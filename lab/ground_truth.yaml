@@ -1,0 +1,138 @@
+# Ground truth for the instrumented lab tool.
+#
+# The agent NEVER sees this file. It is the answer key: `bench` matches the
+# agent's discovered beliefs against these records structurally (by class +
+# operation + parameter), not by asking an LLM whether two sentences agree.
+#
+# Every rule can be toggled per-seed. Toggling one OFF mid-run is what drives
+# the belief-retirement demo beat.
+
+version: 1
+tool: lab
+
+rules:
+  - id: page_size_cap
+    class: silent_truncation
+    operation: search
+    parameter: page_size
+    doc_claims: "page_size accepts any integer from 1 to 500"
+    truth: "page_size is silently clamped to 50; larger values return 50 items with has_more=true and no warning"
+    probe_template: boundary
+    difficulty: easy
+
+  - id: rate_limit_flaky_header
+    class: rate_limit
+    operation: "*"
+    parameter: null
+    doc_claims: "no documented rate limit"
+    truth: "3 requests per second; excess returns 429, and Retry-After is present on only ~60% of 429 responses"
+    probe_template: header_burst
+    difficulty: medium
+
+  - id: write_search_lag
+    class: eventual_consistency
+    operation: search
+    parameter: null
+    doc_claims: "created items are immediately searchable"
+    truth: "writes are not visible to search for ~2000ms after creation"
+    probe_template: timing
+    difficulty: medium
+
+  - id: unknown_filter_field
+    class: silent_coercion
+    operation: search
+    parameter: filter
+    doc_claims: "filtering on an unknown field returns 400 invalid_filter"
+    truth: "an unknown or misspelled filter field returns 200 with an empty result set and no error"
+    probe_template: boundary
+    difficulty: easy
+
+  - id: pre_epoch_date_null
+    class: silent_coercion
+    operation: create
+    parameter: due_date
+    doc_claims: "due_date accepts any ISO-8601 date"
+    truth: "dates before 1970-01-01 are silently stored as null"
+    probe_template: boundary
+    difficulty: medium
+
+  - id: large_number_to_string
+    class: silent_coercion
+    operation: create
+    parameter: amount
+    doc_claims: "amount is always returned as a JSON number"
+    truth: "amount values greater than 1000000 are serialised as a JSON string, not a number"
+    probe_template: boundary
+    difficulty: medium
+
+  - id: cursor_expiry
+    class: expiry
+    operation: search
+    parameter: cursor
+    doc_claims: "cursors remain valid indefinitely"
+    truth: "cursors expire 60 seconds after issue; a stale cursor returns 400 cursor_expired"
+    probe_template: timing
+    difficulty: hard
+
+  - id: include_archived_flag
+    class: undocumented_flag
+    operation: search
+    parameter: include_archived
+    doc_claims: "not documented"
+    truth: "archived items are excluded from search unless the undocumented include_archived=true flag is passed"
+    probe_template: flag_discovery
+    difficulty: hard
+
+  - id: unknown_field_ignored
+    class: silent_coercion
+    operation: update
+    parameter: "*"
+    doc_claims: "updating an unknown field returns 400 unknown_field"
+    truth: "PATCH with an unknown field returns 200 and silently ignores that field"
+    probe_template: consistency
+    difficulty: easy
+
+  - id: archived_get_404
+    class: undocumented_flag
+    operation: get
+    parameter: null
+    doc_claims: "GET by id returns an item regardless of archived state"
+    truth: "GET by id returns 404 for an archived item even though the item still exists"
+    probe_template: consistency
+    difficulty: medium
+
+  - id: bulk_cap
+    class: silent_truncation
+    operation: bulk_create
+    parameter: items
+    doc_claims: "bulk_create accepts up to 100 items per call"
+    truth: "bulk_create silently processes only the first 20 items and reports success for all of them"
+    probe_template: boundary
+    difficulty: medium
+
+  - id: sort_created_is_edited
+    class: mislabelled_semantics
+    operation: search
+    parameter: sort
+    doc_claims: "sort=created orders by creation time"
+    truth: "sort=created actually orders by last_edited time"
+    probe_template: ordering
+    difficulty: hard
+
+  - id: title_truncation
+    class: silent_truncation
+    operation: create
+    parameter: title
+    doc_claims: "title accepts up to 2000 characters"
+    truth: "title is silently truncated to 255 characters"
+    probe_template: boundary
+    difficulty: easy
+
+  - id: write_502_after_commit
+    class: idempotency_hazard
+    operation: create
+    parameter: null
+    doc_claims: "a 502 response means the request was not processed"
+    truth: "roughly 5% of creates return 502 AFTER the item has already been committed; a naive retry produces a duplicate"
+    probe_template: idempotency
+    difficulty: hard

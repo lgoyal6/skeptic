@@ -1,0 +1,18 @@
+[project]
+name = "skeptic"
+version = "0.1.0"
+description = "An agent that reverse-engineers its own tools: runs experiments, keeps falsifiable beliefs, publishes the corrected spec."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "httpx>=0.27",
+    "pyyaml>=6.0",
+    "rich>=13.9",
+]
+
+[project.scripts]
+skeptic = "cli:main"
+
+[tool.uv]
+package = false

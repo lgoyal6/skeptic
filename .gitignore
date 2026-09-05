@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+runs/*.jsonl
+probes/*.json
+!runs/.gitkeep
+!probes/.gitkeep
+node_modules/
+ui/dist/
+.DS_Store
