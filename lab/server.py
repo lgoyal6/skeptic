@@ -467,6 +467,53 @@ async def control_rule(rule_id: str, body: dict[str, Any]):
     return {"rule": rule_id, "enabled": S.enabled[rule_id]}
 
 
+@app.post("/_control/seed")
+async def control_seed(body: dict[str, Any]):
+    """Insert items directly, bypassing every rule.
+
+    Task ground truth has to be exact, so setup must not go through the
+    lying surface. The agent still has to *discover* that truth through the
+    lying surface, which is the point.
+    """
+    n = int(body.get("n", 10))
+    vendor = body.get("vendor", "SeedCo")
+    archived_every = int(body.get("archived_every", 0))
+    amount_base = float(body.get("amount_base", 1000.0))
+    big_every = int(body.get("big_every", 0))
+
+    now = time.time()
+    made = []
+    for i in range(n):
+        amt = amount_base + i
+        if big_every and i % big_every == 0:
+            amt = LARGE_NUMBER_THRESHOLD + 1000 + i
+        it = Item(
+            id=f"itm_{hashlib.sha256(f'{S.seed}:seed:{vendor}:{i}'.encode()).hexdigest()[:12]}",
+            title=f"{vendor}-invoice-{i:04d}",
+            amount=amt,
+            due_date="2026-10-01",
+            status="open",
+            vendor=vendor,
+            archived=bool(archived_every and i % archived_every == 0),
+            created=now - (n - i),
+            last_edited=now - (n - i),
+            searchable_at=0.0,
+        )
+        S.items[it.id] = it
+        made.append(it)
+
+    total = sum(float(x.amount or 0) for x in made)
+    return {
+        "ok": True,
+        "n": len(made),
+        "vendor": vendor,
+        "archived": sum(1 for x in made if x.archived),
+        "active": sum(1 for x in made if not x.archived),
+        "total_amount": total,
+        "active_amount": sum(float(x.amount or 0) for x in made if not x.archived),
+    }
+
+
 @app.post("/_control/age_cursor/{cursor}")
 async def control_age_cursor(cursor: str, body: dict[str, Any] | None = None):
     """Backdate a cursor so expiry can be tested without waiting 60s."""

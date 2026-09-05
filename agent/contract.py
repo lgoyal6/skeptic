@@ -115,7 +115,11 @@ class ContractLayer:
             c.op == "search"
             and c.status == 400
             and isinstance(c.response, dict)
-            and "cursor" in str(c.response.get("error", ""))
+            # Must be expiry specifically. An agent that invents a garbage
+            # cursor also gets a 400 mentioning "cursor", and matching on the
+            # substring turned that into a false anomaly -- and would have
+            # turned it into a false belief.
+            and c.response.get("error") == "cursor_expired"
         ):
             # 400 is a documented outcome for search, so a plain status check
             # sails past this one. The lie is specifically that cursors are
