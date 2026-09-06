@@ -249,8 +249,12 @@ the build window.
 
 ### Counterfactual replay
 
-`./.venv/bin/python -m replay.counterfactual` reports 218 wasted calls across 46
-runs. Token savings are reported as zero rather than estimated, because
+`./.venv/bin/python -m replay.counterfactual` reports 115 distinct wasted calls
+across 47 runs, alongside 219 belief-attributions. Those are different numbers
+for a reason: the rate-limit rule applies to every operation, so a belief about
+`search` and one about `create` both legitimately charge the same 429. Summing
+per-belief totals double counts, so the headline is the distinct count and the
+attribution sum is printed beside it rather than either being dropped. Token savings are reported as zero rather than estimated, because
 `runs/history.jsonl` does not exist in this snapshot and the tool refuses to
 guess at a number it cannot evidence.
 

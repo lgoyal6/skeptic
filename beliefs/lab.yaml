@@ -1,8 +1,8 @@
 tool: lab
-updated: '2026-09-06T05:38:38Z'
+updated: '2026-09-06T05:52:21Z'
 counts:
-  hypothesis: 3
-  confirmed: 4
+  hypothesis: 5
+  confirmed: 5
   falsified: 20
   retired: 0
 beliefs:
@@ -669,12 +669,13 @@ beliefs:
   status: confirmed
   posterior:
     alpha: 2.0
-    beta: 6.0
+    beta: 8.0
   evidence_for: 1
   evidence_against: 3
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-002
   - probe-002
   - probe-002
   survived_falsification: null
@@ -686,14 +687,14 @@ beliefs:
     parameter: due_date
     signatures:
     - create.due_date.silent_null
-    runs_affected: 7
-    calls_affected: 11
+    runs_affected: 8
+    calls_affected: 12
     wasted_calls: 0
     tokens_saved_estimate: 0
     runs_rescued: 0
     rescued_run_ids: []
     first_seen_run: recon-000
-    last_seen_run: retire-demo-1788665224-relearn
+    last_seen_run: recon-final
     method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
       from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
       = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
@@ -722,6 +723,11 @@ beliefs:
       wasted: 0
       reason: 'call 1: due_date=''1969-12-31'' sent, stored as null'
     - run: recon-000
+      call_ns:
+      - 3
+      wasted: 0
+      reason: 'call 3: due_date=''1965-04-01'' sent, stored as null'
+    - run: recon-final
       call_ns:
       - 3
       wasted: 0
@@ -928,7 +934,22 @@ beliefs:
     detail: verdict proposed silent_truncation; wire evidence (silent_null) admits only silent_coercion
     p_doc_correct: 0.25
     status: confirmed
-  p_doc_correct: 0.25
+  - t: 1788673844.516
+    event: confirmed_by_probe
+    detail: probe-002
+    p_doc_correct: 0.25
+    status: confirmed
+  - t: 1788673844.516
+    event: probe_confirmed
+    detail: The read-back shows null for the due_date field, matching the hypothesis prediction.
+    p_doc_correct: 0.2
+    status: confirmed
+  - t: 1788673844.516
+    event: class_restatement_rejected
+    detail: verdict proposed silent_truncation; wire evidence (silent_null) admits only silent_coercion
+    p_doc_correct: 0.2
+    status: confirmed
+  p_doc_correct: 0.2
   class: silent_coercion
 - id: lab.search.the_item_is_created_in_a_draft_state_and_is
   tool: lab
@@ -940,12 +961,13 @@ beliefs:
   status: confirmed
   posterior:
     alpha: 3.0
-    beta: 28.7
+    beta: 30.7
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-009
   - probe-009
   - probe-009
   - probe-009
@@ -968,14 +990,14 @@ beliefs:
     parameter: null
     signatures:
     - search._.write_not_visible
-    runs_affected: 3
-    calls_affected: 3
-    wasted_calls: 4
+    runs_affected: 4
+    calls_affected: 4
+    wasted_calls: 5
     tokens_saved_estimate: 0
     runs_rescued: 0
     rescued_run_ids: []
     first_seen_run: recon-000
-    last_seen_run: recon-r2
+    last_seen_run: recon-final
     method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
       from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
       = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
@@ -988,6 +1010,11 @@ beliefs:
       - 12
       wasted: 1
       reason: call 12 searched 0.40s after create 11 (vendor='ReconFresh') and missed the new row
+    - run: recon-final
+      call_ns:
+      - 11
+      wasted: 1
+      reason: call 11 searched 0.40s after create 10 (vendor='ReconFresh') and missed the new row
     - run: recon-obs
       call_ns:
       - 12
@@ -1190,7 +1217,18 @@ beliefs:
       item would not appear.
     p_doc_correct: 0.0946
     status: confirmed
-  p_doc_correct: 0.0946
+  - t: 1788673844.293
+    event: confirmed_by_probe
+    detail: probe-009
+    p_doc_correct: 0.0946
+    status: confirmed
+  - t: 1788673844.293
+    event: probe_confirmed
+    detail: The search returned zero rows after waiting 0.5 seconds, matching the prediction that the
+      item would not appear.
+    p_doc_correct: 0.089
+    status: confirmed
+  p_doc_correct: 0.089
   class: eventual_consistency
 - id: lab.search.the_rate_limit_is_global_shared_across_all_u
   tool: lab
@@ -1203,7 +1241,7 @@ beliefs:
   status: confirmed
   posterior:
     alpha: 3.0
-    beta: 32.5
+    beta: 36.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
@@ -1220,6 +1258,8 @@ beliefs:
   - probe-010
   - probe-010
   - probe-010
+  - probe-010
+  - probe-006
   - probe-010
   - probe-006
   - probe-010
@@ -1993,115 +2033,57 @@ beliefs:
       request.'
     p_doc_correct: 0.0845
     status: confirmed
-  p_doc_correct: 0.0845
+  - t: 1788673844.235
+    event: confirmed_by_probe
+    detail: probe-010
+    p_doc_correct: 0.0845
+    status: confirmed
+  - t: 1788673844.235
+    event: probe_confirmed
+    detail: 7 out of 10 requests were throttled.
+    p_doc_correct: 0.08
+    status: confirmed
+  - t: 1788673844.235
+    event: restated_from_evidence
+    detail: 'was: The system throttles 7 out of 10 requests, with the first throttled request occurring
+      at index 4.'
+    p_doc_correct: 0.08
+    status: confirmed
+  - t: 1788673844.405
+    event: confirmed_by_probe
+    detail: probe-006
+    p_doc_correct: 0.08
+    status: confirmed
+  - t: 1788673844.405
+    event: probe_confirmed
+    detail: The 4th request was throttled and 7 requests total were throttled, matching the prediction.
+    p_doc_correct: 0.0759
+    status: confirmed
+  - t: 1788673844.405
+    event: restated_from_evidence
+    detail: 'was: 7 out of 10 requests were throttled, with the first throttling occurring on the 4th
+      request.'
+    p_doc_correct: 0.0759
+    status: confirmed
+  p_doc_correct: 0.0759
   class: rate_limit
-- id: lab.search.cursors_expire_after_a_fixed_time_duration_e
-  tool: lab
-  operation: search
-  doc_claims: cursors remain valid indefinitely
-  belief: Cursors expire after a fixed time duration (e.g., 1 hour) to prevent stale data.
-  action: Refresh the cursor periodically (e.g., every hour).
-  parameter: cursor
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.search.cursors_expire_if_no_requests_are_made_for_a
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: cursors remain valid indefinitely
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Use the cursor immediately. If it works, wait 2 hours and try again. If it fails, the time
-      limit is the cause.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search.cursor.expiry
-    p_doc_correct: 0.4444
-    status: hypothesis
-  p_doc_correct: 0.4444
-  class: expiry
-- id: lab.search.cursors_expire_if_no_requests_are_made_for_a
-  tool: lab
-  operation: search
-  doc_claims: cursors remain valid indefinitely
-  belief: Cursors expire if no requests are made for a specific duration (e.g., 30 minutes of inactivity).
-  action: Refresh the cursor periodically (e.g., every 15 minutes).
-  parameter: cursor
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.search.cursors_expire_after_a_fixed_time_duration_e
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: cursors remain valid indefinitely
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Use the cursor, then make a request with a different cursor. If the original cursor still
-      works, the limit is inactivity-based.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search.cursor.expiry
-    p_doc_correct: 0.4444
-    status: hypothesis
-  p_doc_correct: 0.4444
-  class: expiry
 - id: lab.update.the_validation_logic_is_buggy_and_only_check
   tool: lab
   operation: update
   doc_claims: 400 unknown_field
-  belief: The field `not_a_real_field` was present in the readback and stored as null, despite being sent
-    with the value 'test_value'.
-  action: Be cautious with required fields; assume the API might be lenient.
+  belief: The system stored the field 'not_a_real_field' as 'null' despite being sent a value.
+  action: Do not rely on this field for data storage; it will be null.
   parameter: not_a_real_field
-  status: hypothesis
+  status: confirmed
   posterior:
     alpha: 2.0
-    beta: 2.0
+    beta: 4.0
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-001
   survived_falsification: null
   falsified_by: null
   replay:
@@ -2301,8 +2283,269 @@ beliefs:
     detail: The readback object does not contain the key 'not_a_real_field'.
     p_doc_correct: 0.5
     status: hypothesis
-  p_doc_correct: 0.5
+  - t: 1788673844.629
+    event: probe_inconclusive
+    detail: The readback object does not contain the key 'not_a_real_field'.
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788673844.685
+    event: confirmed_by_probe
+    detail: probe-001
+    p_doc_correct: 0.5
+    status: confirmed
+  - t: 1788673844.685
+    event: probe_confirmed
+    detail: The mismatched fields show 'not_a_real_field' was sent as 'test_value' but stored as 'null'.
+    p_doc_correct: 0.3333
+    status: confirmed
+  - t: 1788673844.685
+    event: restated_from_evidence
+    detail: 'was: The field `not_a_real_field` was present in the readback and stored as null, despite
+      being sent with the value ''test_val'
+    p_doc_correct: 0.3333
+    status: confirmed
+  - t: 1788673844.685
+    event: class_restatement_rejected
+    detail: verdict proposed silent_truncation; wire evidence (silent_ignore) admits only silent_coercion
+    p_doc_correct: 0.3333
+    status: confirmed
+  p_doc_correct: 0.3333
   class: silent_coercion
+- id: lab.create.the_request_was_processed_but_a_race_conditi
+  tool: lab
+  operation: create
+  doc_claims: 502 means the request was not processed
+  belief: The request was processed, but a race condition occurred (e.g., another concurrent request modified
+    the resource) causing the server to return an error that was mapped to 502.
+  action: Implement client-side idempotency keys and check for conflicts (409) before retrying.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-final
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_server_successfully_committed_the_databa
+  - lab.create.the_server_successfully_committed_the_transa
+  history:
+  - t: 1788673914.675
+    event: created
+    detail: 502 means the request was not processed
+    p_doc_correct: 0.6667
+    status: hypothesis
+  - t: 1788673914.675
+    event: contradiction
+    detail: recon-final
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788673914.675
+    event: hypothesis
+    detail: Fetch the item by its unique identifier (ID). If the item exists, the first hypothesis is
+      wrong. If it does not exist, the second hypothesis is wrong.
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788673914.675
+    event: signature
+    detail: create._.idempotency_hazard
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: idempotency_hazard
+- id: lab.create.the_server_successfully_committed_the_databa
+  tool: lab
+  operation: create
+  doc_claims: 502 means the request was not processed
+  belief: The server successfully committed the database transaction and sent a 200 OK response, but the
+    client received a 502 due to a network issue (e.g., TCP retransmission failure, load balancer timeout)
+    after the response was sent.
+  action: Implement client-side idempotency keys to detect duplicates and verify resource existence via
+    GET before assuming failure.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-final
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_request_was_processed_but_a_race_conditi
+  - lab.create.the_server_successfully_committed_the_transa
+  history:
+  - t: 1788673914.675
+    event: created
+    detail: 502 means the request was not processed
+    p_doc_correct: 0.6667
+    status: hypothesis
+  - t: 1788673914.675
+    event: contradiction
+    detail: recon-final
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788673914.675
+    event: hypothesis
+    detail: Attempt to create the *exact same* resource again using a unique ID or idempotency key. If
+      the API returns 200 OK (or 201 Created), it confirms the first reques
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788673914.675
+    event: signature
+    detail: create._.idempotency_hazard
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: idempotency_hazard
+- id: lab.create.the_server_successfully_committed_the_transa
+  tool: lab
+  operation: create
+  doc_claims: 502 means the request was not processed
+  belief: The server successfully committed the transaction but crashed or timed out *after* the commit
+    but *before* flushing the response to the client, resulting in a 502 and a potentially incomplete
+    object.
+  action: Implement client-side idempotency keys and verify resource existence via GET before assuming
+    failure.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-final
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_server_successfully_committed_the_databa
+  - lab.create.the_request_was_processed_but_a_race_conditi
+  history:
+  - t: 1788673914.675
+    event: created
+    detail: 502 means the request was not processed
+    p_doc_correct: 0.6667
+    status: hypothesis
+  - t: 1788673914.675
+    event: contradiction
+    detail: recon-final
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788673914.675
+    event: hypothesis
+    detail: Check the content of the created item for a unique identifier (ID). If the object has an ID,
+      the server generated it and committed it (ruling out this hypothesi
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788673914.675
+    event: signature
+    detail: create._.idempotency_hazard
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: idempotency_hazard
+- id: lab.search.cursors_expire_after_a_fixed_time_duration_e
+  tool: lab
+  operation: search
+  doc_claims: cursors remain valid indefinitely
+  belief: Cursors expire after a fixed time duration (e.g., 1 hour) to prevent stale data.
+  action: Refresh the cursor periodically (e.g., every hour).
+  parameter: cursor
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.cursors_expire_if_no_requests_are_made_for_a
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: cursors remain valid indefinitely
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Use the cursor immediately. If it works, wait 2 hours and try again. If it fails, the time
+      limit is the cause.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.cursor.expiry
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: expiry
+- id: lab.search.cursors_expire_if_no_requests_are_made_for_a
+  tool: lab
+  operation: search
+  doc_claims: cursors remain valid indefinitely
+  belief: Cursors expire if no requests are made for a specific duration (e.g., 30 minutes of inactivity).
+  action: Refresh the cursor periodically (e.g., every 15 minutes).
+  parameter: cursor
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.cursors_expire_after_a_fixed_time_duration_e
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: cursors remain valid indefinitely
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Use the cursor, then make a request with a different cursor. If the original cursor still
+      works, the limit is inactivity-based.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.cursor.expiry
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: expiry
 - id: lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
   tool: lab
   operation: bulk_create
@@ -2573,13 +2816,14 @@ beliefs:
   parameter: title
   status: falsified
   posterior:
-    alpha: 5.0
+    alpha: 6.0
     beta: 4.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-000
   - probe-000
   - probe-000
   - probe-000
@@ -2693,7 +2937,13 @@ beliefs:
       (lengths 2 and 4) rather than enforcing a hard limit of 25 characters.
     p_doc_correct: 0.4706
     status: falsified
-  p_doc_correct: 0.5263
+  - t: 1788673844.461
+    event: falsified
+    detail: The API returned a 429 for input 24 and a 502 for input 100, and stored truncated strings
+      (lengths 2 and 4) rather than enforcing a hard limit of 25 characters.
+    p_doc_correct: 0.5263
+    status: falsified
+  p_doc_correct: 0.5714
   class: silent_truncation
 - id: lab.create.the_api_enforces_a_rate_limit_based_on_the_s
   tool: lab
@@ -2953,13 +3203,14 @@ beliefs:
   parameter: null
   status: falsified
   posterior:
-    alpha: 4.0
+    alpha: 5.0
     beta: 2.0
   evidence_for: 1
   evidence_against: 4
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-003
   - probe-003
   - probe-003
   survived_falsification: null
@@ -3101,7 +3352,13 @@ beliefs:
       prediction that the flag would alter the results.
     p_doc_correct: 0.6
     status: falsified
-  p_doc_correct: 0.6667
+  - t: 1788673844.572
+    event: falsified
+    detail: The result set did not differ from the base request (both returned 1 row), contradicting the
+      prediction that the flag would alter the results.
+    p_doc_correct: 0.6667
+    status: falsified
+  p_doc_correct: 0.7143
   class: undocumented_flag
 - id: lab.get.the_item_is_created_with_a_default_status_of
   tool: lab
@@ -3409,13 +3666,14 @@ beliefs:
   parameter: sort
   status: falsified
   posterior:
-    alpha: 12.0
+    alpha: 13.0
     beta: 2.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-004
   - probe-004
   - probe-004
   - probe-004
@@ -3512,7 +3770,13 @@ beliefs:
       chronological order.
     p_doc_correct: 0.8209
     status: falsified
-  p_doc_correct: 0.8333
+  - t: 1788673844.348
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not descending
+      chronological order.
+    p_doc_correct: 0.8333
+    status: falsified
+  p_doc_correct: 0.8442
   class: mislabelled_semantics
 - id: lab.search.the_api_sorts_by_the_string_value_of_the_fie
   tool: lab
@@ -3524,13 +3788,14 @@ beliefs:
   parameter: sort
   status: falsified
   posterior:
-    alpha: 12.0
+    alpha: 13.0
     beta: 2.6
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-004
   - probe-004
   - probe-004
   - probe-004
@@ -3628,7 +3893,13 @@ beliefs:
       order of the timestamps (oldest first).
     p_doc_correct: 0.8088
     status: falsified
-  p_doc_correct: 0.8219
+  - t: 1788673844.348
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not lexicographical
+      order of the timestamps (oldest first).
+    p_doc_correct: 0.8219
+    status: falsified
+  p_doc_correct: 0.8333
   class: mislabelled_semantics
 - id: lab.search.the_filter_field_name_vendorr_is_a_typo_for
   tool: lab
@@ -3640,13 +3911,14 @@ beliefs:
   parameter: filter
   status: falsified
   posterior:
-    alpha: 15.0
+    alpha: 16.0
     beta: 2.6
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-008
   - probe-008
   - probe-008
   - probe-008
@@ -3757,7 +4029,12 @@ beliefs:
     detail: The search with 'vendorr' returned 50 items, not empty results.
     p_doc_correct: 0.8434
     status: falsified
-  p_doc_correct: 0.8523
+  - t: 1788673844.18
+    event: falsified
+    detail: The search with 'vendorr' returned 50 items, not empty results.
+    p_doc_correct: 0.8523
+    status: falsified
+  p_doc_correct: 0.8602
   class: silent_coercion
 - id: lab.search.the_filter_is_valid_but_there_are_genuinely
   tool: lab
@@ -3768,13 +4045,14 @@ beliefs:
   parameter: filter
   status: falsified
   posterior:
-    alpha: 15.0
+    alpha: 16.0
     beta: 2.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-008
   - probe-008
   - probe-008
   - probe-008
@@ -3885,7 +4163,12 @@ beliefs:
     detail: Both searches returned 50 items, not empty results.
     p_doc_correct: 0.8537
     status: falsified
-  p_doc_correct: 0.8621
+  - t: 1788673844.18
+    event: falsified
+    detail: Both searches returned 50 items, not empty results.
+    p_doc_correct: 0.8621
+    status: falsified
+  p_doc_correct: 0.8696
   class: silent_coercion
 - id: lab.search.the_search_index_is_updated_asynchronously_a
   tool: lab
@@ -3896,13 +4179,14 @@ beliefs:
   parameter: null
   status: falsified
   posterior:
-    alpha: 15.0
+    alpha: 16.0
     beta: 2.3
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-009
   - probe-009
   - probe-009
   - probe-009
@@ -4020,7 +4304,13 @@ beliefs:
       the item would appear.
     p_doc_correct: 0.8589
     status: falsified
-  p_doc_correct: 0.8671
+  - t: 1788673844.293
+    event: falsified
+    detail: The search returned zero rows after waiting 0.5 seconds, contradicting the prediction that
+      the item would appear.
+    p_doc_correct: 0.8671
+    status: falsified
+  p_doc_correct: 0.8743
   class: eventual_consistency
 - id: lab.search.there_is_a_hidden_rate_limit_e_g_100_request
   tool: lab
@@ -4031,13 +4321,14 @@ beliefs:
   parameter: null
   status: falsified
   posterior:
-    alpha: 15.0
+    alpha: 16.0
     beta: 2.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-010
   - probe-010
   - probe-010
   - probe-010
@@ -4143,7 +4434,12 @@ beliefs:
     detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
     p_doc_correct: 0.8485
     status: falsified
-  p_doc_correct: 0.8571
+  - t: 1788673844.235
+    event: falsified
+    detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
+    p_doc_correct: 0.8571
+    status: falsified
+  p_doc_correct: 0.8649
   class: rate_limit
 - id: lab.update.the_api_is_designed_to_be_soft_and_ignores_u
   tool: lab

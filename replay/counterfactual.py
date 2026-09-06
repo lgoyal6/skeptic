@@ -588,6 +588,7 @@ def replay_all(store: BeliefStore, runs_dir: str = "runs") -> dict[str, Any]:
 
     reports = []
     total_wasted = 0
+    charged: set[tuple[str, int]] = set()
     total_tokens = 0
     total_rescued_runs: set[str] = set()
     for b in confirmed:
@@ -595,6 +596,9 @@ def replay_all(store: BeliefStore, runs_dir: str = "runs") -> dict[str, Any]:
         b.replay = rep
         reports.append(rep)
         total_wasted += rep["wasted_calls"]
+        for ev in rep.get("evidence", []) or []:
+            for n in (ev.get("call_ns") or []):
+                charged.add((ev.get("run", ""), n))
         total_tokens += rep["tokens_saved_estimate"]
         total_rescued_runs.update(rep["rescued_run_ids"])
 
@@ -606,10 +610,18 @@ def replay_all(store: BeliefStore, runs_dir: str = "runs") -> dict[str, Any]:
     elif not runs:
         note = f"no run logs found under {runs_dir!r}"
 
+    # Two beliefs can legitimately blame the same call: the rate-limit rule
+    # applies to every operation, so a belief about `search` and one about
+    # `create` both charge the same 429. Summing per-belief totals therefore
+    # double counts. Report the distinct calls as the headline and keep the
+    # attribution sum beside it rather than dropping either.
+    total_wasted_unique = len(charged)
+
     return {
         "beliefs": reports,
         "total_runs": len(runs),
         "total_wasted_calls": total_wasted,
+        "total_wasted_calls_deduped": total_wasted_unique,
         "total_tokens": total_tokens,
         "total_rescued_runs": len(total_rescued_runs),
         "method": (
@@ -660,7 +672,10 @@ def render(report: dict[str, Any]) -> str:
 
     lines.append("")
     lines.append(
-        f"    total: {report['total_wasted_calls']} wasted calls across {total_runs} runs, "
+        f"    total: {report.get('total_wasted_calls_deduped', report['total_wasted_calls'])} "
+        f"distinct wasted calls across {total_runs} runs "
+        f"({report['total_wasted_calls']} belief-attributions, deduped: two beliefs "
+        f"can blame the same call), "
         f"~{_fmt_tokens_k(report['total_tokens'])} tokens"
     )
     lines.append(f"    method: {report['method']}")
