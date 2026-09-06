@@ -127,9 +127,7 @@ def propose(
 
     out: list[Hypothesis] = []
     for h in data.get("hypotheses", [])[:3]:
-        cls = str(h.get("class", "")).strip()
-        if cls not in CLASSES:
-            cls = _guess_class(anomaly.kind)
+        cls = constrain_class(anomaly.kind, str(h.get("class", "")).strip())
         param = h.get("parameter")
         if isinstance(param, str) and param.lower() in ("null", "none", ""):
             param = None
@@ -146,6 +144,39 @@ def propose(
             )
         )
     return [h for h in out if h.belief]
+
+
+# What the WIRE evidence permits for each anomaly kind. The reflector picks a
+# class from prose and sometimes picks one the evidence cannot support: an
+# `update.not_a_real_field.silent_ignore` anomaly came back labelled
+# `idempotency_hazard`, which is a different defect entirely, and it scored as
+# a false belief. The model may choose only among classes its own evidence
+# admits.
+#
+# silent_empty is deliberately two-valued: "the filter field is wrong" and
+# "archived rows are hidden" present identically, and only a probe separates
+# them. That ambiguity is designed, so both stay allowed.
+KIND_ALLOWS: dict[str, tuple[str, ...]] = {
+    "silent_truncation": ("silent_truncation",),
+    "silent_null": ("silent_coercion",),
+    "type_coercion": ("silent_coercion",),
+    "silent_ignore": ("silent_coercion",),
+    "write_not_visible": ("eventual_consistency",),
+    "silent_empty": ("silent_coercion", "undocumented_flag"),
+    "undocumented_status": ("rate_limit",),
+    "undocumented_flag": ("undocumented_flag",),
+    "mislabelled_semantics": ("mislabelled_semantics",),
+    "idempotency_hazard": ("idempotency_hazard",),
+    "expiry": ("expiry",),
+}
+
+
+def constrain_class(kind: str, proposed: str) -> str:
+    """Keep the model's class only if the wire evidence admits it."""
+    allowed = KIND_ALLOWS.get(kind)
+    if not allowed:
+        return proposed if proposed in CLASSES else "silent_coercion"
+    return proposed if proposed in allowed else allowed[0]
 
 
 def _guess_class(kind: str) -> str:

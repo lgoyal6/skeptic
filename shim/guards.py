@@ -46,7 +46,17 @@ class Guard:
 
 @dataclass
 class ClampPageSize(Guard):
+    """Clamp to the real cap AND follow the cursor.
+
+    Clamping alone just moves the problem: the agent asks for 500, silently
+    receives 50, and reports 50 as the total. The first A/B showed exactly
+    that -- the shielded agent still answered 23 against a true 73. A guard
+    that knows about the cap should do what the caller believed it was
+    already doing, which is return the whole page set.
+    """
+
     cap: int = 50
+    max_pages: int = 20
 
     def before(self, op, payload):
         if op == "search" and payload and isinstance(payload.get("page_size"), int):
@@ -54,6 +64,32 @@ class ClampPageSize(Guard):
                 payload = {**payload, "page_size": self.cap}
                 self.fired += 1
         return payload, None
+
+    def after(self, op, payload, status, body, adapter):
+        if op != "search" or status != 200 or not isinstance(body, dict):
+            return body
+        if not body.get("has_more") or not body.get("next_cursor"):
+            return body
+
+        rows = list(body.get("results") or [])
+        cursor = body.get("next_cursor")
+        pages = 0
+        while cursor and pages < self.max_pages:
+            pages += 1
+            nxt = {**(payload or {}), "cursor": cursor}
+            try:
+                r = adapter.client.post("/v1/search", json=nxt)
+                d = r.json()
+            except Exception:  # noqa: BLE001
+                break
+            if r.status_code != 200 or not isinstance(d, dict):
+                break
+            rows.extend(d.get("results") or [])
+            cursor = d.get("next_cursor") if d.get("has_more") else None
+        if pages:
+            self.fired += 1
+        return {**body, "results": rows, "has_more": False, "next_cursor": None,
+                "_guard_paged": pages}
 
 
 @dataclass

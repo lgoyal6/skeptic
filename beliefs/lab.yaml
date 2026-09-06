@@ -1,9 +1,9 @@
 tool: lab
-updated: '2026-09-06T00:44:41Z'
+updated: '2026-09-06T00:59:41Z'
 counts:
-  hypothesis: 9
+  hypothesis: 5
   confirmed: 5
-  falsified: 10
+  falsified: 14
   retired: 0
 beliefs:
 - id: lab.create.the_field_is_mapped_to_a_legacy_system_that
@@ -16,16 +16,48 @@ beliefs:
   status: confirmed
   posterior:
     alpha: 2.0
-    beta: 4.3
+    beta: 6.3
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
   - probe-003
+  - probe-003
   survived_falsification: null
   falsified_by: null
-  replay: {}
+  replay:
+    belief_id: lab.create.the_field_is_mapped_to_a_legacy_system_that
+    cls: silent_coercion
+    operation: create
+    parameter: due_date
+    signatures:
+    - create.due_date.silent_null
+    runs_affected: 2
+    calls_affected: 2
+    wasted_calls: 0
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: probe-003
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: probe-003
+      call_ns:
+      - 1
+      wasted: 0
+      reason: 'call 1: due_date=''1969-12-31'' sent, stored as null'
+    - run: recon-000
+      call_ns:
+      - 3
+      wasted: 0
+      reason: 'call 3: due_date=''1965-04-01'' sent, stored as null'
   competing:
   - lab.create.the_api_expects_a_specific_date_format_e_g_i
   history:
@@ -66,7 +98,17 @@ beliefs:
       threshold (e.g., 1970), defaulting t'
     p_doc_correct: 0.3175
     status: confirmed
-  p_doc_correct: 0.3175
+  - t: 1788655709.343
+    event: confirmed_by_probe
+    detail: probe-003
+    p_doc_correct: 0.3175
+    status: confirmed
+  - t: 1788655709.343
+    event: probe_confirmed
+    detail: The stored value for due_date was null.
+    p_doc_correct: 0.241
+    status: confirmed
+  p_doc_correct: 0.241
   class: silent_coercion
 - id: lab.get.the_get_request_is_being_made_from_a_differe
   tool: lab
@@ -78,16 +120,44 @@ beliefs:
   status: confirmed
   posterior:
     alpha: 2.0
-    beta: 4.4
+    beta: 8.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
   - probe-004
+  - probe-004
+  - probe-004
   survived_falsification: null
   falsified_by: null
-  replay: {}
+  replay:
+    belief_id: lab.get.the_get_request_is_being_made_from_a_differe
+    cls: undocumented_flag
+    operation: get
+    parameter: null
+    signatures:
+    - get._.undocumented_flag
+    runs_affected: 1
+    calls_affected: 1
+    wasted_calls: 1
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: recon-000
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: recon-000
+      call_ns:
+      - 15
+      wasted: 1
+      reason: call 15 got 404 for id itm_5c412648d863, created earlier in this run
   competing:
   - lab.get.the_item_is_created_with_a_default_status_of
   history:
@@ -128,7 +198,29 @@ beliefs:
       key) than the creation context.'
     p_doc_correct: 0.3125
     status: confirmed
-  p_doc_correct: 0.3125
+  - t: 1788655709.375
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.3125
+    status: confirmed
+  - t: 1788655709.375
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.2381
+    status: confirmed
+  - t: 1788656106.19
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.2381
+    status: confirmed
+  - t: 1788656106.19
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.1923
+    status: confirmed
+  p_doc_correct: 0.1923
   class: undocumented_flag
 - id: lab.search.the_item_is_created_in_a_draft_state_and_is
   tool: lab
@@ -140,16 +232,45 @@ beliefs:
   status: confirmed
   posterior:
     alpha: 2.0
-    beta: 4.7
+    beta: 10.7
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
   - probe-009
+  - probe-009
+  - probe-009
+  - probe-009
   survived_falsification: null
   falsified_by: null
-  replay: {}
+  replay:
+    belief_id: lab.search.the_item_is_created_in_a_draft_state_and_is
+    cls: eventual_consistency
+    operation: search
+    parameter: null
+    signatures:
+    - search._.write_not_visible
+    runs_affected: 1
+    calls_affected: 1
+    wasted_calls: 1
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: recon-000
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: recon-000
+      call_ns:
+      - 12
+      wasted: 1
+      reason: call 12 searched 0.40s after create 11 (vendor='ReconFresh') and missed the new row
   competing:
   - lab.search.the_search_index_is_updated_asynchronously_a
   history:
@@ -191,7 +312,40 @@ beliefs:
       or archived.'
     p_doc_correct: 0.2985
     status: confirmed
-  p_doc_correct: 0.2985
+  - t: 1788655709.549
+    event: confirmed_by_probe
+    detail: probe-009
+    p_doc_correct: 0.2985
+    status: confirmed
+  - t: 1788655709.549
+    event: probe_confirmed
+    detail: The search returned zero rows after waiting 0.5 seconds, matching the prediction that the
+      item would not appear.
+    p_doc_correct: 0.2299
+    status: confirmed
+  - t: 1788656106.362
+    event: confirmed_by_probe
+    detail: probe-009
+    p_doc_correct: 0.2299
+    status: confirmed
+  - t: 1788656106.362
+    event: probe_confirmed
+    detail: The search returned zero rows after waiting 0.5 seconds, matching the prediction that the
+      item would not appear.
+    p_doc_correct: 0.1869
+    status: confirmed
+  - t: 1788656173.37
+    event: confirmed_by_probe
+    detail: probe-009
+    p_doc_correct: 0.1869
+    status: confirmed
+  - t: 1788656173.37
+    event: probe_confirmed
+    detail: The search returned zero rows after waiting 0.5 seconds, matching the prediction that the
+      item would not appear.
+    p_doc_correct: 0.1575
+    status: confirmed
+  p_doc_correct: 0.1575
   class: eventual_consistency
 - id: lab.search.the_rate_limit_is_global_shared_across_all_u
   tool: lab
@@ -203,16 +357,115 @@ beliefs:
   status: confirmed
   posterior:
     alpha: 2.0
-    beta: 4.5
+    beta: 10.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
   - probe-010
+  - probe-010
+  - probe-010
+  - probe-010
   survived_falsification: null
   falsified_by: null
-  replay: {}
+  replay:
+    belief_id: lab.search.the_rate_limit_is_global_shared_across_all_u
+    cls: rate_limit
+    operation: search
+    parameter: null
+    signatures:
+    - search._.undocumented_status
+    runs_affected: 2
+    calls_affected: 15
+    wasted_calls: 15
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: probe-010
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: probe-010
+      call_ns:
+      - 4
+      wasted: 1
+      reason: call 4 hit 429 despite the no-rate-limit doc
+    - run: probe-010
+      call_ns:
+      - 5
+      wasted: 1
+      reason: call 5 hit 429 despite the no-rate-limit doc
+    - run: probe-010
+      call_ns:
+      - 6
+      wasted: 1
+      reason: call 6 hit 429 despite the no-rate-limit doc
+    - run: probe-010
+      call_ns:
+      - 7
+      wasted: 1
+      reason: call 7 hit 429 despite the no-rate-limit doc
+    - run: probe-010
+      call_ns:
+      - 8
+      wasted: 1
+      reason: call 8 hit 429 despite the no-rate-limit doc
+    - run: probe-010
+      call_ns:
+      - 9
+      wasted: 1
+      reason: call 9 hit 429 despite the no-rate-limit doc
+    - run: probe-010
+      call_ns:
+      - 10
+      wasted: 1
+      reason: call 10 hit 429 despite the no-rate-limit doc
+    - run: recon-000
+      call_ns:
+      - 24
+      wasted: 1
+      reason: call 24 hit 429 despite the no-rate-limit doc
+    - run: recon-000
+      call_ns:
+      - 25
+      wasted: 1
+      reason: call 25 hit 429 despite the no-rate-limit doc
+    - run: recon-000
+      call_ns:
+      - 26
+      wasted: 1
+      reason: call 26 hit 429 despite the no-rate-limit doc
+    - run: recon-000
+      call_ns:
+      - 27
+      wasted: 1
+      reason: call 27 hit 429 despite the no-rate-limit doc
+    - run: recon-000
+      call_ns:
+      - 28
+      wasted: 1
+      reason: call 28 hit 429 despite the no-rate-limit doc
+    - run: recon-000
+      call_ns:
+      - 29
+      wasted: 1
+      reason: call 29 hit 429 despite the no-rate-limit doc
+    - run: recon-000
+      call_ns:
+      - 30
+      wasted: 1
+      reason: call 30 hit 429 despite the no-rate-limit doc
+    - run: recon-000
+      call_ns:
+      - 31
+      wasted: 1
+      reason: call 31 hit 429 despite the no-rate-limit doc
   competing:
   - lab.search.there_is_a_hidden_rate_limit_e_g_100_request
   history:
@@ -251,7 +504,37 @@ beliefs:
     detail: 'was: The rate limit is global (shared across all users) and is currently saturated.'
     p_doc_correct: 0.3077
     status: confirmed
-  p_doc_correct: 0.3077
+  - t: 1788655709.501
+    event: confirmed_by_probe
+    detail: probe-010
+    p_doc_correct: 0.3077
+    status: confirmed
+  - t: 1788655709.501
+    event: probe_confirmed
+    detail: 7 out of 10 requests were throttled.
+    p_doc_correct: 0.2353
+    status: confirmed
+  - t: 1788656106.295
+    event: confirmed_by_probe
+    detail: probe-010
+    p_doc_correct: 0.2353
+    status: confirmed
+  - t: 1788656106.295
+    event: probe_confirmed
+    detail: 7 out of 10 requests were throttled.
+    p_doc_correct: 0.1905
+    status: confirmed
+  - t: 1788656173.301
+    event: confirmed_by_probe
+    detail: probe-010
+    p_doc_correct: 0.1905
+    status: confirmed
+  - t: 1788656173.301
+    event: probe_confirmed
+    detail: 7 out of 10 requests were throttled.
+    p_doc_correct: 0.16
+    status: confirmed
+  p_doc_correct: 0.16
   class: rate_limit
 - id: lab.update.the_validation_logic_is_buggy_and_only_check
   tool: lab
@@ -264,16 +547,45 @@ beliefs:
   status: confirmed
   posterior:
     alpha: 2.0
-    beta: 4.5
+    beta: 10.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
   - probe-011
+  - probe-011
+  - probe-011
+  - probe-011
   survived_falsification: null
   falsified_by: null
-  replay: {}
+  replay:
+    belief_id: lab.update.the_validation_logic_is_buggy_and_only_check
+    cls: idempotency_hazard
+    operation: update
+    parameter: not_a_real_field
+    signatures:
+    - update.not_a_real_field.silent_ignore
+    runs_affected: 1
+    calls_affected: 1
+    wasted_calls: 0
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: recon-000
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: recon-000
+      call_ns:
+      - 5
+      wasted: 0
+      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
   competing:
   - lab.update.the_api_is_designed_to_be_soft_and_ignores_u
   history:
@@ -313,8 +625,43 @@ beliefs:
       reject extra unknown fields.'
     p_doc_correct: 0.3077
     status: confirmed
-  p_doc_correct: 0.3077
-  class: idempotency_hazard
+  - t: 1788655709.521
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.3077
+    status: confirmed
+  - t: 1788655709.521
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.2353
+    status: confirmed
+  - t: 1788656106.326
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.2353
+    status: confirmed
+  - t: 1788656106.326
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.1905
+    status: confirmed
+  - t: 1788656173.336
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.1905
+    status: confirmed
+  - t: 1788656173.336
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.16
+    status: confirmed
+  - t: 1788656381.998
+    event: class_corrected_retroactively
+    detail: idempotency_hazard -> silent_coercion from update.not_a_real_field.silent_ignore
+    p_doc_correct: 0.16
+    status: confirmed
+  p_doc_correct: 0.16
+  class: silent_coercion
 - id: lab.create.the_api_accepts_up_to_2000_characters_but_th
   tool: lab
   operation: create
@@ -357,6 +704,18 @@ beliefs:
   - t: 1788653613.038
     event: signature
     detail: create.title.silent_truncation
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656106.469
+    event: probe_inconclusive
+    detail: The evidence confirms the string was echoed back, but does not provide the character count
+      to verify the 3000-character limit.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656173.439
+    event: probe_inconclusive
+    detail: The evidence confirms the string was echoed back, but does not provide the character count
+      to verify the 3000-character limit.
     p_doc_correct: 0.4444
     status: hypothesis
   p_doc_correct: 0.4444
@@ -405,60 +764,20 @@ beliefs:
     detail: create.title.silent_truncation
     p_doc_correct: 0.4444
     status: hypothesis
+  - t: 1788656106.469
+    event: probe_inconclusive
+    detail: The evidence confirms the string was echoed back, but does not provide the character count
+      to verify the 255-character limit.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656173.439
+    event: probe_inconclusive
+    detail: The evidence confirms the string was echoed back, but does not provide the character count
+      to verify the 255-character limit.
+    p_doc_correct: 0.4444
+    status: hypothesis
   p_doc_correct: 0.4444
   class: silent_truncation
-- id: lab.create.the_underlying_database_stores_the_amount_as
-  tool: lab
-  operation: create
-  doc_claims: number
-  belief: The underlying database stores the amount as a string (VARCHAR) to avoid precision loss, and
-    the API layer simply reflects the database type.
-  action: Treat all response fields as strings.
-  parameter: amount
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.4
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.create.the_api_accepts_numeric_input_but_serializes
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: number
-    p_doc_correct: 0.5882
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Check the 'created_at' or 'updated_at' fields. If these are also strings, the API is likely
-      reflecting the DB schema.
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: create.amount.type_coercion
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788655481.537
-    event: probe_inconclusive
-    detail: The evidence confirms the API behavior (echo matches sent) but does not reveal the underlying
-      database storage type.
-    p_doc_correct: 0.4545
-    status: hypothesis
-  p_doc_correct: 0.4545
-  class: silent_coercion
 - id: lab.search.cursors_expire_after_a_fixed_time_duration_e
   tool: lab
   operation: search
@@ -549,55 +868,6 @@ beliefs:
     status: hypothesis
   p_doc_correct: 0.4444
   class: expiry
-- id: lab.search.the_api_accepts_500_but_the_specific_query_s
-  tool: lab
-  operation: search
-  doc_claims: 'up to 500 (doc: page_size_max=500)'
-  belief: The API accepts 500, but the specific query scope or database only contains 50 items.
-  action: Check the 'has_more' flag to determine if more data exists.
-  parameter: page_size
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.search.the_api_enforces_a_hard_limit_of_50_results
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: 'up to 500 (doc: page_size_max=500)'
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Create 100 items and search with page_size=500. If it returns 100, the limit is data-dependent.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search.page_size.silent_truncation
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788655481.507
-    event: probe_inconclusive
-    detail: Both hypotheses predict the same outcome (50 items for all inputs).
-    p_doc_correct: 0.4444
-    status: hypothesis
-  p_doc_correct: 0.4444
-  class: silent_truncation
 - id: lab.search.the_api_enforces_a_hard_limit_of_50_results
   tool: lab
   operation: search
@@ -646,98 +916,33 @@ beliefs:
     detail: Both hypotheses predict the same outcome (50 items for all inputs).
     p_doc_correct: 0.4444
     status: hypothesis
+  - t: 1788655709.403
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656106.224
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656106.51
+    event: probe_inconclusive
+    detail: The result set was 1, not 50, so the hard limit behavior could not be observed.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656173.233
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656173.474
+    event: probe_inconclusive
+    detail: The result set was 1, not 50, so the hard limit behavior could not be observed.
+    p_doc_correct: 0.4444
+    status: hypothesis
   p_doc_correct: 0.4444
   class: silent_truncation
-- id: lab.search.the_api_sorts_by_created_descending_but_the
-  tool: lab
-  operation: search
-  doc_claims: ordered by created ascending
-  belief: The API sorts by 'created' descending, but the documentation claims ascending.
-  action: Assume descending order if ascending does not match expectations.
-  parameter: sort
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.4
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.search.the_api_sorts_by_the_string_value_of_the_fie
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: ordered by created ascending
-    p_doc_correct: 0.5882
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Sort by 'created' and 'created' (reverse). Compare the order of the results.
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search.sort.mislabelled_semantics
-    p_doc_correct: 0.4545
-    status: hypothesis
-  p_doc_correct: 0.4545
-  class: mislabelled_semantics
-- id: lab.search.the_api_sorts_by_the_string_value_of_the_fie
-  tool: lab
-  operation: search
-  doc_claims: ordered by created ascending
-  belief: The API sorts by the string value of the field 'created' (alphabetically), not the timestamp
-    value.
-  action: Use 'created_at' or 'id' for sorting instead of 'created'.
-  parameter: sort
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.6
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.search.the_api_sorts_by_created_descending_but_the
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: ordered by created ascending
-    p_doc_correct: 0.5556
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4348
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Sort by 'created_at' (if available) or 'id'. If these return correct chronological order,
-      'created' sorts alphabetically.
-    p_doc_correct: 0.4348
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search.sort.mislabelled_semantics
-    p_doc_correct: 0.4348
-    status: hypothesis
-  p_doc_correct: 0.4348
-  class: mislabelled_semantics
 - id: lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
   tool: lab
   operation: bulk_create
@@ -748,13 +953,14 @@ beliefs:
   parameter: items
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 4.0
     beta: 2.6
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-000
   - probe-000
   survived_falsification: null
   falsified_by: probe-000
@@ -789,8 +995,19 @@ beliefs:
       created (with a null name).
     p_doc_correct: 0.4348
     status: falsified
-  p_doc_correct: 0.5357
-  class: idempotency_hazard
+  - t: 1788655709.453
+    event: falsified
+    detail: The prediction was that 20 items would be created, but the read-back shows only one item was
+      created (with a null name).
+    p_doc_correct: 0.5357
+    status: falsified
+  - t: 1788656381.998
+    event: class_corrected_retroactively
+    detail: idempotency_hazard -> silent_truncation from bulk_create.items.silent_truncation
+    p_doc_correct: 0.6061
+    status: falsified
+  p_doc_correct: 0.6061
+  class: silent_truncation
 - id: lab.bulk_create.the_transaction_failed_for_the_first_10_item
   tool: lab
   operation: bulk_create
@@ -801,13 +1018,14 @@ beliefs:
   parameter: items
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 4.0
     beta: 2.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-000
   - probe-000
   survived_falsification: null
   falsified_by: probe-000
@@ -842,8 +1060,19 @@ beliefs:
       (with a null name).
     p_doc_correct: 0.4545
     status: falsified
-  p_doc_correct: 0.5556
-  class: idempotency_hazard
+  - t: 1788655709.453
+    event: falsified
+    detail: The prediction was that 0 items would be created, but the read-back shows one item was created
+      (with a null name).
+    p_doc_correct: 0.5556
+    status: falsified
+  - t: 1788656381.998
+    event: class_corrected_retroactively
+    detail: idempotency_hazard -> silent_truncation from bulk_create.items.silent_truncation
+    p_doc_correct: 0.625
+    status: falsified
+  p_doc_correct: 0.625
+  class: silent_truncation
 - id: lab.create.the_api_accepts_numeric_input_but_serializes
   tool: lab
   operation: create
@@ -854,13 +1083,14 @@ beliefs:
   parameter: amount
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 4.0
     beta: 2.6
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-001
   - probe-001
   survived_falsification: null
   falsified_by: probe-001
@@ -895,7 +1125,13 @@ beliefs:
       that the read-back would be a string.
     p_doc_correct: 0.4348
     status: falsified
-  p_doc_correct: 0.5357
+  - t: 1788655709.43
+    event: falsified
+    detail: The read-back matches the sent value (100), which is a number, contradicting the prediction
+      that the read-back would be a string.
+    p_doc_correct: 0.5357
+    status: falsified
+  p_doc_correct: 0.6061
   class: silent_coercion
 - id: lab.create.the_api_expects_a_specific_date_format_e_g_i
   tool: lab
@@ -907,13 +1143,14 @@ beliefs:
   parameter: due_date
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 4.0
     beta: 2.7
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-003
   - probe-003
   survived_falsification: null
   falsified_by: probe-003
@@ -946,7 +1183,84 @@ beliefs:
     detail: The stored value was null, not the sent value '1969-12-31'.
     p_doc_correct: 0.4255
     status: falsified
-  p_doc_correct: 0.5263
+  - t: 1788655709.343
+    event: falsified
+    detail: The stored value was null, not the sent value '1969-12-31'.
+    p_doc_correct: 0.5263
+    status: falsified
+  p_doc_correct: 0.597
+  class: silent_coercion
+- id: lab.create.the_underlying_database_stores_the_amount_as
+  tool: lab
+  operation: create
+  doc_claims: number
+  belief: The underlying database stores the amount as a string (VARCHAR) to avoid precision loss, and
+    the API layer simply reflects the database type.
+  action: Treat all response fields as strings.
+  parameter: amount
+  status: falsified
+  posterior:
+    alpha: 4.0
+    beta: 2.4
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-001
+  - probe-001
+  survived_falsification: null
+  falsified_by: probe-001
+  replay: {}
+  competing:
+  - lab.create.the_api_accepts_numeric_input_but_serializes
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: number
+    p_doc_correct: 0.5882
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Check the 'created_at' or 'updated_at' fields. If these are also strings, the API is likely
+      reflecting the DB schema.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.amount.type_coercion
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788655481.537
+    event: probe_inconclusive
+    detail: The evidence confirms the API behavior (echo matches sent) but does not reveal the underlying
+      database storage type.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788655709.43
+    event: probe_inconclusive
+    detail: The evidence confirms the API behavior (echo matches sent) but does not reveal the underlying
+      database storage type.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788656106.414
+    event: falsified
+    detail: 'The API echoed the sent data exactly (echo_matches_sent: true) instead of converting the
+      amount to a string.'
+    p_doc_correct: 0.4545
+    status: falsified
+  - t: 1788656173.404
+    event: falsified
+    detail: 'The API echoed the sent data exactly (echo_matches_sent: true) instead of converting the
+      amount to a string.'
+    p_doc_correct: 0.5556
+    status: falsified
+  p_doc_correct: 0.625
   class: silent_coercion
 - id: lab.get.the_item_is_created_with_a_default_status_of
   tool: lab
@@ -958,13 +1272,15 @@ beliefs:
   parameter: null
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 5.0
     beta: 2.6
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-004
+  - probe-004
   - probe-004
   survived_falsification: null
   falsified_by: probe-004
@@ -998,8 +1314,200 @@ beliefs:
       with the status 'active', not 'archived'.
     p_doc_correct: 0.4348
     status: falsified
-  p_doc_correct: 0.5357
+  - t: 1788655709.375
+    event: falsified
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active', not 'archived'.
+    p_doc_correct: 0.5357
+    status: falsified
+  - t: 1788656106.19
+    event: falsified
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active', not 'archived'.
+    p_doc_correct: 0.6061
+    status: falsified
+  p_doc_correct: 0.6579
   class: undocumented_flag
+- id: lab.search.the_api_accepts_500_but_the_specific_query_s
+  tool: lab
+  operation: search
+  doc_claims: 'up to 500 (doc: page_size_max=500)'
+  belief: The API accepts 500, but the specific query scope or database only contains 50 items.
+  action: Check the 'has_more' flag to determine if more data exists.
+  parameter: page_size
+  status: falsified
+  posterior:
+    alpha: 4.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-003
+  - probe-003
+  survived_falsification: null
+  falsified_by: probe-003
+  replay: {}
+  competing:
+  - lab.search.the_api_enforces_a_hard_limit_of_50_results
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: 'up to 500 (doc: page_size_max=500)'
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Create 100 items and search with page_size=500. If it returns 100, the limit is data-dependent.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.page_size.silent_truncation
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788655481.507
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788655709.403
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656106.224
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656106.51
+    event: falsified
+    detail: The result set did not increase; the delta was 0.
+    p_doc_correct: 0.4444
+    status: falsified
+  - t: 1788656173.233
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.5455
+    status: falsified
+  - t: 1788656173.474
+    event: falsified
+    detail: The result set did not increase; the delta was 0.
+    p_doc_correct: 0.5455
+    status: falsified
+  p_doc_correct: 0.6154
+  class: silent_truncation
+- id: lab.search.the_api_sorts_by_created_descending_but_the
+  tool: lab
+  operation: search
+  doc_claims: ordered by created ascending
+  belief: The API sorts by 'created' descending, but the documentation claims ascending.
+  action: Assume descending order if ascending does not match expectations.
+  parameter: sort
+  status: falsified
+  posterior:
+    alpha: 3.0
+    beta: 2.4
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-004
+  survived_falsification: null
+  falsified_by: probe-004
+  replay: {}
+  competing:
+  - lab.search.the_api_sorts_by_the_string_value_of_the_fie
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: ordered by created ascending
+    p_doc_correct: 0.5882
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Sort by 'created' and 'created' (reverse). Compare the order of the results.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.sort.mislabelled_semantics
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788656173.51
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not descending
+      chronological order.
+    p_doc_correct: 0.4545
+    status: falsified
+  p_doc_correct: 0.5556
+  class: mislabelled_semantics
+- id: lab.search.the_api_sorts_by_the_string_value_of_the_fie
+  tool: lab
+  operation: search
+  doc_claims: ordered by created ascending
+  belief: The API sorts by the string value of the field 'created' (alphabetically), not the timestamp
+    value.
+  action: Use 'created_at' or 'id' for sorting instead of 'created'.
+  parameter: sort
+  status: falsified
+  posterior:
+    alpha: 3.0
+    beta: 2.6
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-004
+  survived_falsification: null
+  falsified_by: probe-004
+  replay: {}
+  competing:
+  - lab.search.the_api_sorts_by_created_descending_but_the
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: ordered by created ascending
+    p_doc_correct: 0.5556
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Sort by 'created_at' (if available) or 'id'. If these return correct chronological order,
+      'created' sorts alphabetically.
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.sort.mislabelled_semantics
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788656173.51
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not lexicographical
+      order of the timestamps (oldest first).
+    p_doc_correct: 0.4348
+    status: falsified
+  p_doc_correct: 0.5357
+  class: mislabelled_semantics
 - id: lab.search.the_filter_field_name_vendorr_is_a_typo_for
   tool: lab
   operation: search
@@ -1010,13 +1518,16 @@ beliefs:
   parameter: filter
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 6.0
     beta: 2.6
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-008
+  - probe-008
+  - probe-008
   - probe-008
   survived_falsification: null
   falsified_by: probe-008
@@ -1050,8 +1561,28 @@ beliefs:
     detail: The search with 'vendorr' returned 50 items, not empty results.
     p_doc_correct: 0.4348
     status: falsified
-  p_doc_correct: 0.5357
-  class: mislabelled_semantics
+  - t: 1788655709.475
+    event: falsified
+    detail: The search with 'vendorr' returned 50 items, not empty results.
+    p_doc_correct: 0.5357
+    status: falsified
+  - t: 1788656106.26
+    event: falsified
+    detail: The search with 'vendorr' returned 50 items, not empty results.
+    p_doc_correct: 0.6061
+    status: falsified
+  - t: 1788656173.267
+    event: falsified
+    detail: The search with 'vendorr' returned 50 items, not empty results.
+    p_doc_correct: 0.6579
+    status: falsified
+  - t: 1788656381.998
+    event: class_corrected_retroactively
+    detail: mislabelled_semantics -> silent_coercion from search.filter.silent_empty
+    p_doc_correct: 0.6977
+    status: falsified
+  p_doc_correct: 0.6977
+  class: silent_coercion
 - id: lab.search.the_filter_is_valid_but_there_are_genuinely
   tool: lab
   operation: search
@@ -1061,13 +1592,16 @@ beliefs:
   parameter: filter
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 6.0
     beta: 2.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-008
+  - probe-008
+  - probe-008
   - probe-008
   survived_falsification: null
   falsified_by: probe-008
@@ -1101,8 +1635,28 @@ beliefs:
     detail: Both searches returned 50 items, not empty results.
     p_doc_correct: 0.4545
     status: falsified
-  p_doc_correct: 0.5556
-  class: mislabelled_semantics
+  - t: 1788655709.475
+    event: falsified
+    detail: Both searches returned 50 items, not empty results.
+    p_doc_correct: 0.5556
+    status: falsified
+  - t: 1788656106.26
+    event: falsified
+    detail: Both searches returned 50 items, not empty results.
+    p_doc_correct: 0.625
+    status: falsified
+  - t: 1788656173.267
+    event: falsified
+    detail: Both searches returned 50 items, not empty results.
+    p_doc_correct: 0.6757
+    status: falsified
+  - t: 1788656381.998
+    event: class_corrected_retroactively
+    detail: mislabelled_semantics -> silent_coercion from search.filter.silent_empty
+    p_doc_correct: 0.7143
+    status: falsified
+  p_doc_correct: 0.7143
+  class: silent_coercion
 - id: lab.search.the_search_index_is_updated_asynchronously_a
   tool: lab
   operation: search
@@ -1112,13 +1666,16 @@ beliefs:
   parameter: null
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 6.0
     beta: 2.3
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-009
+  - probe-009
+  - probe-009
   - probe-009
   survived_falsification: null
   falsified_by: probe-009
@@ -1152,7 +1709,25 @@ beliefs:
       the item would appear.
     p_doc_correct: 0.4651
     status: falsified
-  p_doc_correct: 0.566
+  - t: 1788655709.549
+    event: falsified
+    detail: The search returned zero rows after waiting 0.5 seconds, contradicting the prediction that
+      the item would appear.
+    p_doc_correct: 0.566
+    status: falsified
+  - t: 1788656106.362
+    event: falsified
+    detail: The search returned zero rows after waiting 0.5 seconds, contradicting the prediction that
+      the item would appear.
+    p_doc_correct: 0.6349
+    status: falsified
+  - t: 1788656173.37
+    event: falsified
+    detail: The search returned zero rows after waiting 0.5 seconds, contradicting the prediction that
+      the item would appear.
+    p_doc_correct: 0.6849
+    status: falsified
+  p_doc_correct: 0.7229
   class: eventual_consistency
 - id: lab.search.there_is_a_hidden_rate_limit_e_g_100_request
   tool: lab
@@ -1163,13 +1738,16 @@ beliefs:
   parameter: null
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 6.0
     beta: 2.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-010
+  - probe-010
+  - probe-010
   - probe-010
   survived_falsification: null
   falsified_by: probe-010
@@ -1203,7 +1781,22 @@ beliefs:
     detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
     p_doc_correct: 0.4444
     status: falsified
-  p_doc_correct: 0.5455
+  - t: 1788655709.501
+    event: falsified
+    detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
+    p_doc_correct: 0.5455
+    status: falsified
+  - t: 1788656106.295
+    event: falsified
+    detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
+    p_doc_correct: 0.6154
+    status: falsified
+  - t: 1788656173.301
+    event: falsified
+    detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
+    p_doc_correct: 0.6667
+    status: falsified
+  p_doc_correct: 0.7059
   class: rate_limit
 - id: lab.update.the_api_is_designed_to_be_soft_and_ignores_u
   tool: lab
@@ -1215,13 +1808,16 @@ beliefs:
   parameter: not_a_real_field
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 6.0
     beta: 2.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-011
+  - probe-011
+  - probe-011
   - probe-011
   survived_falsification: null
   falsified_by: probe-011
@@ -1255,5 +1851,25 @@ beliefs:
     detail: The read-back contained the 'not_a_real_field' (stored as null).
     p_doc_correct: 0.4444
     status: falsified
-  p_doc_correct: 0.5455
-  class: idempotency_hazard
+  - t: 1788655709.521
+    event: falsified
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.5455
+    status: falsified
+  - t: 1788656106.326
+    event: falsified
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.6154
+    status: falsified
+  - t: 1788656173.336
+    event: falsified
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.6667
+    status: falsified
+  - t: 1788656381.998
+    event: class_corrected_retroactively
+    detail: idempotency_hazard -> silent_coercion from update.not_a_real_field.silent_ignore
+    p_doc_correct: 0.7059
+    status: falsified
+  p_doc_correct: 0.7059
+  class: silent_coercion

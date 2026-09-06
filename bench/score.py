@@ -69,12 +69,33 @@ def match(belief, rules: list[dict[str, Any]]) -> dict[str, Any] | None:
     return (exact or candidates)[0]
 
 
+OBSERVED_PATH = Path("runs/observable.json")
+
+
 def observable_rules(lab_base: str) -> set[str] | None:
+    """Rules the lab has actually triggered, accumulated across the session.
+
+    The live endpoint only knows what fired since the lab process last reset,
+    and the A/B deliberately resets the world between arms. Reading it alone
+    made the denominator collapse to 1 and produced a recall of "5/1". The
+    honest denominator is every rule observed at any point in this session, so
+    it is unioned into a file that survives resets.
+    """
+    seen: set[str] = set()
+    if OBSERVED_PATH.exists():
+        try:
+            seen |= set(json.loads(OBSERVED_PATH.read_text()))
+        except Exception:  # noqa: BLE001
+            pass
     try:
         r = httpx.get(f"{lab_base}/_control/rules_fired", timeout=5.0)
-        return set(r.json().get("observable", []))
-    except Exception:
-        return None
+        seen |= set(r.json().get("observable", []))
+    except Exception:  # noqa: BLE001
+        pass
+    if seen:
+        OBSERVED_PATH.parent.mkdir(parents=True, exist_ok=True)
+        OBSERVED_PATH.write_text(json.dumps(sorted(seen), indent=2))
+    return seen or None
 
 
 def score(

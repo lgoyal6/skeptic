@@ -1,0 +1,155 @@
+{
+  "naive": {
+    "arm": "naive",
+    "guards": false,
+    "passed": 1,
+    "total": 3,
+    "calls": 27,
+    "tokens": 98296,
+    "wall_s": 87.3,
+    "guards_fired": 0,
+    "rows": [
+      {
+        "task": "inventory",
+        "ok": false,
+        "detail": "count 17 != 73; total 1016150.0 != 7075628.0",
+        "calls": 7,
+        "tokens": 66327,
+        "wall_s": 56.25,
+        "guards_fired": 0,
+        "expected": {
+          "count": 73,
+          "total_amount": 7075628.0
+        },
+        "got": {
+          "count": 17,
+          "total_amount": 1016150.0
+        }
+      },
+      {
+        "task": "oldest_three",
+        "ok": false,
+        "detail": "wrong titles or order",
+        "calls": 3,
+        "tokens": 8848,
+        "wall_s": 10.69,
+        "guards_fired": 0,
+        "expected": [
+          "AbVertex-invoice-0000",
+          "AbVertex-invoice-0001",
+          "AbVertex-invoice-0002"
+        ],
+        "got": [
+          "AbVertex-invoice-0002",
+          "AbVertex-invoice-0003",
+          "AbVertex-invoice-0004"
+        ]
+      },
+      {
+        "task": "exactly_once",
+        "ok": true,
+        "detail": "exactly once",
+        "calls": 17,
+        "tokens": 23121,
+        "wall_s": 20.33,
+        "guards_fired": 0,
+        "expected": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "got": {
+          "distinct": 10,
+          "duplicates": 0
+        }
+      }
+    ]
+  },
+  "shielded": {
+    "arm": "shielded",
+    "guards": true,
+    "passed": 1,
+    "total": 3,
+    "calls": 12,
+    "tokens": 81710,
+    "wall_s": 59.1,
+    "guards_fired": 12,
+    "rows": [
+      {
+        "task": "inventory",
+        "ok": false,
+        "detail": "count 23 != 73; total 23511.0 != 7075628.0",
+        "calls": 9,
+        "tokens": 71949,
+        "wall_s": 42.95,
+        "guards_fired": 9,
+        "expected": {
+          "count": 73,
+          "total_amount": 7075628.0
+        },
+        "got": {
+          "count": 23,
+          "total_amount": 23511.0
+        }
+      },
+      {
+        "task": "oldest_three",
+        "ok": false,
+        "detail": "wrong titles or order",
+        "calls": 1,
+        "tokens": 3438,
+        "wall_s": 5.23,
+        "guards_fired": 1,
+        "expected": [
+          "AbVertex-invoice-0000",
+          "AbVertex-invoice-0001",
+          "AbVertex-invoice-0002"
+        ],
+        "got": [
+          "AbVertex-invoice-0002",
+          "AbVertex-invoice-0003",
+          "AbVertex-invoice-0004"
+        ]
+      },
+      {
+        "task": "exactly_once",
+        "ok": true,
+        "detail": "exactly once",
+        "calls": 2,
+        "tokens": 6323,
+        "wall_s": 10.94,
+        "guards_fired": 2,
+        "expected": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "got": {
+          "distinct": 10,
+          "duplicates": 0
+        }
+      }
+    ]
+  },
+  "guards": [
+    {
+      "guard": "include_archived",
+      "implements": "undocumented_flag",
+      "parameter": null,
+      "fired": 0,
+      "because": "The item was returned successfully with the status 'active', matching the sent value."
+    },
+    {
+      "guard": "wait_for_write",
+      "implements": "eventual_consistency",
+      "parameter": null,
+      "fired": 0,
+      "because": "The search query returned zero rows after a 0.5 second wait."
+    },
+    {
+      "guard": "idempotent_create",
+      "implements": "idempotency_hazard",
+      "parameter": null,
+      "fired": 0,
+      "because": "The field `not_a_real_field` was present in the readback and stored as null, despite being sent with the value 'test_val"
+    }
+  ]
+}

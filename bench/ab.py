@@ -53,6 +53,7 @@ def run_arm(
     beliefs_root: str,
     repeats: int = 1,
     verbose: bool = True,
+    collect: list[Any] | None = None,
 ) -> dict[str, Any]:
     ex, _refl, usage = build()
     store = BeliefStore("lab", root=beliefs_root)
@@ -64,6 +65,8 @@ def run_arm(
     for rep in range(repeats):
         for task_id, cfg in SUITE:
             guards = compile_guards(store) if guards_on else []
+            if collect is not None:
+                collect.extend(guards)
             _reset_world()
             task = tasks.get(task_id)
             run_id = f"ab-{label}-{task_id}-{rep}"
@@ -147,15 +150,25 @@ def main() -> int:
         return 1
 
     print(f"\n  {len(store.active())} confirmed beliefs -> {len(guards)} guards\n")
+    used: list[Any] = []
     naive = run_arm("naive", False, a.beliefs, a.repeats)
-    shielded = run_arm("shielded", True, a.beliefs, a.repeats)
+    shielded = run_arm("shielded", True, a.beliefs, a.repeats, collect=used)
 
-    out = render(naive, shielded, compile_guards(store))
+    # Report the guards that actually ran, not a freshly compiled set whose
+    # counters are all zero.
+    merged: dict[str, Any] = {}
+    for g in used:
+        prev = merged.get(g.name)
+        if prev is None:
+            merged[g.name] = g
+        else:
+            prev.fired += g.fired
+    out = render(naive, shielded, list(merged.values()))
     print(out)
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(
         {"naive": naive, "shielded": shielded,
-         "guards": guard_report(guards)}, indent=2))
+         "guards": guard_report(list(merged.values()))}, indent=2))
     print(f"  written to {a.out}\n")
     return 0
 

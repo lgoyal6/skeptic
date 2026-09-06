@@ -3,3 +3,8 @@
     [probe-001] 1 rivals -> silent_coercion
     [probe-002] 2 rivals -> expiry
     [probe-003] 2 rivals -> silent_truncation
+    [probe-001] consistency 2 calls 322s -> ['falsified']
+    [probe-004] 2 rivals -> mislabelled_semantics
+    [probe-000] consistency 2 calls 424s -> ['inconclusive', 'inconclusive']
+    [probe-003] timing 2 calls 450s -> ['falsified', 'inconclusive']
+    [probe-004] ordering 6 calls 315s -> ['falsified', 'falsified']

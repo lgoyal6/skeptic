@@ -21,7 +21,7 @@ from typing import Any
 from agent.beliefs import Belief, BeliefStore
 from agent.contract import Anomaly
 from agent.llm import LLM
-from reflect.hypothesis import CLASSES, Hypothesis
+from reflect.hypothesis import CLASSES, Hypothesis, constrain_class
 
 BATCH_PROMPT = """An API's documentation disagrees with its real behaviour in several places.
 Explain each one.
@@ -110,9 +110,7 @@ def propose_batch(
             continue
         hyps: list[Hypothesis] = []
         for h in (f.get("hypotheses") or [])[:3]:
-            cls = str(h.get("class", "")).strip()
-            if cls not in CLASSES:
-                continue
+            cls = constrain_class(anomaly.kind, str(h.get("class", "")).strip())
             param = h.get("parameter")
             if isinstance(param, str) and param.lower() in ("null", "none", ""):
                 param = None

@@ -1,0 +1,28 @@
+{
+  "tool": "lab",
+  "generated": "2026-09-06T00:55:21Z",
+  "confirmed_beliefs": 5,
+  "guards": [
+    {
+      "name": "include_archived",
+      "implements": "undocumented_flag",
+      "parameter": null,
+      "because": "The item was returned successfully with the status 'active', matching the sent value."
+    },
+    {
+      "name": "wait_for_write",
+      "implements": "eventual_consistency",
+      "parameter": null,
+      "because": "The search query returned zero rows after a 0.5 second wait."
+    },
+    {
+      "name": "idempotent_create",
+      "implements": "idempotency_hazard",
+      "parameter": null,
+      "because": "The field `not_a_real_field` was present in the readback and stored as null, despite being sent with the value 'test_val"
+    }
+  ],
+  "unimplemented_classes": [
+    "rate_limit"
+  ]
+}
