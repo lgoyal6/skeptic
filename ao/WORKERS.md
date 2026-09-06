@@ -3,7 +3,7 @@
 Prompts for the three roles the orchestrator spawns as AO workers. Each one
 runs in its own isolated git worktree at
 `~/.ao/data/worktrees/skeptic/<session-id>`, on its own branch
-(`ao/<session-id>/root`) — never in the orchestrator's own working copy.
+(`ao/<session-id>/root`), never in the orchestrator's own working copy.
 
 Two preconditions this installation needed, so spawning does not silently
 hang:
@@ -20,7 +20,7 @@ way rather than assuming a fixed format.
 ## falsifier (`claude-code`)
 
 **Purpose.** The adversary. Every belief in the store was produced by the
-same reflector (GLM-4.7-Flash) that wanted it to be true — a confirmation
+same reflector (GLM-4.7-Flash) that wanted it to be true, a confirmation
 from the model that proposed the hypothesis is the author marking their own
 homework, and it has already gone wrong once here: a hypothesis predicted
 correctly while claiming a cap depended on the API key's subscription tier,
@@ -41,7 +41,7 @@ ao spawn --project skeptic --kind worker --harness claude-code \
   --name falsifier --prompt "<BRIEF, filled in below>"
 ```
 
-**Prompt text** — `BRIEF` from `ao/falsify.py`, with `{beliefs}` and
+**Prompt text**, `BRIEF` from `ao/falsify.py`, with `{beliefs}` and
 `{evidence}` filled in by `_fmt_beliefs(store)` (every currently-active
 confirmed belief, plus, for each, the facts and learned text from its probe
 record(s) on disk):
@@ -91,11 +91,11 @@ it rather than agreeing by default.
 ```
 
 **File it must write.** `falsification.json` at the repo root of its own
-worktree — the single JSON object shown above.
+worktree, the single JSON object shown above.
 
 **How the orchestrator reads it back.** `ao.falsify.await_output()` polls
 `~/.ao/data/worktrees/skeptic/<session-id>/falsification.json` every 10s (up
-to a 600s default timeout) and parses it as soon as it exists — a direct
+to a 600s default timeout) and parses it as soon as it exists, a direct
 filesystem read of the worker's worktree, not a PR merge, because this file
 is scratch output meant only to talk back to the orchestrator, not part of
 the published history. `--apply` then walks each review: `"sound"` sets
@@ -110,8 +110,8 @@ tree, so the review itself is kept as evidence.
 ## prober (`codex`)
 
 **Purpose.** Settling every open hypothesis with `bench.settle` is I/O
-bound — each probe spends a couple of seconds calling the lab and several
-minutes waiting on the model — and can run for a while even with several
+bound, each probe spends a couple of seconds calling the lab and several
+minutes waiting on the model, and can run for a while even with several
 workers in parallel. Spawning it as its own AO worker means the orchestrator
 session stays free to keep handling other events (a PR landing, a check
 failing) while settling runs in the background, instead of blocking on it
@@ -133,7 +133,7 @@ From the repository root of this worktree, run:
 
 Let it finish. It prints the number of rival groups it settled and, at the
 end, a line of the form `beliefs: {'hypothesis': N, 'confirmed': N,
-'falsified': N, 'retired': N}` — that line is your report. Do not edit
+'falsified': N, 'retired': N}`, that line is your report. Do not edit
 beliefs/lab.yaml or any file under probes/ by hand; bench.settle writes both
 as a side effect of the experiments it runs. Then stop.
 ```
@@ -147,8 +147,8 @@ of that touches the orchestrator's working copy directly.
 **How the orchestrator reads the result back.** Two options, and they serve
 different purposes:
 
-- **A quick peek** — read `~/.ao/data/worktrees/skeptic/<session-id>/beliefs/lab.yaml` and the new files under `.../probes/` directly from disk, the same technique `ao.falsify.await_output()` uses for a single file, generalized to a directory. Good enough to decide what to do next.
-- **Making it authoritative** — the new probe records and belief changes only become part of the published history once they are merged into the main line. Once `session.completed` fires, check the PR (`ao review trigger`, then `ao pr merge` once checks are green) so the next `cli.py bench` and `shim.export` — run from the orchestrator's own worktree — actually see the new evidence.
+- **A quick peek**, read `~/.ao/data/worktrees/skeptic/<session-id>/beliefs/lab.yaml` and the new files under `.../probes/` directly from disk, the same technique `ao.falsify.await_output()` uses for a single file, generalized to a directory. Good enough to decide what to do next.
+- **Making it authoritative**, the new probe records and belief changes only become part of the published history once they are merged into the main line. Once `session.completed` fires, check the PR (`ao review trigger`, then `ao pr merge` once checks are green) so the next `cli.py bench` and `shim.export`, run from the orchestrator's own worktree, actually see the new evidence.
 
 `ao session get <session-id> --json` is worth checking alongside the raw
 file poll: `bench.settle` has no single "done" marker file the way the
@@ -201,7 +201,7 @@ ordinary tracked-file changes on its branch.
 `~/.ao/data/worktrees/skeptic/<session-id>/report.md` the same way as the
 falsifier's output file, to get the summary as soon as it exists. Unlike
 `falsification.json`, `export/TOOLS.md` and `export/guards.json` are meant
-to be the published artifact, not scratch — so once `session.completed`
+to be the published artifact, not scratch, so once `session.completed`
 fires and the summary reads as expected, trigger `ao review trigger` and
 land it with `ao pr merge` so the regenerated spec becomes what the main
 worktree actually has on disk.

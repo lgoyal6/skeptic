@@ -2,28 +2,28 @@
   "naive": {
     "arm": "naive",
     "guards": false,
-    "passed": 0,
-    "total": 3,
-    "calls": 29,
-    "tokens": 67566,
-    "wall_s": 48.6,
+    "passed": 3,
+    "total": 9,
+    "calls": 66,
+    "tokens": 587942,
+    "wall_s": 473.7,
     "guards_fired": 0,
     "rows": [
       {
         "task": "inventory",
         "ok": false,
-        "detail": "count 19 != 73; total 1017169.0 != 7075628.0",
-        "calls": 7,
-        "tokens": 33426,
-        "wall_s": 21.71,
+        "detail": "count 17 != 73; total 1017170.0 != 7075628.0",
+        "calls": 1,
+        "tokens": 5076,
+        "wall_s": 10.66,
         "guards_fired": 0,
         "expected": {
           "count": 73,
           "total_amount": 7075628.0
         },
         "got": {
-          "count": 19,
-          "total_amount": 1017169.0
+          "count": 17,
+          "total_amount": 1017170.0
         }
       },
       {
@@ -31,8 +31,8 @@
         "ok": false,
         "detail": "wrong titles or order",
         "calls": 1,
-        "tokens": 3267,
-        "wall_s": 3.85,
+        "tokens": 3350,
+        "wall_s": 4.71,
         "guards_fired": 0,
         "expected": [
           "AbVertex-invoice-0000",
@@ -47,11 +47,11 @@
       },
       {
         "task": "exactly_once",
-        "ok": false,
-        "detail": "10 distinct titles, 2 duplicates (wanted 10, 0)",
-        "calls": 21,
-        "tokens": 30873,
-        "wall_s": 22.97,
+        "ok": true,
+        "detail": "exactly once",
+        "calls": 3,
+        "tokens": 9221,
+        "wall_s": 15.04,
         "guards_fired": 0,
         "expected": {
           "distinct": 10,
@@ -59,7 +59,101 @@
         },
         "got": {
           "distinct": 10,
-          "duplicates": 2
+          "duplicates": 0
+        }
+      },
+      {
+        "task": "inventory",
+        "ok": false,
+        "detail": "no answer (step limit reached)",
+        "calls": 12,
+        "tokens": 251078,
+        "wall_s": 331.48,
+        "guards_fired": 0,
+        "expected": null,
+        "got": null
+      },
+      {
+        "task": "oldest_three",
+        "ok": false,
+        "detail": "wrong titles or order",
+        "calls": 1,
+        "tokens": 3293,
+        "wall_s": 4.43,
+        "guards_fired": 0,
+        "expected": [
+          "AbVertex-invoice-0000",
+          "AbVertex-invoice-0001",
+          "AbVertex-invoice-0002"
+        ],
+        "got": [
+          "AbVertex-invoice-0002",
+          "AbVertex-invoice-0003",
+          "AbVertex-invoice-0004"
+        ]
+      },
+      {
+        "task": "exactly_once",
+        "ok": true,
+        "detail": "exactly once",
+        "calls": 7,
+        "tokens": 9248,
+        "wall_s": 12.92,
+        "guards_fired": 0,
+        "expected": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "got": {
+          "distinct": 10,
+          "duplicates": 0
+        }
+      },
+      {
+        "task": "inventory",
+        "ok": false,
+        "detail": "no answer (step limit reached)",
+        "calls": 28,
+        "tokens": 293418,
+        "wall_s": 74.72,
+        "guards_fired": 0,
+        "expected": null,
+        "got": null
+      },
+      {
+        "task": "oldest_three",
+        "ok": false,
+        "detail": "wrong titles or order",
+        "calls": 1,
+        "tokens": 3256,
+        "wall_s": 3.53,
+        "guards_fired": 0,
+        "expected": [
+          "AbVertex-invoice-0000",
+          "AbVertex-invoice-0001",
+          "AbVertex-invoice-0002"
+        ],
+        "got": [
+          "AbVertex-invoice-0002",
+          "AbVertex-invoice-0003",
+          "AbVertex-invoice-0004"
+        ]
+      },
+      {
+        "task": "exactly_once",
+        "ok": true,
+        "detail": "exactly once",
+        "calls": 12,
+        "tokens": 10002,
+        "wall_s": 16.15,
+        "guards_fired": 0,
+        "expected": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "got": {
+          "distinct": 10,
+          "duplicates": 0
         }
       }
     ]
@@ -67,28 +161,28 @@
   "shielded": {
     "arm": "shielded",
     "guards": true,
-    "passed": 1,
-    "total": 3,
-    "calls": 12,
-    "tokens": 80028,
-    "wall_s": 31.0,
-    "guards_fired": 1,
+    "passed": 3,
+    "total": 9,
+    "calls": 43,
+    "tokens": 368082,
+    "wall_s": 136.1,
+    "guards_fired": 3,
     "rows": [
       {
         "task": "inventory",
         "ok": false,
-        "detail": "count 16 != 73; total 16016.0 != 7075628.0",
-        "calls": 9,
-        "tokens": 70452,
-        "wall_s": 16.77,
+        "detail": "count 17 != 73; total 1027325.0 != 7075628.0",
+        "calls": 4,
+        "tokens": 19342,
+        "wall_s": 8.55,
         "guards_fired": 0,
         "expected": {
           "count": 73,
           "total_amount": 7075628.0
         },
         "got": {
-          "count": 16,
-          "total_amount": 16016.0
+          "count": 17,
+          "total_amount": 1027325.0
         }
       },
       {
@@ -96,8 +190,8 @@
         "ok": false,
         "detail": "wrong titles or order",
         "calls": 1,
-        "tokens": 3216,
-        "wall_s": 3.28,
+        "tokens": 3197,
+        "wall_s": 3.06,
         "guards_fired": 0,
         "expected": [
           "AbVertex-invoice-0000",
@@ -115,8 +209,108 @@
         "ok": true,
         "detail": "exactly once",
         "calls": 2,
-        "tokens": 6360,
-        "wall_s": 10.96,
+        "tokens": 7150,
+        "wall_s": 13.32,
+        "guards_fired": 1,
+        "expected": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "got": {
+          "distinct": 10,
+          "duplicates": 0
+        }
+      },
+      {
+        "task": "inventory",
+        "ok": false,
+        "detail": "count 16 != 73; total 1026105.0 != 7075628.0",
+        "calls": 2,
+        "tokens": 9787,
+        "wall_s": 7.36,
+        "guards_fired": 0,
+        "expected": {
+          "count": 73,
+          "total_amount": 7075628.0
+        },
+        "got": {
+          "count": 16,
+          "total_amount": 1026105.0
+        }
+      },
+      {
+        "task": "oldest_three",
+        "ok": false,
+        "detail": "wrong titles or order",
+        "calls": 1,
+        "tokens": 3240,
+        "wall_s": 4.02,
+        "guards_fired": 0,
+        "expected": [
+          "AbVertex-invoice-0000",
+          "AbVertex-invoice-0001",
+          "AbVertex-invoice-0002"
+        ],
+        "got": [
+          "AbVertex-invoice-0002",
+          "AbVertex-invoice-0003",
+          "AbVertex-invoice-0004"
+        ]
+      },
+      {
+        "task": "exactly_once",
+        "ok": true,
+        "detail": "exactly once",
+        "calls": 2,
+        "tokens": 6195,
+        "wall_s": 9.95,
+        "guards_fired": 1,
+        "expected": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "got": {
+          "distinct": 10,
+          "duplicates": 0
+        }
+      },
+      {
+        "task": "inventory",
+        "ok": false,
+        "detail": "no answer (step limit reached)",
+        "calls": 28,
+        "tokens": 308701,
+        "wall_s": 73.42,
+        "guards_fired": 0,
+        "expected": null,
+        "got": null
+      },
+      {
+        "task": "oldest_three",
+        "ok": false,
+        "detail": "wrong titles or order",
+        "calls": 1,
+        "tokens": 4011,
+        "wall_s": 3.82,
+        "guards_fired": 0,
+        "expected": [
+          "AbVertex-invoice-0000",
+          "AbVertex-invoice-0001",
+          "AbVertex-invoice-0002"
+        ],
+        "got": [
+          "AbVertex-invoice-0002",
+          "AbVertex-invoice-0003",
+          "AbVertex-invoice-0004"
+        ]
+      },
+      {
+        "task": "exactly_once",
+        "ok": true,
+        "detail": "exactly once",
+        "calls": 2,
+        "tokens": 6459,
+        "wall_s": 12.56,
         "guards_fired": 1,
         "expected": {
           "distinct": 10,
@@ -141,7 +335,7 @@
       "guard": "wait_for_write",
       "implements": "eventual_consistency",
       "parameter": null,
-      "fired": 1,
+      "fired": 3,
       "because": "The search query returned zero rows after a 0.5 second wait."
     },
     {
