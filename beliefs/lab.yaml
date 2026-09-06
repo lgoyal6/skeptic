@@ -1,120 +1,572 @@
 tool: lab
-updated: '2026-09-06T00:03:35Z'
+updated: '2026-09-06T00:13:33Z'
 counts:
-  hypothesis: 3
+  hypothesis: 24
   confirmed: 0
   falsified: 0
   retired: 0
 beliefs:
-- id: lab.search.the_api_attempts_to_honor_page_size_but_if_t
+- id: lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
   tool: lab
-  operation: search
-  doc_claims: 'up to 500 (doc: page_size_max=500)'
-  belief: The API attempts to honor `page_size`, but if the requested size is too high (or the query is
-    heavy), it silently caps the response at 50 as a safety measure.
-  action: Request `page_size=50` to ensure the API does not cap the response.
-  parameter: page_size
+  operation: bulk_create
+  doc_claims: 'all 30 created (doc: bulk_max=100)'
+  belief: The API has a hard batch limit (e.g., 20 items) that was exceeded, causing the excess to be
+    silently dropped.
+  action: Split bulk requests into chunks of 20 items.
+  parameter: items
   status: hypothesis
   posterior:
     alpha: 2.0
-    beta: 2.4
+    beta: 2.6
   evidence_for: 1
   evidence_against: 0
-  first_seen: s003-inventory
+  first_seen: recon-000
   last_confirmed: ''
   probes: []
   survived_falsification: null
   falsified_by: null
   replay: {}
   competing:
-  - lab.search.the_api_enforces_a_hard_limit_of_50_results
-  - lab.search.the_limit_of_50_is_specific_to_the_current_q
+  - lab.bulk_create.the_transaction_failed_for_the_first_10_item
   history:
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: created
-    detail: 'up to 500 (doc: page_size_max=500)'
+    detail: 'all 30 created (doc: bulk_max=100)'
+    p_doc_correct: 0.5556
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Try creating 21 items. If it returns 21, the limit is higher. Try creating 30 items again.
+      If it returns 20 again, the limit is fixed.
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: bulk_create.items.silent_truncation
+    p_doc_correct: 0.4348
+    status: hypothesis
+  p_doc_correct: 0.4348
+  class: idempotency_hazard
+- id: lab.bulk_create.the_transaction_failed_for_the_first_10_item
+  tool: lab
+  operation: bulk_create
+  doc_claims: 'all 30 created (doc: bulk_max=100)'
+  belief: The transaction failed for the first 10 items (e.g., validation error), causing a rollback that
+    reported 30 successes but only committed 20.
+  action: Check response body for errors and retry failed items.
+  parameter: items
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.4
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: 'all 30 created (doc: bulk_max=100)'
     p_doc_correct: 0.5882
     status: hypothesis
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: contradiction
-    detail: s003-inventory
+    detail: recon-000
     p_doc_correct: 0.4545
     status: hypothesis
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: hypothesis
-    detail: Call search with `page_size=50`. If the response contains exactly 50 items, the safety cap
-      is confirmed.
+    detail: Check the response body for error messages. Try creating the 11th item again. If it succeeds,
+      the previous batch failed.
     p_doc_correct: 0.4545
     status: hypothesis
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: signature
-    detail: search.page_size.silent_truncation
+    detail: bulk_create.items.silent_truncation
+    p_doc_correct: 0.4545
+    status: hypothesis
+  p_doc_correct: 0.4545
+  class: idempotency_hazard
+- id: lab.create.the_api_accepts_numeric_input_but_serializes
+  tool: lab
+  operation: create
+  doc_claims: number
+  belief: The API accepts numeric input but serializes all response fields as JSON strings (e.g., for
+    legacy compatibility or specific contract requirements).
+  action: Treat all numeric response fields as strings.
+  parameter: amount
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.6
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_underlying_database_stores_the_amount_as
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: number
+    p_doc_correct: 0.5556
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Check the 'id' field in the response. If 'id' is also a string, the API likely serializes
+      everything as strings.
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.amount.type_coercion
+    p_doc_correct: 0.4348
+    status: hypothesis
+  p_doc_correct: 0.4348
+  class: silent_coercion
+- id: lab.create.the_api_accepts_up_to_2000_characters_but_th
+  tool: lab
+  operation: create
+  doc_claims: 'stored as sent (doc: title_max=2000)'
+  belief: The API accepts up to 2000 characters, but the response payload is truncated for display purposes
+    while the database stores the full length.
+  action: Do not truncate user input; rely on the GET response to verify storage length.
+  parameter: title
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_api_enforces_a_hard_internal_limit_of_25
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: 'stored as sent (doc: title_max=2000)'
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Create an item with 400 characters, then immediately GET the item. If the GET response contains
+      400 characters, the truncation is only in the response body.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.title.silent_truncation
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: silent_truncation
+- id: lab.create.the_api_enforces_a_hard_internal_limit_of_25
+  tool: lab
+  operation: create
+  doc_claims: 'stored as sent (doc: title_max=2000)'
+  belief: The API enforces a hard internal limit of 255 characters for the 'title' field, overriding the
+    documented 2000 limit.
+  action: Truncate user input to 255 characters to ensure success.
+  parameter: title
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_api_accepts_up_to_2000_characters_but_th
+  history:
+  - t: 1788653613.037
+    event: created
+    detail: 'stored as sent (doc: title_max=2000)'
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send a title of exactly 255 characters. If it succeeds, send 256 characters. If 256 fails
+      with a 400 error, it is a hard limit. If 256 succeeds but the response
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.title.silent_truncation
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: silent_truncation
+- id: lab.create.the_api_expects_a_specific_date_format_e_g_i
+  tool: lab
+  operation: create
+  doc_claims: stored as sent
+  belief: The API expects a specific date format (e.g., ISO 8601) and '1965-04-01' is invalid, causing
+    it to default to null.
+  action: Always send dates in ISO 8601 format.
+  parameter: due_date
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.7
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_field_is_mapped_to_a_legacy_system_that
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: stored as sent
+    p_doc_correct: 0.5405
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4255
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send '1965-04-01T00:00:00Z' (ISO 8601). If this is accepted, the API requires ISO format.
+    p_doc_correct: 0.4255
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.due_date.silent_null
+    p_doc_correct: 0.4255
+    status: hypothesis
+  p_doc_correct: 0.4255
+  class: silent_coercion
+- id: lab.create.the_field_is_mapped_to_a_legacy_system_that
+  tool: lab
+  operation: create
+  doc_claims: stored as sent
+  belief: The field is mapped to a legacy system that does not support dates before a certain threshold
+    (e.g., 1970), defaulting to null.
+  action: Ensure dates are within the supported range.
+  parameter: due_date
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.3
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_api_expects_a_specific_date_format_e_g_i
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: stored as sent
+    p_doc_correct: 0.6061
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send a date in the current year (e.g., '2023-04-01'). If this is accepted, the issue is specific
+      to the year 1965.
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.due_date.silent_null
+    p_doc_correct: 0.4651
+    status: hypothesis
+  p_doc_correct: 0.4651
+  class: silent_coercion
+- id: lab.create.the_underlying_database_stores_the_amount_as
+  tool: lab
+  operation: create
+  doc_claims: number
+  belief: The underlying database stores the amount as a string (VARCHAR) to avoid precision loss, and
+    the API layer simply reflects the database type.
+  action: Treat all response fields as strings.
+  parameter: amount
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.4
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_api_accepts_numeric_input_but_serializes
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: number
+    p_doc_correct: 0.5882
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Check the 'created_at' or 'updated_at' fields. If these are also strings, the API is likely
+      reflecting the DB schema.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.amount.type_coercion
     p_doc_correct: 0.4545
     status: hypothesis
   p_doc_correct: 0.4545
   class: silent_coercion
-- id: lab.search.the_api_enforces_a_hard_limit_of_50_results
+- id: lab.get.the_get_request_is_being_made_from_a_differe
   tool: lab
-  operation: search
-  doc_claims: 'up to 500 (doc: page_size_max=500)'
-  belief: The API enforces a hard limit of 50 results per page for this endpoint, ignoring the `page_size`
-    parameter entirely.
-  action: Always request `page_size=50` and rely on `has_more` for pagination.
-  parameter: page_size
+  operation: get
+  doc_claims: GET returns the item regardless of archived state
+  belief: The GET request is being made from a different context (e.g., different tenant or API key) than
+    the creation context.
+  action: Ensure context consistency (API keys, tenants) across operations.
+  parameter: null
   status: hypothesis
   posterior:
     alpha: 2.0
     beta: 2.4
   evidence_for: 1
   evidence_against: 0
-  first_seen: s003-inventory
+  first_seen: recon-000
   last_confirmed: ''
   probes: []
   survived_falsification: null
   falsified_by: null
   replay: {}
   competing:
-  - lab.search.the_api_attempts_to_honor_page_size_but_if_t
-  - lab.search.the_limit_of_50_is_specific_to_the_current_q
+  - lab.get.the_item_is_created_with_a_default_status_of
   history:
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: created
-    detail: 'up to 500 (doc: page_size_max=500)'
+    detail: GET returns the item regardless of archived state
     p_doc_correct: 0.5882
     status: hypothesis
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: contradiction
-    detail: s003-inventory
+    detail: recon-000
     p_doc_correct: 0.4545
     status: hypothesis
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: hypothesis
-    detail: Call search with `page_size=100`. If the response contains exactly 50 items, the hard limit
-      is confirmed.
+    detail: Use the exact same API key and headers for the GET request as the POST request.
     p_doc_correct: 0.4545
     status: hypothesis
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: signature
-    detail: search.page_size.silent_truncation
+    detail: get._.undocumented_flag
     p_doc_correct: 0.4545
     status: hypothesis
   p_doc_correct: 0.4545
-  class: silent_truncation
-- id: lab.search.the_limit_of_50_is_specific_to_the_current_q
+  class: undocumented_flag
+- id: lab.get.the_item_is_created_with_a_default_status_of
   tool: lab
-  operation: search
-  doc_claims: 'up to 500 (doc: page_size_max=500)'
-  belief: The limit of 50 is specific to the current query context (e.g., the 'Northwind' vendor filter),
-    and other queries might allow 500.
-  action: Test with different filters to determine if the limit is global or specific.
-  parameter: filter
+  operation: get
+  doc_claims: GET returns the item regardless of archived state
+  belief: The item is created with a default status of 'archived' or 'deleted', making it invisible to
+    GET requests.
+  action: Check the status of items before attempting to GET them.
+  parameter: null
   status: hypothesis
   posterior:
     alpha: 2.0
-    beta: 2.2
+    beta: 2.6
   evidence_for: 1
   evidence_against: 0
-  first_seen: s003-inventory
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.get.the_get_request_is_being_made_from_a_differe
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: GET returns the item regardless of archived state
+    p_doc_correct: 0.5556
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Check the 'status' field of the created item. If it is 'archived', the flag is the status.
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: get._.undocumented_flag
+    p_doc_correct: 0.4348
+    status: hypothesis
+  p_doc_correct: 0.4348
+  class: undocumented_flag
+- id: lab.search.cursors_expire_after_a_fixed_time_duration_e
+  tool: lab
+  operation: search
+  doc_claims: cursors remain valid indefinitely
+  belief: Cursors expire after a fixed time duration (e.g., 1 hour) to prevent stale data.
+  action: Refresh the cursor periodically (e.g., every hour).
+  parameter: cursor
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.cursors_expire_if_no_requests_are_made_for_a
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: cursors remain valid indefinitely
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Use the cursor immediately. If it works, wait 2 hours and try again. If it fails, the time
+      limit is the cause.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.cursor.expiry
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: expiry
+- id: lab.search.cursors_expire_if_no_requests_are_made_for_a
+  tool: lab
+  operation: search
+  doc_claims: cursors remain valid indefinitely
+  belief: Cursors expire if no requests are made for a specific duration (e.g., 30 minutes of inactivity).
+  action: Refresh the cursor periodically (e.g., every 15 minutes).
+  parameter: cursor
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.cursors_expire_after_a_fixed_time_duration_e
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: cursors remain valid indefinitely
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Use the cursor, then make a request with a different cursor. If the original cursor still
+      works, the limit is inactivity-based.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.cursor.expiry
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: expiry
+- id: lab.search.the_api_accepts_500_but_the_specific_query_s
+  tool: lab
+  operation: search
+  doc_claims: 'up to 500 (doc: page_size_max=500)'
+  belief: The API accepts 500, but the specific query scope or database only contains 50 items.
+  action: Check the 'has_more' flag to determine if more data exists.
+  parameter: page_size
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
   last_confirmed: ''
   probes: []
   survived_falsification: null
@@ -122,28 +574,521 @@ beliefs:
   replay: {}
   competing:
   - lab.search.the_api_enforces_a_hard_limit_of_50_results
-  - lab.search.the_api_attempts_to_honor_page_size_but_if_t
   history:
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: created
     detail: 'up to 500 (doc: page_size_max=500)'
-    p_doc_correct: 0.625
+    p_doc_correct: 0.5714
     status: hypothesis
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: contradiction
-    detail: s003-inventory
-    p_doc_correct: 0.4762
+    detail: recon-000
+    p_doc_correct: 0.4444
     status: hypothesis
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: hypothesis
-    detail: Call search with `page_size=500` and an empty filter or a different vendor. If it returns
-      500 results, the limit is query-dependent.
-    p_doc_correct: 0.4762
+    detail: Create 100 items and search with page_size=500. If it returns 100, the limit is data-dependent.
+    p_doc_correct: 0.4444
     status: hypothesis
-  - t: 1788653015.245
+  - t: 1788653613.038
     event: signature
     detail: search.page_size.silent_truncation
-    p_doc_correct: 0.4762
+    p_doc_correct: 0.4444
     status: hypothesis
-  p_doc_correct: 0.4762
+  p_doc_correct: 0.4444
+  class: silent_truncation
+- id: lab.search.the_api_enforces_a_hard_limit_of_50_results
+  tool: lab
+  operation: search
+  doc_claims: 'up to 500 (doc: page_size_max=500)'
+  belief: The API enforces a hard limit of 50 results per page regardless of the request.
+  action: Cap requests at 50 results.
+  parameter: page_size
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_api_accepts_500_but_the_specific_query_s
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: 'up to 500 (doc: page_size_max=500)'
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Request page_size=51. If it returns 51, the limit is soft. If it returns 50, the limit is
+      hard.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.page_size.silent_truncation
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: silent_truncation
+- id: lab.search.the_api_sorts_by_created_descending_but_the
+  tool: lab
+  operation: search
+  doc_claims: ordered by created ascending
+  belief: The API sorts by 'created' descending, but the documentation claims ascending.
+  action: Assume descending order if ascending does not match expectations.
+  parameter: sort
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.4
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_api_sorts_by_the_string_value_of_the_fie
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: ordered by created ascending
+    p_doc_correct: 0.5882
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Sort by 'created' and 'created' (reverse). Compare the order of the results.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.sort.mislabelled_semantics
+    p_doc_correct: 0.4545
+    status: hypothesis
+  p_doc_correct: 0.4545
   class: mislabelled_semantics
+- id: lab.search.the_api_sorts_by_the_string_value_of_the_fie
+  tool: lab
+  operation: search
+  doc_claims: ordered by created ascending
+  belief: The API sorts by the string value of the field 'created' (alphabetically), not the timestamp
+    value.
+  action: Use 'created_at' or 'id' for sorting instead of 'created'.
+  parameter: sort
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.6
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_api_sorts_by_created_descending_but_the
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: ordered by created ascending
+    p_doc_correct: 0.5556
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Sort by 'created_at' (if available) or 'id'. If these return correct chronological order,
+      'created' sorts alphabetically.
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.sort.mislabelled_semantics
+    p_doc_correct: 0.4348
+    status: hypothesis
+  p_doc_correct: 0.4348
+  class: mislabelled_semantics
+- id: lab.search.the_filter_field_name_vendorr_is_a_typo_for
+  tool: lab
+  operation: search
+  doc_claims: matching rows, or 400 invalid_filter for a bad field
+  belief: The filter field name 'vendorr' is a typo for 'vendor' or 'vendor_id', and the API silently
+    ignores the typo, returning empty results.
+  action: Verify field names against the documentation.
+  parameter: filter
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.6
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_filter_is_valid_but_there_are_genuinely
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: matching rows, or 400 invalid_filter for a bad field
+    p_doc_correct: 0.5556
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: 'Search with filter: { ''vendor'': ''Recon'' }. If results are returned, the field name was
+      incorrect.'
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.filter.silent_empty
+    p_doc_correct: 0.4348
+    status: hypothesis
+  p_doc_correct: 0.4348
+  class: mislabelled_semantics
+- id: lab.search.the_filter_is_valid_but_there_are_genuinely
+  tool: lab
+  operation: search
+  doc_claims: matching rows, or 400 invalid_filter for a bad field
+  belief: The filter is valid, but there are genuinely no items matching 'Recon' in the database.
+  action: Verify data existence before filtering.
+  parameter: filter
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.4
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_filter_field_name_vendorr_is_a_typo_for
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: matching rows, or 400 invalid_filter for a bad field
+    p_doc_correct: 0.5882
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Search for a vendor that definitely exists (e.g., a known test vendor). If results are returned,
+      the previous query was valid but had no data.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.filter.silent_empty
+    p_doc_correct: 0.4545
+    status: hypothesis
+  p_doc_correct: 0.4545
+  class: mislabelled_semantics
+- id: lab.search.the_item_is_created_in_a_draft_state_and_is
+  tool: lab
+  operation: search
+  doc_claims: items are immediately searchable
+  belief: The item is created in a 'draft' state and is not searchable until explicitly published or archived.
+  action: Ensure items are published before searching.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.7
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_search_index_is_updated_asynchronously_a
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: items are immediately searchable
+    p_doc_correct: 0.5405
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4255
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: 'Check the ''status'' field of the created item. Try creating it with ''status'': ''published''.
+      If it appears immediately, it was a draft.'
+    p_doc_correct: 0.4255
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search._.write_not_visible
+    p_doc_correct: 0.4255
+    status: hypothesis
+  p_doc_correct: 0.4255
+  class: eventual_consistency
+- id: lab.search.the_rate_limit_is_global_shared_across_all_u
+  tool: lab
+  operation: search
+  doc_claims: no rate limit; 429 never returned
+  belief: The rate limit is global (shared across all users) and is currently saturated.
+  action: Retry with exponential backoff.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.there_is_a_hidden_rate_limit_e_g_100_request
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: no rate limit; 429 never returned
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Wait 5 minutes and try again. If it works, the limit was global and saturated.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search._.undocumented_status
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: rate_limit
+- id: lab.search.the_search_index_is_updated_asynchronously_a
+  tool: lab
+  operation: search
+  doc_claims: items are immediately searchable
+  belief: The search index is updated asynchronously and has a lag of approximately 0.4 seconds.
+  action: Implement a retry/backoff mechanism for search.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.3
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_item_is_created_in_a_draft_state_and_is
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: items are immediately searchable
+    p_doc_correct: 0.6061
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Wait 5 seconds and search again. If the item appears, it was an indexing delay.
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search._.write_not_visible
+    p_doc_correct: 0.4651
+    status: hypothesis
+  p_doc_correct: 0.4651
+  class: eventual_consistency
+- id: lab.search.there_is_a_hidden_rate_limit_e_g_100_request
+  tool: lab
+  operation: search
+  doc_claims: no rate limit; 429 never returned
+  belief: There is a hidden rate limit (e.g., 100 requests per minute) that is rarely hit but exists.
+  action: Implement rate limiting logic.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_rate_limit_is_global_shared_across_all_u
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: no rate limit; 429 never returned
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Make 100 requests rapidly. If it hits 429, the limit is hidden. Make 100 requests slowly.
+      If it hits 429, the limit is time-based.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search._.undocumented_status
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: rate_limit
+- id: lab.update.the_api_is_designed_to_be_soft_and_ignores_u
+  tool: lab
+  operation: update
+  doc_claims: 400 unknown_field
+  belief: The API is designed to be 'soft' and ignores unknown fields to allow future expansion without
+    breaking existing clients.
+  action: Assume unknown fields are ignored, but verify required fields are present.
+  parameter: not_a_real_field
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.update.the_validation_logic_is_buggy_and_only_check
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: 400 unknown_field
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send a valid field that is required but missing. If the API returns 200, it confirms the 'soft'
+      design. If it returns 400, it confirms a validation bug.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: update.not_a_real_field.silent_ignore
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: idempotency_hazard
+- id: lab.update.the_validation_logic_is_buggy_and_only_check
+  tool: lab
+  operation: update
+  doc_claims: 400 unknown_field
+  belief: The validation logic is buggy and only checks for missing required fields, failing to reject
+    extra unknown fields.
+  action: Be cautious with required fields; assume the API might be lenient.
+  parameter: not_a_real_field
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.update.the_api_is_designed_to_be_soft_and_ignores_u
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: 400 unknown_field
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send a valid field that is required but missing. If it returns 200, the validation is broken.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: update.not_a_real_field.silent_ignore
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: idempotency_hazard

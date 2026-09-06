@@ -72,29 +72,15 @@ def main() -> int:
         for pb in r.promises_broken:
             print(f"   x {pb}", flush=True)
         store = BeliefStore("lab", root=a.beliefs)
-        covered = set()
-        minted = 0
-        calls_log = _read_log("recon-000")
-        for an in r.anomalies:
-            if minted >= a.recon_hypotheses:
-                break
-            if an.signature() in covered:
-                continue
-            covered.add(an.signature())
-            try:
-                hyps = propose(refl, an, calls_log)
-            except Exception as e:
-                print(f"   ! hypothesis failed for {an.signature()}: {e}", flush=True)
-                continue
-            if not hyps:
-                continue
-            made = mint(store, hyps, an, run_id="recon-000")
-            for b in made:
-                if not any(h.get("event") == "signature" for h in b.history):
-                    b.note("signature", an.signature())
-            minted += 1
-            print(f"   + {len(made)} rivals for {an.signature()}", flush=True)
-        store.save()
+        from reflect.batch import propose_batch, mint_batch
+        try:
+            grouped = propose_batch(refl, r.anomalies, max_anomalies=a.recon_hypotheses)
+            minted = mint_batch(store, grouped, r.anomalies, run_id="recon-000")
+        except Exception as e:
+            print(f"   ! batch hypothesis failed: {e}", flush=True)
+            minted = 0
+        for sig in sorted(grouped if minted else {}):
+            print(f"   + {len(grouped[sig])} rivals for {sig}", flush=True)
         print(f"recon minted {minted} hypothesis sets; {store.counts()}", flush=True)
 
     for i in range(a.cycles):
