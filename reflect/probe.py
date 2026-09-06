@@ -142,9 +142,8 @@ class ProbeRecord:
         return p
 
 
-def _uninformative(obs: Observation) -> bool:
-    """Did the experiment actually observe anything?"""
-    f = obs.facts or {}
+def _facts_uninformative(f: dict[str, Any]) -> bool:
+    """Did these facts carry any signal at all?"""
     if f.get("error"):
         return True
     sweep = f.get("sweep")
@@ -155,6 +154,11 @@ def _uninformative(obs: Observation) -> bool:
     if f.get("population") == 0:
         return True
     return False
+
+
+def _uninformative(obs: Observation) -> bool:
+    """Did the experiment actually observe anything?"""
+    return _facts_uninformative(obs.facts or {})
 
 
 def _normalise(s: str) -> str:
@@ -370,8 +374,25 @@ def _apply(
     adversarial: bool = False,
     learned: dict[str, Any] | None = None,
 ) -> None:
-    """Move beliefs according to the verdicts."""
+    """Move beliefs according to the verdicts.
+
+    The uninformative-observation check used to live only in `run_probe`, so
+    every other caller bypassed it -- and `bench/apply_probes.py` replays
+    saved records from disk straight into here, which is the path used after
+    every settle. A record with an empty sweep could still falsify a true
+    belief on re-application. The guard belongs at the point of effect, not
+    at one of the call sites.
+    """
     learned = learned or {}
+    obs_facts = (rec.observation or {}).get("facts") or {}
+    if _facts_uninformative(obs_facts):
+        for v in rec.verdicts:
+            b = store.get(str(v.get("hypothesis_id", "")))
+            if b is not None:
+                b.note("probe_uninformative", f"{rec.id} observed no signal; verdict ignored")
+        store.save()
+        return
+
     for v in rec.verdicts:
         b = store.get(str(v.get("hypothesis_id", "")))
         if b is None:

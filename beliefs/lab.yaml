@@ -1,10 +1,10 @@
 tool: lab
-updated: '2026-09-06T03:27:10Z'
+updated: '2026-09-06T03:34:36Z'
 counts:
-  hypothesis: 5
+  hypothesis: 7
   confirmed: 4
   falsified: 16
-  retired: 2
+  retired: 0
 beliefs:
 - id: lab.create.the_api_enforces_a_hard_internal_limit_of_25
   tool: lab
@@ -736,6 +736,284 @@ beliefs:
     status: hypothesis
   p_doc_correct: 0.5
   class: rate_limit
+- id: lab.create.the_field_is_mapped_to_a_legacy_system_that
+  tool: lab
+  operation: create
+  doc_claims: stored as sent
+  belief: The due_date field was sent as '1969-12-31' but stored as null.
+  action: Ensure dates are within the supported range.
+  parameter: due_date
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 3
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay:
+    belief_id: lab.create.the_field_is_mapped_to_a_legacy_system_that
+    cls: silent_coercion
+    operation: create
+    parameter: due_date
+    signatures:
+    - create.due_date.silent_null
+    runs_affected: 2
+    calls_affected: 2
+    wasted_calls: 0
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: probe-003
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: probe-003
+      call_ns:
+      - 1
+      wasted: 0
+      reason: 'call 1: due_date=''1969-12-31'' sent, stored as null'
+    - run: recon-000
+      call_ns:
+      - 3
+      wasted: 0
+      reason: 'call 3: due_date=''1965-04-01'' sent, stored as null'
+  competing:
+  - lab.create.the_api_expects_a_specific_date_format_e_g_i
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: stored as sent
+    p_doc_correct: 0.6061
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send a date in the current year (e.g., '2023-04-01'). If this is accepted, the issue is specific
+      to the year 1965.
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.due_date.silent_null
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788655481.318
+    event: confirmed_by_probe
+    detail: probe-003
+    p_doc_correct: 0.4651
+    status: confirmed
+  - t: 1788655481.318
+    event: probe_confirmed
+    detail: The stored value for due_date was null.
+    p_doc_correct: 0.3175
+    status: confirmed
+  - t: 1788655481.318
+    event: restated_from_evidence
+    detail: 'was: The field is mapped to a legacy system that does not support dates before a certain
+      threshold (e.g., 1970), defaulting t'
+    p_doc_correct: 0.3175
+    status: confirmed
+  - t: 1788655709.343
+    event: confirmed_by_probe
+    detail: probe-003
+    p_doc_correct: 0.3175
+    status: confirmed
+  - t: 1788655709.343
+    event: probe_confirmed
+    detail: The stored value for due_date was null.
+    p_doc_correct: 0.241
+    status: confirmed
+  - t: 1788665226.877
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665224-round-1
+    p_doc_correct: 0.5263
+    status: confirmed
+  - t: 1788665228.892
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665224-round-2
+    p_doc_correct: 0.6557
+    status: confirmed
+  - t: 1788665230.907
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665224-round-3
+    p_doc_correct: 0.7296
+    status: confirmed
+  - t: 1788665230.907
+    event: auto_falsified
+    detail: posterior reverted above trust threshold
+    p_doc_correct: 0.7296
+    status: falsified
+  - t: 1788665230.94
+    event: retired
+    detail: world observed to match documentation for rule `pre_epoch_date_null` over 3 round(s) after
+      the rule was disabled; posterior crossed the trust threshold (0.7)
+    p_doc_correct: 0.7296
+    status: retired
+  - t: 1788665676.957
+    event: reopened_after_world_restored
+    detail: rule toggled back on by retire_demo
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: silent_coercion
+- id: lab.get.the_get_request_is_being_made_from_a_differe
+  tool: lab
+  operation: get
+  doc_claims: GET returns the item regardless of archived state
+  belief: The item was returned successfully with the status 'active', matching the sent value.
+  action: Ensure context consistency (API keys, tenants) across operations.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 4
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay:
+    belief_id: lab.get.the_get_request_is_being_made_from_a_differe
+    cls: undocumented_flag
+    operation: get
+    parameter: null
+    signatures:
+    - get._.undocumented_flag
+    runs_affected: 1
+    calls_affected: 1
+    wasted_calls: 1
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: recon-000
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: recon-000
+      call_ns:
+      - 15
+      wasted: 1
+      reason: call 15 got 404 for id itm_5c412648d863, created earlier in this run
+  competing:
+  - lab.get.the_item_is_created_with_a_default_status_of
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: GET returns the item regardless of archived state
+    p_doc_correct: 0.5882
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Use the exact same API key and headers for the GET request as the POST request.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: get._.undocumented_flag
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788655481.418
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.4545
+    status: confirmed
+  - t: 1788655481.418
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.3125
+    status: confirmed
+  - t: 1788655481.418
+    event: restated_from_evidence
+    detail: 'was: The GET request is being made from a different context (e.g., different tenant or API
+      key) than the creation context.'
+    p_doc_correct: 0.3125
+    status: confirmed
+  - t: 1788655709.375
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.3125
+    status: confirmed
+  - t: 1788655709.375
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.2381
+    status: confirmed
+  - t: 1788656106.19
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.2381
+    status: confirmed
+  - t: 1788656106.19
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.1923
+    status: confirmed
+  - t: 1788665077.34
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-1
+    p_doc_correct: 0.4545
+    status: confirmed
+  - t: 1788665083.384
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-2
+    p_doc_correct: 0.5882
+    status: confirmed
+  - t: 1788665089.431
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-3
+    p_doc_correct: 0.6693
+    status: confirmed
+  - t: 1788665095.887
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-4
+    p_doc_correct: 0.7237
+    status: confirmed
+  - t: 1788665095.887
+    event: auto_falsified
+    detail: posterior reverted above trust threshold
+    p_doc_correct: 0.7237
+    status: falsified
+  - t: 1788665095.92
+    event: retired
+    detail: world observed to match documentation for rule `archived_get_404` over 4 round(s) after the
+      rule was disabled; posterior crossed the trust threshold (0.7)
+    p_doc_correct: 0.7237
+    status: retired
+  - t: 1788665676.957
+    event: reopened_after_world_restored
+    detail: rule toggled back on by retire_demo
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: undocumented_flag
 - id: lab.search.cursors_expire_after_a_fixed_time_duration_e
   tool: lab
   operation: search
@@ -2075,276 +2353,3 @@ beliefs:
     status: falsified
   p_doc_correct: 0.7619
   class: silent_coercion
-- id: lab.create.the_field_is_mapped_to_a_legacy_system_that
-  tool: lab
-  operation: create
-  doc_claims: stored as sent
-  belief: The due_date field was sent as '1969-12-31' but stored as null.
-  action: Ensure dates are within the supported range.
-  parameter: due_date
-  status: retired
-  posterior:
-    alpha: 17.0
-    beta: 6.3
-  evidence_for: 1
-  evidence_against: 3
-  first_seen: recon-000
-  last_confirmed: ''
-  probes:
-  - probe-003
-  - probe-003
-  survived_falsification: null
-  falsified_by: null
-  replay:
-    belief_id: lab.create.the_field_is_mapped_to_a_legacy_system_that
-    cls: silent_coercion
-    operation: create
-    parameter: due_date
-    signatures:
-    - create.due_date.silent_null
-    runs_affected: 2
-    calls_affected: 2
-    wasted_calls: 0
-    tokens_saved_estimate: 0
-    runs_rescued: 0
-    rescued_run_ids: []
-    first_seen_run: recon-000
-    last_seen_run: probe-003
-    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
-      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
-      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
-      this belief's own minting signature(s).
-    notes:
-    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
-    evidence:
-    - run: probe-003
-      call_ns:
-      - 1
-      wasted: 0
-      reason: 'call 1: due_date=''1969-12-31'' sent, stored as null'
-    - run: recon-000
-      call_ns:
-      - 3
-      wasted: 0
-      reason: 'call 3: due_date=''1965-04-01'' sent, stored as null'
-  competing:
-  - lab.create.the_api_expects_a_specific_date_format_e_g_i
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: stored as sent
-    p_doc_correct: 0.6061
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4651
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Send a date in the current year (e.g., '2023-04-01'). If this is accepted, the issue is specific
-      to the year 1965.
-    p_doc_correct: 0.4651
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: create.due_date.silent_null
-    p_doc_correct: 0.4651
-    status: hypothesis
-  - t: 1788655481.318
-    event: confirmed_by_probe
-    detail: probe-003
-    p_doc_correct: 0.4651
-    status: confirmed
-  - t: 1788655481.318
-    event: probe_confirmed
-    detail: The stored value for due_date was null.
-    p_doc_correct: 0.3175
-    status: confirmed
-  - t: 1788655481.318
-    event: restated_from_evidence
-    detail: 'was: The field is mapped to a legacy system that does not support dates before a certain
-      threshold (e.g., 1970), defaulting t'
-    p_doc_correct: 0.3175
-    status: confirmed
-  - t: 1788655709.343
-    event: confirmed_by_probe
-    detail: probe-003
-    p_doc_correct: 0.3175
-    status: confirmed
-  - t: 1788655709.343
-    event: probe_confirmed
-    detail: The stored value for due_date was null.
-    p_doc_correct: 0.241
-    status: confirmed
-  - t: 1788665226.877
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665224-round-1
-    p_doc_correct: 0.5263
-    status: confirmed
-  - t: 1788665228.892
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665224-round-2
-    p_doc_correct: 0.6557
-    status: confirmed
-  - t: 1788665230.907
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665224-round-3
-    p_doc_correct: 0.7296
-    status: confirmed
-  - t: 1788665230.907
-    event: auto_falsified
-    detail: posterior reverted above trust threshold
-    p_doc_correct: 0.7296
-    status: falsified
-  - t: 1788665230.94
-    event: retired
-    detail: world observed to match documentation for rule `pre_epoch_date_null` over 3 round(s) after
-      the rule was disabled; posterior crossed the trust threshold (0.7)
-    p_doc_correct: 0.7296
-    status: retired
-  p_doc_correct: 0.7296
-  class: silent_coercion
-- id: lab.get.the_get_request_is_being_made_from_a_differe
-  tool: lab
-  operation: get
-  doc_claims: GET returns the item regardless of archived state
-  belief: The item was returned successfully with the status 'active', matching the sent value.
-  action: Ensure context consistency (API keys, tenants) across operations.
-  parameter: null
-  status: retired
-  posterior:
-    alpha: 22.0
-    beta: 8.4
-  evidence_for: 1
-  evidence_against: 4
-  first_seen: recon-000
-  last_confirmed: ''
-  probes:
-  - probe-004
-  - probe-004
-  - probe-004
-  survived_falsification: null
-  falsified_by: null
-  replay:
-    belief_id: lab.get.the_get_request_is_being_made_from_a_differe
-    cls: undocumented_flag
-    operation: get
-    parameter: null
-    signatures:
-    - get._.undocumented_flag
-    runs_affected: 1
-    calls_affected: 1
-    wasted_calls: 1
-    tokens_saved_estimate: 0
-    runs_rescued: 0
-    rescued_run_ids: []
-    first_seen_run: recon-000
-    last_seen_run: recon-000
-    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
-      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
-      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
-      this belief's own minting signature(s).
-    notes:
-    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
-    evidence:
-    - run: recon-000
-      call_ns:
-      - 15
-      wasted: 1
-      reason: call 15 got 404 for id itm_5c412648d863, created earlier in this run
-  competing:
-  - lab.get.the_item_is_created_with_a_default_status_of
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: GET returns the item regardless of archived state
-    p_doc_correct: 0.5882
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Use the exact same API key and headers for the GET request as the POST request.
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: get._.undocumented_flag
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788655481.418
-    event: confirmed_by_probe
-    detail: probe-004
-    p_doc_correct: 0.4545
-    status: confirmed
-  - t: 1788655481.418
-    event: probe_confirmed
-    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
-      with the status 'active'.
-    p_doc_correct: 0.3125
-    status: confirmed
-  - t: 1788655481.418
-    event: restated_from_evidence
-    detail: 'was: The GET request is being made from a different context (e.g., different tenant or API
-      key) than the creation context.'
-    p_doc_correct: 0.3125
-    status: confirmed
-  - t: 1788655709.375
-    event: confirmed_by_probe
-    detail: probe-004
-    p_doc_correct: 0.3125
-    status: confirmed
-  - t: 1788655709.375
-    event: probe_confirmed
-    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
-      with the status 'active'.
-    p_doc_correct: 0.2381
-    status: confirmed
-  - t: 1788656106.19
-    event: confirmed_by_probe
-    detail: probe-004
-    p_doc_correct: 0.2381
-    status: confirmed
-  - t: 1788656106.19
-    event: probe_confirmed
-    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
-      with the status 'active'.
-    p_doc_correct: 0.1923
-    status: confirmed
-  - t: 1788665077.34
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-1
-    p_doc_correct: 0.4545
-    status: confirmed
-  - t: 1788665083.384
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-2
-    p_doc_correct: 0.5882
-    status: confirmed
-  - t: 1788665089.431
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-3
-    p_doc_correct: 0.6693
-    status: confirmed
-  - t: 1788665095.887
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-4
-    p_doc_correct: 0.7237
-    status: confirmed
-  - t: 1788665095.887
-    event: auto_falsified
-    detail: posterior reverted above trust threshold
-    p_doc_correct: 0.7237
-    status: falsified
-  - t: 1788665095.92
-    event: retired
-    detail: world observed to match documentation for rule `archived_get_404` over 4 round(s) after the
-      rule was disabled; posterior crossed the trust threshold (0.7)
-    p_doc_correct: 0.7237
-    status: retired
-  p_doc_correct: 0.7237
-  class: undocumented_flag

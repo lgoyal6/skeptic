@@ -1,0 +1,11 @@
+=== recon ===
+recon: 31 calls 14.7s, 12 promises broken, 12 signatures
+0 signatures not yet explained
+=== settle ===
+  4 rival groups, 4 at a time
+    [probe-000] 3 rivals -> rate_limit
+    [probe-001] 1 rivals -> silent_coercion
+    [probe-002] 1 rivals -> undocumented_flag
+    [probe-003] 2 rivals -> expiry
+    [probe-001] consistency 2 calls 42s -> ['confirmed']
+    [probe-002] flag_discovery 2 calls 63s -> ['falsified']
