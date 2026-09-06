@@ -23,6 +23,28 @@ from agent.tasks import Task, TaskResult
 
 MAX_STEPS = 28
 
+# Message history is resent in full on every step, so a long run costs
+# quadratically. A 28-step baseline burned 427k tokens, most of it re-reading
+# tool results from twenty steps ago. Older tool payloads are compacted to a
+# one-line digest; the model keeps the shape of what happened without paying
+# for the body again.
+KEEP_FULL_TOOL_RESULTS = 6
+DIGEST_CHARS = 220
+
+
+def _compact_history(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    tool_idx = [i for i, m in enumerate(messages) if m.get("role") == "tool"]
+    if len(tool_idx) <= KEEP_FULL_TOOL_RESULTS:
+        return messages
+    stale = set(tool_idx[:-KEEP_FULL_TOOL_RESULTS])
+    out = []
+    for i, m in enumerate(messages):
+        if i in stale and len(m.get("content", "")) > DIGEST_CHARS:
+            out.append({**m, "content": m["content"][:DIGEST_CHARS] + " …[trimmed]"})
+        else:
+            out.append(m)
+    return out
+
 TOOLS = [
     {
         "type": "function",
@@ -205,6 +227,7 @@ def run_task(
     try:
         while steps < MAX_STEPS:
             steps += 1
+            messages = _compact_history(messages)
             rep = executor.chat(messages, tools=TOOLS, max_tokens=1800)
 
             if not rep.tool_calls:

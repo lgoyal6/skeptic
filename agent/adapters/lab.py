@@ -36,8 +36,16 @@ class LabAdapter:
         base: str = BASE,
         guards: list[Any] | None = None,
         runs_dir: str | Path = "runs",
+        min_interval: float = 0.0,
     ) -> None:
         self.run_id = run_id
+        # Pacing between calls. An experiment must isolate its variable: a
+        # 4-value boundary sweep fired back-to-back trips the tool's 3/s limit,
+        # and the verdict then reasons about a 429 instead of the pagination
+        # cap it was sent to measure. Probes pace themselves; header_burst
+        # sets this to 0 because throttling is the thing it is measuring.
+        self.min_interval = min_interval
+        self._last_call_t = 0.0
         self.client = httpx.Client(base_url=base, timeout=30.0)
         self.contract = ContractLayer()
         self.guards = guards or []
@@ -71,8 +79,14 @@ class LabAdapter:
             self._write(rec)
             return 0, {"refused_by_guard": refusal}
 
+        if self.min_interval > 0:
+            gap = time.time() - self._last_call_t
+            if gap < self.min_interval:
+                time.sleep(self.min_interval - gap)
+
         self.n += 1
         t = time.time()
+        self._last_call_t = t
         if method == "GET":
             r = self.client.get(path)
         elif method == "PATCH":

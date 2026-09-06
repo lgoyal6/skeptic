@@ -26,6 +26,15 @@ from agent.llm import LLM
 from reflect.hypothesis import Hypothesis
 from reflect.templates import TEMPLATES, Observation, catalogue, choose
 
+# A reasoning model starves its own answer at a low cap: it spends the whole
+# budget thinking and returns content=null with finish_reason=length, then
+# json_chat doubles and retries. Measured on the real design prompt:
+#   6000 tokens -> 61s, starved, no content
+#  14000 tokens -> 34s, succeeded first time
+# The ladder cost 6x. Start where it actually fits.
+DESIGN_BUDGET = 14000
+VERDICT_BUDGET = 16000
+
 DESIGN_PROMPT = """You are designing ONE experiment to tell rival explanations apart.
 
 RIVAL HYPOTHESES
@@ -127,14 +136,39 @@ class ProbeRecord:
         return p
 
 
+def _normalise(s: str) -> str:
+    return "".join(c for c in str(s).lower() if c.isalnum() or c == " ").strip()
+
+
+def indistinguishable(predictions: list[dict[str, str]]) -> list[str]:
+    """Hypotheses whose predictions are identical -- the experiment cannot split them."""
+    seen: dict[str, list[str]] = {}
+    for p in predictions:
+        seen.setdefault(_normalise(p.get("predicts", "")), []).append(
+            str(p.get("hypothesis_id", ""))
+        )
+    return [ids[0] for ids in seen.values() if len(ids) > 1]
+
+
 def design(
     reflector: LLM,
     beliefs: list[Belief],
     vendor: str,
     budget_calls: int = 5,
+    exclude: set[str] | None = None,
 ) -> dict[str, Any]:
+    """Choose an experiment, and reject one that cannot separate the rivals.
+
+    The prompt already says a template predicting the same outcome for two
+    hypotheses is useless. The model does not always obey: on the pagination
+    rivals it picked `timing`, which lumps 'hard cap' and 'vendor-specific
+    cap' into one bucket, and duly returned two INCONCLUSIVE verdicts after
+    spending the call budget. So the rule is enforced in code, not requested
+    in prose.
+    """
+    exclude = exclude or set()
     classes = [b.cls for b in beliefs]
-    ranked = choose(classes)
+    ranked = [r for r in choose(classes) if r[0] not in exclude]
     ranked_txt = "\n".join(
         f"  {name}: {score:.2f} rival classes separated per call" for name, score in ranked
     ) or "  (no template matches these classes)"
@@ -143,22 +177,35 @@ def design(
         f"  id={b.id}\n    class={b.cls} parameter={b.parameter}\n    claim: {b.belief}"
         for b in beliefs
     )
+    extra = ""
+    if exclude:
+        extra = (
+            f"\n\nDo NOT use these templates, they already failed to separate these "
+            f"hypotheses: {', '.join(sorted(exclude))}."
+        )
 
     data = reflector.json_chat(
         [
             {"role": "system", "content": "You design minimal, decisive experiments. You commit to predictions before seeing results."},
             {"role": "user", "content": DESIGN_PROMPT.format(
                 hyps=hyps_txt, catalogue=catalogue(), ranked=ranked_txt, vendor=vendor
-            )},
+            ) + extra},
         ],
-        max_tokens=6000,
+        max_tokens=DESIGN_BUDGET,
     )
 
     name = str(data.get("template", "")).strip()
-    if name not in TEMPLATES:
-        name = ranked[0][0] if ranked else "consistency"
+    if name not in TEMPLATES or name in exclude:
+        name = ranked[0][0] if ranked else "boundary"
         data["template"] = name
-        data.setdefault("why_this_one", "fell back to the highest-ranked template")
+        data.setdefault("why_this_one", "fell back to the highest-ranked usable template")
+
+    # enforce the rule the prompt states
+    if len(beliefs) > 1 and not exclude:
+        dupes = indistinguishable(data.get("predictions", []))
+        if dupes:
+            return design(reflector, beliefs, vendor, budget_calls,
+                          exclude={name} | exclude)
     return data
 
 
@@ -177,7 +224,11 @@ def run_probe(
     plan = design(reflector, beliefs, vendor=vendor, budget_calls=budget_calls)
     tmpl = TEMPLATES[plan["template"]]
 
-    adapter = LabAdapter(run_id=probe_id, runs_dir=runs_dir)
+    # header_burst measures throttling, so it must be allowed to burst.
+    # Everything else paces itself so the rate limiter does not contaminate
+    # the variable under test.
+    pace = 0.0 if tmpl.name == "header_burst" else 0.4
+    adapter = LabAdapter(run_id=probe_id, runs_dir=runs_dir, min_interval=pace)
     try:
         obs: Observation = tmpl.run(adapter, plan.get("params") or {})
     except Exception as e:  # a probe that blows up is a failed probe, not a crash
@@ -202,7 +253,7 @@ def run_probe(
                 narrative="; ".join(obs.narrative)[:400],
             )},
         ],
-        max_tokens=5000,
+        max_tokens=VERDICT_BUDGET,
     )
 
     rec = ProbeRecord(
@@ -290,6 +341,24 @@ def _apply(
             b.posterior.supports_doc(1.0)
         else:
             b.note("probe_inconclusive", because)
+
+    # If one experiment confirms two rivals, it did not actually separate
+    # them: they are one belief wearing two hats. Keep the best-supported and
+    # retire the rest as duplicates, rather than letting memory carry two
+    # sentences that say the same thing and halve precision.
+    confirmed_now = [
+        store.get(str(v.get("hypothesis_id", "")))
+        for v in rec.verdicts
+        if str(v.get("verdict", "")).lower() == "confirmed"
+    ]
+    confirmed_now = [b for b in confirmed_now if b is not None]
+    if len(confirmed_now) > 1:
+        keeper = max(confirmed_now, key=lambda b: (b.posterior.p_doc_correct * -1, len(b.belief)))
+        for b in confirmed_now:
+            if b.id == keeper.id:
+                continue
+            b.retire(f"duplicate of {keeper.id}; {rec.id} could not separate them")
+            keeper.note("absorbed_duplicate", b.id)
 
     # a confirmed belief refutes its rivals
     for v in rec.verdicts:
