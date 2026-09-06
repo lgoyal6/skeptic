@@ -1,0 +1,90 @@
+{
+  "id": "probe-008",
+  "belief_ids": [
+    "lab.search.the_filter_field_name_vendorr_is_a_typo_for",
+    "lab.search.the_filter_is_valid_but_there_are_genuinely"
+  ],
+  "template": "boundary",
+  "params": {
+    "op": "search",
+    "param": "vendor",
+    "values": [
+      "Recon",
+      "vendorr"
+    ],
+    "base": {
+      "filter": {
+        "vendor": "Recon"
+      },
+      "page_size": 50
+    }
+  },
+  "why": "This template tests the field name directly; if 'vendor' is the correct name, it should return data, whereas a valid but empty filter will return nothing regardless of the name.",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.search.the_filter_field_name_vendorr_is_a_typo_for",
+      "predicts": "The search with the correct field name 'vendor' will return items, while the search with the typo 'vendorr' will return empty results."
+    },
+    {
+      "hypothesis_id": "lab.search.the_filter_is_valid_but_there_are_genuinely",
+      "predicts": "Both searches (with 'vendor' and 'vendorr') will return empty results because there are genuinely no items matching 'Recon'."
+    }
+  ],
+  "observation": {
+    "template": "boundary",
+    "params": {
+      "op": "search",
+      "param": "vendor",
+      "values": [
+        "Recon",
+        "vendorr"
+      ],
+      "base": {
+        "filter": {
+          "vendor": "Recon"
+        },
+        "page_size": 50
+      }
+    },
+    "calls": 2,
+    "facts": {
+      "sweep": [
+        {
+          "sent": "Recon",
+          "status": 200,
+          "returned": 50,
+          "has_more": true
+        },
+        {
+          "sent": "vendorr",
+          "status": 200,
+          "returned": 50,
+          "has_more": true
+        }
+      ],
+      "ceiling": 50,
+      "saturates_at_ceiling": true,
+      "tracks_request": false
+    },
+    "narrative": [
+      "vendor=Recon -> 50 rows, has_more=True",
+      "vendor=vendorr -> 50 rows, has_more=True"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.search.the_filter_field_name_vendorr_is_a_typo_for",
+      "verdict": "falsified",
+      "because": "The search with 'vendorr' returned 50 items, not empty results."
+    },
+    {
+      "hypothesis_id": "lab.search.the_filter_is_valid_but_there_are_genuinely",
+      "verdict": "falsified",
+      "because": "Both searches returned 50 items, not empty results."
+    }
+  ],
+  "learned": "The search endpoint accepts 'vendorr' as a valid filter parameter and returns 50 items for the value 'Recon'.",
+  "calls": 2,
+  "wall_s": 67.1,
+  "adversarial": false
+}

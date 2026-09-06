@@ -1,0 +1,72 @@
+{
+  "id": "probe-000",
+  "belief_ids": [
+    "lab.search.cursors_expire_after_a_fixed_time_duration_e",
+    "lab.search.cursors_expire_if_no_requests_are_made_for_a"
+  ],
+  "template": "timing",
+  "params": {
+    "vendor": "Probe00",
+    "wait_s": 2700,
+    "base": {
+      "filter": {
+        "vendor": "Probe00"
+      },
+      "page_size": 50
+    }
+  },
+  "why": "The timing template is the only one that allows for a deliberate pause between operations, which is necessary to test whether a cursor survives a specific duration of time (supporting the fixed expiry hypothesis) or expires due to a lack of activity (supporting the inactivity expiry hypothesis).",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.search.cursors_expire_after_a_fixed_time_duration_e",
+      "predicts": "The cursor will still be valid and return results after 45 minutes, as it has not yet reached the fixed 1-hour limit."
+    },
+    {
+      "hypothesis_id": "lab.search.cursors_expire_if_no_requests_are_made_for_a",
+      "predicts": "The cursor will be expired and return an error or empty results after 45 minutes, as this duration exceeds the 30-minute inactivity window."
+    }
+  ],
+  "observation": {
+    "template": "timing",
+    "params": {
+      "vendor": "Probe00",
+      "wait_s": 2700,
+      "base": {
+        "filter": {
+          "vendor": "Probe00"
+        },
+        "page_size": 50
+      }
+    },
+    "calls": 2,
+    "facts": {
+      "before": 9,
+      "after": 0,
+      "waited_s": 2700.0,
+      "changed": true,
+      "delta": -9
+    },
+    "narrative": [
+      "9 rows, waited 2700.0s, then 0 rows"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.search.cursors_expire_after_a_fixed_time_duration_e",
+      "verdict": "falsified",
+      "because": "The cursor returned 0 rows instead of results after 45 minutes."
+    },
+    {
+      "hypothesis_id": "lab.search.cursors_expire_if_no_requests_are_made_for_a",
+      "verdict": "confirmed",
+      "because": "The cursor returned 0 rows after 45 minutes, matching the prediction of expiration."
+    }
+  ],
+  "learned": "The cursor returned 0 rows after 45 minutes of inactivity, whereas it previously returned 9 rows.",
+  "calls": 2,
+  "wall_s": 51046.25,
+  "adversarial": false,
+  "learned_class": "expiry",
+  "learned_parameter": "wait_s",
+  "learned_action": "Do not rely on the cursor after 45 minutes of inactivity."
+}

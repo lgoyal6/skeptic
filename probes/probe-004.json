@@ -1,0 +1,68 @@
+{
+  "id": "probe-004",
+  "belief_ids": [
+    "lab.search.the_api_sorts_by_created_descending_but_the",
+    "lab.search.the_api_sorts_by_the_string_value_of_the_fie"
+  ],
+  "template": "ordering",
+  "params": {
+    "vendor": "Probe04",
+    "sort": "created"
+  },
+  "why": "The ordering template directly probes the sorting logic of the 'created' field, which is the core mechanism of both rival hypotheses.",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.search.the_api_sorts_by_created_descending_but_the",
+      "predicts": "The items will be returned in descending chronological order (newest items first)."
+    },
+    {
+      "hypothesis_id": "lab.search.the_api_sorts_by_the_string_value_of_the_fie",
+      "predicts": "The items will be returned in lexicographical order of the string timestamp (oldest items first)."
+    }
+  ],
+  "observation": {
+    "template": "ordering",
+    "params": {
+      "vendor": "Probe04",
+      "sort": "created"
+    },
+    "calls": 6,
+    "facts": {
+      "creation_order": [
+        "Probe04-o0",
+        "Probe04-o1",
+        "Probe04-o2"
+      ],
+      "returned_order": [
+        "",
+        "Probe04-o1",
+        "Probe04-o2",
+        "Probe04-o0"
+      ],
+      "matches_creation": false,
+      "edited_row_moved_last": true
+    },
+    "narrative": [
+      "created ['Probe04-o0', 'Probe04-o1', 'Probe04-o2'], sort=created returned ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0']"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.search.the_api_sorts_by_created_descending_but_the",
+      "verdict": "falsified",
+      "because": "The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not descending chronological order."
+    },
+    {
+      "hypothesis_id": "lab.search.the_api_sorts_by_the_string_value_of_the_fie",
+      "verdict": "falsified",
+      "because": "The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not lexicographical order of the timestamps (oldest first)."
+    }
+  ],
+  "learned": "The API returns an empty string at the start of the list when sorting by creation, and the order of the remaining items does not match chronological or lexicographical order.",
+  "calls": 6,
+  "wall_s": 315.1,
+  "adversarial": false,
+  "learned_class": "mislabelled_semantics",
+  "learned_parameter": "sort",
+  "learned_action": "Expect an empty string at the start of the list when sorting by creation."
+}

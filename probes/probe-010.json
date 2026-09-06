@@ -1,0 +1,56 @@
+{
+  "id": "probe-010",
+  "belief_ids": [
+    "lab.search.the_rate_limit_is_global_shared_across_all_u",
+    "lab.search.there_is_a_hidden_rate_limit_e_g_100_request"
+  ],
+  "template": "header_burst",
+  "params": {
+    "n": 10
+  },
+  "why": "This template directly tests the system's behavior under load to determine if throttling occurs and how it manifests.",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.search.the_rate_limit_is_global_shared_across_all_u",
+      "predicts": "The rapid burst of requests will result in a throttling error (e.g., 429 status) because the global shared limit is saturated."
+    },
+    {
+      "hypothesis_id": "lab.search.there_is_a_hidden_rate_limit_e_g_100_request",
+      "predicts": "The rapid burst of requests will succeed without error, as the hidden limit is high enough to accommodate 10 requests."
+    }
+  ],
+  "observation": {
+    "template": "header_burst",
+    "params": {
+      "n": 10
+    },
+    "calls": 10,
+    "facts": {
+      "n": 10,
+      "throttled": 7,
+      "first_throttle_at": 4,
+      "retry_after_present": 4,
+      "retry_after_absent": 3,
+      "header_reliable": false
+    },
+    "narrative": [
+      "7/10 throttled; Retry-After present on 4/7"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.search.the_rate_limit_is_global_shared_across_all_u",
+      "verdict": "confirmed",
+      "because": "7 out of 10 requests were throttled."
+    },
+    {
+      "hypothesis_id": "lab.search.there_is_a_hidden_rate_limit_e_g_100_request",
+      "verdict": "falsified",
+      "because": "7 out of 10 requests were throttled, contradicting the prediction of success."
+    }
+  ],
+  "learned": "7 out of 10 requests were throttled, with the first throttling occurring on the 4th request.",
+  "calls": 10,
+  "wall_s": 41.31,
+  "adversarial": false
+}

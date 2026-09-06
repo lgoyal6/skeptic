@@ -1,0 +1,59 @@
+{
+  "id": "probe-001",
+  "belief_ids": [
+    "lab.update.the_validation_logic_is_buggy_and_only_check"
+  ],
+  "template": "consistency",
+  "params": {
+    "fields": {
+      "not_a_real_field": "test_value"
+    },
+    "vendor": "Probe01"
+  },
+  "why": "This template writes the undocumented field and reads it back, directly verifying if the field is stored and if it is stored as null.",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.update.the_validation_logic_is_buggy_and_only_check",
+      "predicts": "The readback will contain the key 'not_a_real_field' with the value 'null'."
+    }
+  ],
+  "observation": {
+    "template": "consistency",
+    "params": {
+      "fields": {
+        "not_a_real_field": "test_value"
+      },
+      "vendor": "Probe01"
+    },
+    "calls": 2,
+    "facts": {
+      "create_status": 200,
+      "get_status": 200,
+      "echo_matches_sent": false,
+      "mismatches": {
+        "not_a_real_field": {
+          "sent": "test_value",
+          "stored": null
+        }
+      },
+      "readback_matches_echo": true
+    },
+    "narrative": [
+      "sent ['not_a_real_field', 'vendor'], mismatched ['not_a_real_field']"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.update.the_validation_logic_is_buggy_and_only_check",
+      "verdict": "confirmed",
+      "because": "The mismatched fields show 'not_a_real_field' was sent as 'test_value' but stored as 'null'."
+    }
+  ],
+  "learned": "The system stored the field 'not_a_real_field' as 'null' despite being sent a value.",
+  "calls": 2,
+  "wall_s": 57.27,
+  "adversarial": false,
+  "learned_class": "silent_truncation",
+  "learned_parameter": "not_a_real_field",
+  "learned_action": "Do not rely on this field for data storage; it will be null."
+}

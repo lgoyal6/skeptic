@@ -1,0 +1,49 @@
+{
+  "id": "probe-006",
+  "belief_ids": [
+    "lab.search.the_rate_limit_is_global_shared_across_all_u"
+  ],
+  "template": "header_burst",
+  "params": {
+    "n": 10
+  },
+  "why": "The hypothesis explicitly describes a rate limit scenario (throttling on the 4th of 10 requests). The header_burst template is the only one designed to fire rapid requests and observe throttling behavior.",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.search.the_rate_limit_is_global_shared_across_all_u",
+      "predicts": "The 4th request will be throttled, and requests 5, 6, 7, 8, 9, and 10 will also be throttled, resulting in 7 throttled requests total."
+    }
+  ],
+  "observation": {
+    "template": "header_burst",
+    "params": {
+      "n": 10
+    },
+    "calls": 10,
+    "facts": {
+      "n": 10,
+      "throttled": 7,
+      "first_throttle_at": 4,
+      "retry_after_present": 5,
+      "retry_after_absent": 2,
+      "header_reliable": false
+    },
+    "narrative": [
+      "7/10 throttled; Retry-After present on 5/7"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.search.the_rate_limit_is_global_shared_across_all_u",
+      "verdict": "confirmed",
+      "because": "The 4th request was throttled and 7 requests total were throttled, matching the prediction."
+    }
+  ],
+  "learned": "The system throttles 7 out of 10 requests, with the first throttled request occurring at index 4.",
+  "calls": 10,
+  "wall_s": 81.5,
+  "adversarial": false,
+  "learned_class": "rate_limit",
+  "learned_parameter": "3",
+  "learned_action": "Do not exceed 3 requests in a single burst."
+}

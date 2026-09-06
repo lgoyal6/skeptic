@@ -1,0 +1,59 @@
+{
+  "id": "probe-002",
+  "belief_ids": [
+    "lab.create.the_field_is_mapped_to_a_legacy_system_that"
+  ],
+  "template": "consistency",
+  "params": {
+    "fields": {
+      "due_date": "1969-12-31"
+    },
+    "vendor": "Probe02"
+  },
+  "why": "It directly compares the value sent to the value stored, which is the only way to verify if a silent coercion occurred.",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.create.the_field_is_mapped_to_a_legacy_system_that",
+      "predicts": "The read-back will show null (or the legacy system's null representation), not '1969-12-31'."
+    }
+  ],
+  "observation": {
+    "template": "consistency",
+    "params": {
+      "fields": {
+        "due_date": "1969-12-31"
+      },
+      "vendor": "Probe02"
+    },
+    "calls": 2,
+    "facts": {
+      "create_status": 200,
+      "get_status": 200,
+      "echo_matches_sent": false,
+      "mismatches": {
+        "due_date": {
+          "sent": "1969-12-31",
+          "stored": null
+        }
+      },
+      "readback_matches_echo": true
+    },
+    "narrative": [
+      "sent ['due_date', 'vendor'], mismatched ['due_date']"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.create.the_field_is_mapped_to_a_legacy_system_that",
+      "verdict": "confirmed",
+      "because": "The read-back shows null for the due_date field, matching the hypothesis prediction."
+    }
+  ],
+  "learned": "The system accepts '1969-12-31' during creation but returns null on read-back.",
+  "calls": 2,
+  "wall_s": 59.66,
+  "adversarial": false,
+  "learned_class": "silent_truncation",
+  "learned_parameter": "due_date",
+  "learned_action": "Avoid sending '1969-12-31' or handle the null response."
+}

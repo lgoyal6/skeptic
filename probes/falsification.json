@@ -1,0 +1,28 @@
+{
+  "reviews": [
+    {
+      "belief_id": "lab.create.the_api_enforces_a_hard_internal_limit_of_25",
+      "verdict": "unsupported_cause",
+      "attack": "Create items with titles of exactly 24, 25, 26, 100, and 2000 characters, read each back by id, and compare stored length to sent length. Any read-back longer than 25 characters kills both the truncation claim and the 'hard internal limit of 25'.",
+      "because": "The only cited evidence (probe-000, header_burst) measures throttling of 10 requests and contains no title-length data at all, so neither truncation nor a 25-character limit was ever observed."
+    },
+    {
+      "belief_id": "lab.search.the_item_is_created_in_a_draft_state_and_is",
+      "verdict": "unsupported_cause",
+      "attack": "Create an item, confirm GET-by-id returns it with 200, read back its status field, then poll search with no publish step at 1s, 5s, 30s, and 60s. The item appearing later without publishing refutes draft-gating; a read-back status of 'published' refutes it immediately.",
+      "because": "Zero rows before and after a single 0.5s wait (repeated six times with the same probe) never observed a draft status, never confirmed the create succeeded, and cannot distinguish draft-gating from indexing lag longer than 0.5s or a query that simply does not match the item."
+    },
+    {
+      "belief_id": "lab.search.the_rate_limit_is_global_shared_across_all_u",
+      "verdict": "overgeneralised",
+      "attack": "Burst with credential A until throttled, then immediately send one search with a different credential B from a different source. If B succeeds while A is still throttled, the limit is per-user or per-key, not global shared across all users.",
+      "because": "All ten calls in probe-010 came from one client with one credential, so 'global, shared across all users' was never varied; per-key, per-user, and per-IP limits all produce identical single-client evidence."
+    },
+    {
+      "belief_id": "lab.update.the_validation_logic_is_buggy_and_only_check",
+      "verdict": "unsupported_cause",
+      "attack": "Fetch the raw GET response and check whether the literal key 'not_a_real_field' exists (present with null vs absent entirely); a diff tool reporting absent keys as null would refute 'stored as null'. Then send the bogus field on an actual UPDATE of an existing item, since the cited facts only show create_status and get_status.",
+      "because": "The evidence shows a create/read-back diff reporting sent 'test_value' vs stored null, which is equally consistent with the field being silently dropped and the comparator defaulting missing keys to null, and the update path this belief is filed under was never exercised."
+    }
+  ]
+}

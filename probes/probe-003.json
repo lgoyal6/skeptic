@@ -1,0 +1,72 @@
+{
+  "id": "probe-003",
+  "belief_ids": [
+    "lab.get.the_get_request_is_being_made_from_a_differe"
+  ],
+  "template": "flag_discovery",
+  "params": {
+    "flag": "magic_filter",
+    "value": true,
+    "base": {
+      "filter": {
+        "vendor": "Probe03"
+      },
+      "page_size": 50
+    }
+  },
+  "why": "This template directly tests whether the undocumented flag alters the result set, distinguishing it from the flag being ignored (silent_coercion).",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.get.the_get_request_is_being_made_from_a_differe",
+      "predicts": "The result set will differ from the base request because the undocumented flag is active and functional."
+    },
+    {
+      "hypothesis_id": "silent_coercion",
+      "predicts": "The result set will be identical to the base request because the undocumented flag is ignored or coerced to a default value."
+    }
+  ],
+  "observation": {
+    "template": "flag_discovery",
+    "params": {
+      "flag": "magic_filter",
+      "value": true,
+      "base": {
+        "filter": {
+          "vendor": "Probe03"
+        },
+        "page_size": 50
+      }
+    },
+    "calls": 2,
+    "facts": {
+      "flag": "magic_filter",
+      "without": 1,
+      "with": 1,
+      "flag_changes_result": false,
+      "flag_rejected": false,
+      "extra_rows": 0
+    },
+    "narrative": [
+      "without magic_filter: 1 rows; with magic_filter: 1 rows (status 200)"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.get.the_get_request_is_being_made_from_a_differe",
+      "verdict": "falsified",
+      "because": "The result set did not differ from the base request (both returned 1 row), contradicting the prediction that the flag would alter the results."
+    },
+    {
+      "hypothesis_id": "silent_coercion",
+      "verdict": "confirmed",
+      "because": "The result set was identical to the base request, matching the prediction that the flag would be ignored or coerced."
+    }
+  ],
+  "learned": "The magic_filter flag does not alter the result set; both requests returned 1 row.",
+  "calls": 2,
+  "wall_s": 187.22,
+  "adversarial": false,
+  "learned_class": "silent_coercion",
+  "learned_parameter": "magic_filter",
+  "learned_action": "Do not rely on the magic_filter flag to filter results."
+}

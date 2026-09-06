@@ -1,0 +1,77 @@
+{
+  "id": "probe-005",
+  "belief_ids": [
+    "lab.update.the_validation_logic_is_buggy_and_only_check"
+  ],
+  "template": "consistency",
+  "params": {
+    "fields": {
+      "not_a_real_field": "test_value"
+    },
+    "vendor": "Probe05"
+  },
+  "why": "This template directly tests the write-read cycle to determine if the undocumented field is present in the storage layer, distinguishing between it being stored (even as null) and being ignored.",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.update.the_validation_logic_is_buggy_and_only_check",
+      "predicts": "The readback object will contain the key 'not_a_real_field' (even if its value is null)."
+    },
+    {
+      "hypothesis_id": "silent_truncation",
+      "predicts": "The readback object will not contain the key 'not_a_real_field'."
+    },
+    {
+      "hypothesis_id": "undocumented_flag",
+      "predicts": "The readback object will not contain the key 'not_a_real_field'."
+    }
+  ],
+  "observation": {
+    "template": "consistency",
+    "params": {
+      "fields": {
+        "not_a_real_field": "test_value"
+      },
+      "vendor": "Probe05"
+    },
+    "calls": 2,
+    "facts": {
+      "create_status": 200,
+      "get_status": 200,
+      "echo_matches_sent": false,
+      "mismatches": {
+        "not_a_real_field": {
+          "sent": "test_value",
+          "stored": null
+        }
+      },
+      "readback_matches_echo": true
+    },
+    "narrative": [
+      "sent ['not_a_real_field', 'vendor'], mismatched ['not_a_real_field']"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.update.the_validation_logic_is_buggy_and_only_check",
+      "verdict": "inconclusive",
+      "because": "The readback object does not contain the key 'not_a_real_field'."
+    },
+    {
+      "hypothesis_id": "silent_truncation",
+      "verdict": "inconclusive",
+      "because": "The readback object does not contain the key 'not_a_real_field'."
+    },
+    {
+      "hypothesis_id": "undocumented_flag",
+      "verdict": "inconclusive",
+      "because": "The readback object does not contain the key 'not_a_real_field'."
+    }
+  ],
+  "learned": "The readback object does not contain the key 'not_a_real_field'.",
+  "calls": 2,
+  "wall_s": 79.84,
+  "adversarial": false,
+  "learned_class": "silent_truncation",
+  "learned_parameter": "not_a_real_field",
+  "learned_action": "Do not rely on the readback containing the key 'not_a_real_field'."
+}

@@ -1,0 +1,69 @@
+{
+  "id": "probe-009",
+  "belief_ids": [
+    "lab.search.the_item_is_created_in_a_draft_state_and_is",
+    "lab.search.the_search_index_is_updated_asynchronously_a"
+  ],
+  "template": "timing",
+  "params": {
+    "vendor": "Probe09",
+    "wait_s": 0.5,
+    "base": {
+      "filter": {
+        "vendor": "Probe09"
+      },
+      "page_size": 50
+    }
+  },
+  "why": "The draft hypothesis claims the item is invisible to search, while the async hypothesis claims it is visible but delayed. A timing experiment directly distinguishes between 'never appears' and 'appears after a lag'.",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.search.the_item_is_created_in_a_draft_state_and_is",
+      "predicts": "The item will not appear in the search results immediately, nor will it appear after the 0.5 second wait."
+    },
+    {
+      "hypothesis_id": "lab.search.the_search_index_is_updated_asynchronously_a",
+      "predicts": "The item will appear in the search results immediately (or within the 0.5 second window)."
+    }
+  ],
+  "observation": {
+    "template": "timing",
+    "params": {
+      "vendor": "Probe09",
+      "wait_s": 0.5,
+      "base": {
+        "filter": {
+          "vendor": "Probe09"
+        },
+        "page_size": 50
+      }
+    },
+    "calls": 2,
+    "facts": {
+      "before": 0,
+      "after": 0,
+      "waited_s": 0.5,
+      "changed": false,
+      "delta": 0
+    },
+    "narrative": [
+      "0 rows, waited 0.5s, then 0 rows"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.search.the_item_is_created_in_a_draft_state_and_is",
+      "verdict": "confirmed",
+      "because": "The search returned zero rows after waiting 0.5 seconds, matching the prediction that the item would not appear."
+    },
+    {
+      "hypothesis_id": "lab.search.the_search_index_is_updated_asynchronously_a",
+      "verdict": "falsified",
+      "because": "The search returned zero rows after waiting 0.5 seconds, contradicting the prediction that the item would appear."
+    }
+  ],
+  "learned": "The search query returned zero rows after a 0.5 second wait.",
+  "calls": 2,
+  "wall_s": 301.99,
+  "adversarial": false
+}

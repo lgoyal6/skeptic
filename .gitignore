@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 .env
 runs/*.jsonl
-probes/*.json
+!runs/observable.json
 !runs/.gitkeep
 !probes/.gitkeep
 node_modules/
@@ -11,3 +11,7 @@ ui/dist/
 .DS_Store
 ADVERSARY_BRIEF.md
 .agent-work/
+
+# Probe records and bench results are EVIDENCE, not build output. The whole
+# claim of this project is that its numbers came from experiments a reader can
+# inspect, so the experiments ship with it.
