@@ -20,6 +20,9 @@ from typing import Any, Callable
 
 from agent.adapters.lab import LabAdapter
 
+# No single experiment may block a worker for longer than this.
+MAX_WAIT_S = 20.0
+
 
 @dataclass
 class Observation:
@@ -154,7 +157,14 @@ def _timing(a: LabAdapter, p: dict[str, Any]) -> Observation:
     Separates a transient (indexing lag) from a permanent property (hard cap).
     """
     vendor = p.get("vendor", "ProbeTiming")
-    wait_s = float(p.get("wait_s", 3.0))
+    # An experiment gets a wall-clock budget like it gets a call budget.
+    # Unbounded, this template does exactly what it is told: a design asked
+    # for wait_s=2700 and the probe slept for forty-five minutes, blocking a
+    # settle worker the whole time. The cap is recorded in the facts so the
+    # verdict can see the question was only asked out to MAX_WAIT_S and not
+    # mistake a truncated wait for a negative result.
+    requested = float(p.get("wait_s", 3.0))
+    wait_s = min(requested, MAX_WAIT_S)
     base = dict(p.get("base") or {"filter": {"vendor": vendor}, "page_size": 50})
 
     sc0, b0 = a.search(**base)
@@ -167,7 +177,9 @@ def _timing(a: LabAdapter, p: dict[str, Any]) -> Observation:
         template="timing",
         params=p,
         calls=2,
-        facts={"before": n0, "after": n1, "waited_s": wait_s, "changed": n0 != n1,
+        facts={"before": n0, "after": n1, "waited_s": wait_s,
+               "requested_wait_s": requested,
+               "wait_truncated": requested > wait_s, "changed": n0 != n1,
                "delta": (n1 - n0) if (n0 is not None and n1 is not None) else None},
         narrative=[f"{n0} rows, waited {wait_s}s, then {n1} rows"],
     )
