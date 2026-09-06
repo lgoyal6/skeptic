@@ -1,0 +1,24 @@
+  12 rival groups, 5 at a time
+    [probe-000] 2 rivals -> idempotency_hazard
+    [probe-001] 2 rivals -> silent_coercion
+    [probe-002] 2 rivals -> silent_truncation
+    [probe-003] 2 rivals -> silent_coercion
+    [probe-004] 2 rivals -> undocumented_flag
+    [probe-003] consistency 2 calls 63s -> ['falsified', 'confirmed']
+    [probe-005] 2 rivals -> expiry
+    [probe-004] consistency 2 calls 74s -> ['confirmed', 'falsified']
+    [probe-006] 2 rivals -> silent_truncation
+    [probe-006] boundary 3 calls 187s -> ['inconclusive', 'inconclusive']
+    [probe-007] 2 rivals -> mislabelled_semantics
+    [probe-001] consistency 2 calls 358s -> ['falsified', 'inconclusive']
+    [probe-008] 2 rivals -> mislabelled_semantics
+    [probe-000] consistency 2 calls 370s -> ['falsified', 'falsified']
+    [probe-009] 2 rivals -> eventual_consistency
+    [probe-008] boundary 2 calls 67s -> ['falsified', 'falsified']
+    [probe-010] 2 rivals -> rate_limit
+    [probe-010] header_burst 10 calls 41s -> ['confirmed', 'falsified']
+    [probe-011] 2 rivals -> idempotency_hazard
+    ! probe failed: RuntimeError: reflector llm failed after 4 attempts: The read operation timed out
+    [probe-011] consistency 2 calls 66s -> ['falsified', 'confirmed']
+    [probe-009] timing 2 calls 302s -> ['confirmed', 'falsified']
+    ! probe failed: RuntimeError: reflector llm failed after 4 attempts: The read operation timed out

@@ -128,6 +128,12 @@ class ProbeRecord:
     calls: int
     wall_s: float
     adversarial: bool = False
+    # The restated-from-evidence fields, persisted so a saved probe record is
+    # enough to re-apply its verdicts. Without these, a crashed settle run
+    # loses every experiment it already paid for.
+    learned_class: str = ""
+    learned_parameter: str = ""
+    learned_action: str = ""
 
     def save(self, root: str | Path = "probes") -> Path:
         p = Path(root) / f"{self.id}.json"
@@ -219,7 +225,15 @@ def run_probe(
     probes_dir: str = "probes",
     budget_calls: int = 5,
     adversarial: bool = False,
+    apply: bool = True,
 ) -> ProbeRecord:
+    """Design, run and judge one experiment.
+
+    `apply=False` returns the record without touching the belief store, so
+    several probes can run concurrently (they are almost entirely waiting on
+    the model) and have their verdicts applied serially afterwards. The store
+    is a single YAML file; concurrent writers would race.
+    """
     t0 = time.time()
     plan = design(reflector, beliefs, vendor=vendor, budget_calls=budget_calls)
     tmpl = TEMPLATES[plan["template"]]
@@ -266,12 +280,17 @@ def run_probe(
         observation=obs.to_dict(),
         verdicts=verdict_data.get("verdicts", []),
         learned=str(verdict_data.get("learned", "")),
+        learned_class=str(verdict_data.get("learned_class", "")),
+        learned_parameter=str(verdict_data.get("learned_parameter", "")),
+        learned_action=str(verdict_data.get("learned_action", "")),
         calls=obs.calls,
         wall_s=round(time.time() - t0, 2),
         adversarial=adversarial,
     )
     rec.save(probes_dir)
-    _apply(store, rec, adversarial=adversarial, learned=verdict_data)
+    rec._learned_payload = verdict_data  # type: ignore[attr-defined]
+    if apply:
+        _apply(store, rec, adversarial=adversarial, learned=verdict_data)
     return rec
 
 

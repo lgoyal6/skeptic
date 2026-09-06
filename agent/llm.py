@@ -103,7 +103,10 @@ class LLM:
         base_url: str,
         api_key: str,
         usage: Usage | None = None,
-        timeout: float = 120.0,
+        # Measured completions on this endpoint run to 370s under load while
+        # the same call takes 34s idle. A 120s ceiling was cutting off work
+        # that was still coming, and reporting it as a transport failure.
+        timeout: float = 480.0,
     ) -> None:
         self.role = role
         self.model = model

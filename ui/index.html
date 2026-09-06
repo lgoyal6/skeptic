@@ -1,0 +1,262 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>skeptic</title>
+<style>
+  :root {
+    --ink: #17191c;
+    --ink-2: #5b6068;
+    --ink-3: #8b9098;
+    --paper: #fbfaf7;
+    --rule: #dcd8cf;
+    --grid: #eae6dd;
+    --true: #1f6f43;
+    --false: #a33a2a;
+    --open: #8a6d1f;
+    --gone: #9aa0a6;
+    --accent: #1d4ed8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 13px/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 26px 26px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 26px 20px 60px; }
+  header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+  h1 { font-size: 17px; margin: 0; letter-spacing: -0.2px; }
+  .sub { color: var(--ink-2); font-size: 12px; }
+  .thesis {
+    margin: 12px 0 22px; padding: 10px 14px; background: #fff;
+    border: 1px solid var(--rule); border-left: 3px solid var(--ink);
+    color: var(--ink-2); max-width: 860px;
+  }
+
+  /* metrics strip */
+  .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .metric { background: #fff; border: 1px solid var(--rule); padding: 10px 12px; }
+  .metric .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+  .metric .v { font-size: 22px; margin-top: 3px; letter-spacing: -0.5px; }
+  .metric .n { font-size: 11px; color: var(--ink-2); }
+  .metric.bad .v { color: var(--false); }
+  .metric.good .v { color: var(--true); }
+
+  nav { display: flex; gap: 2px; border-bottom: 1px solid var(--rule); margin-bottom: 18px; }
+  nav button {
+    font: inherit; background: none; border: 0; border-bottom: 2px solid transparent;
+    padding: 7px 13px; cursor: pointer; color: var(--ink-2);
+  }
+  nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+  section[hidden] { display: none; }
+
+  /* doc vs reality */
+  .belief { background: #fff; border: 1px solid var(--rule); margin-bottom: 10px; }
+  .belief > .head {
+    display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+    border-bottom: 1px solid var(--rule); cursor: pointer;
+  }
+  .tag {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .05em;
+    padding: 1px 6px; border: 1px solid currentColor;
+  }
+  .s-confirmed { color: var(--true); }
+  .s-hypothesis { color: var(--open); }
+  .s-falsified { color: var(--false); }
+  .s-retired { color: var(--gone); }
+  .where { color: var(--ink-3); font-size: 11.5px; margin-left: auto; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; }
+  .split > div { padding: 10px 12px; }
+  .split > div:first-child { border-right: 1px dashed var(--rule); background: #fdfcfa; }
+  .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin-bottom: 4px; }
+  .claim { color: var(--ink-2); }
+  .real { color: var(--ink); }
+  .foot { padding: 8px 12px; border-top: 1px dashed var(--rule); color: var(--ink-2); font-size: 11.5px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .bar { height: 4px; background: var(--grid); position: relative; width: 108px; display: inline-block; vertical-align: middle; }
+  .bar > i { position: absolute; inset: 0 auto 0 0; background: var(--false); }
+  details.hist { padding: 8px 12px; border-top: 1px dashed var(--rule); }
+  details.hist summary { cursor: pointer; color: var(--ink-3); font-size: 11.5px; }
+  details.hist ol { margin: 8px 0 0; padding-left: 20px; color: var(--ink-2); font-size: 11.5px; }
+
+  /* A/B */
+  table { border-collapse: collapse; width: 100%; background: #fff; border: 1px solid var(--rule); }
+  th, td { padding: 7px 11px; text-align: left; border-bottom: 1px solid var(--rule); }
+  th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); font-weight: 500; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pass { color: var(--true); }
+  .fail { color: var(--false); }
+  .win { background: #f2f8f4; }
+
+  /* probe */
+  .probe { background: #fff; border: 1px solid var(--rule); margin-bottom: 14px; }
+  .probe .head { padding: 8px 12px; border-bottom: 1px solid var(--rule); display: flex; gap: 10px; align-items: baseline; }
+  .probe .body { padding: 10px 12px; }
+  pre { margin: 6px 0 0; background: #fbfaf7; border: 1px solid var(--rule); padding: 8px 10px; overflow-x: auto; font-size: 11.5px; }
+  .hyp { padding: 7px 10px; border-left: 2px solid var(--rule); margin: 7px 0; }
+  .hyp.confirmed { border-left-color: var(--true); }
+  .hyp.falsified { border-left-color: var(--false); }
+  .hyp.inconclusive { border-left-color: var(--open); }
+  .muted { color: var(--ink-3); }
+  .empty { color: var(--ink-3); padding: 20px 0; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>skeptic</h1>
+    <span class="sub">the agent that reverse-engineers its own tools</span>
+  </header>
+  <div class="thesis">
+    Every agent is handed tool documentation and told to trust it. This one doesn't.
+    It runs experiments on its tools, learns what they actually do, discards beliefs
+    that stop being true, and publishes the spec so the next agent doesn't have to.
+  </div>
+
+  <div class="strip" id="strip"></div>
+
+  <nav>
+    <button id="t-docs" aria-selected="true">doc vs reality</button>
+    <button id="t-ab" aria-selected="false">before / after</button>
+    <button id="t-probe" aria-selected="false">probes</button>
+  </nav>
+
+  <section id="s-docs"></section>
+  <section id="s-ab" hidden></section>
+  <section id="s-probe" hidden></section>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+async function j(u) { try { const r = await fetch(u); return await r.json(); } catch { return {}; } }
+
+function metric(k, v, n, cls) {
+  return `<div class="metric ${cls||''}"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n||''}</div></div>`;
+}
+
+async function paintStrip() {
+  const [sc, be, hi] = await Promise.all([j('/api/score'), j('/api/beliefs'), j('/api/history')]);
+  const runs = (hi.runs||[]);
+  const withMem = runs.filter(r => r.memory);
+  const passed = withMem.filter(r => r.success).length;
+  const c = be.counts || {};
+  const cells = [
+    metric('precision', (sc.precision ?? 0).toFixed(2), `${sc.matched||0} of ${sc.confirmed_beliefs||0} confirmed`,
+           (sc.precision >= 0.9 ? 'good' : '')),
+    metric('recall', (sc.recall_observable ?? 0).toFixed(2),
+           `${(sc.found||[]).length} of ${(sc.observable_rules||[]).length} observable`),
+    metric('false beliefs', sc.false_beliefs ?? '-', 'matched no real rule',
+           (sc.false_beliefs > 0 ? 'bad' : 'good')),
+    metric('confirmed', c.confirmed ?? 0, `${c.hypothesis||0} open, ${c.falsified||0} falsified, ${c.retired||0} retired`),
+    metric('memory size', (be.context_tokens ?? 0) + 't', 'carried into every run'),
+    metric('task runs', `${passed}/${withMem.length}`, 'passed with memory'),
+  ];
+  $('#strip').innerHTML = cells.join('');
+}
+
+async function paintDocs() {
+  const d = await j('/api/beliefs');
+  const rows = (d.beliefs||[]);
+  if (!rows.length) { $('#s-docs').innerHTML = '<div class="empty">No beliefs yet. Run a session.</div>'; return; }
+  $('#s-docs').innerHTML = rows.map(b => {
+    const pct = Math.round((1 - b.p_doc) * 100);
+    const where = `${esc(b.operation)}${b.parameter ? ' / ' + esc(b.parameter) : ''}`;
+    return `<div class="belief">
+      <div class="head">
+        <span class="tag s-${b.status}">${b.status}</span>
+        <span class="muted">${esc(b.cls)}</span>
+        <span class="where">${where}</span>
+      </div>
+      <div class="split">
+        <div><div class="lbl">the docs say</div><div class="claim">${esc(b.doc_claims)||'<span class="muted">nothing specific</span>'}</div></div>
+        <div><div class="lbl">actually</div><div class="real">${esc(b.belief)}</div></div>
+      </div>
+      ${b.action ? `<div class="foot"><span>&rarr; ${esc(b.action)}</span></div>` : ''}
+      <div class="foot">
+        <span>doubt the docs <span class="bar"><i style="width:${pct}%"></i></span> ${pct}%</span>
+        <span>evidence ${b.evidence_for} for / ${b.evidence_against} against</span>
+        <span>${b.probes.length ? 'settled by ' + b.probes.map(esc).join(', ') : 'not yet settled'}</span>
+        ${b.survived ? `<span>survived ${esc(b.survived)}</span>` : ''}
+      </div>
+      ${b.history && b.history.length ? `<details class="hist"><summary>lifecycle (${b.history.length})</summary>
+        <ol>${b.history.map(h => `<li>${esc(h.event)} <span class="muted">p(doc)=${h.p_doc_correct} ${esc(h.detail||'')}</span></li>`).join('')}</ol>
+      </details>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function paintAB() {
+  const d = await j('/api/ab');
+  if (!d.available) {
+    $('#s-ab').innerHTML = '<div class="empty">No A/B yet. Run <code>make ab</code> once beliefs are confirmed.</div>';
+    return;
+  }
+  const n = d.naive, s = d.shielded;
+  const tasks = n.rows.map(r => r.task);
+  const srow = Object.fromEntries(s.rows.map(r => [r.task, r]));
+  const body = tasks.map(t => {
+    const a = n.rows.find(r => r.task === t) || {}, b = srow[t] || {};
+    const better = !a.ok && b.ok;
+    return `<tr class="${better ? 'win' : ''}">
+      <td>${esc(t)}</td>
+      <td class="${a.ok?'pass':'fail'}">${a.ok?'PASS':'FAIL'}</td>
+      <td class="num">${a.calls ?? '-'}</td>
+      <td class="${b.ok?'pass':'fail'}">${b.ok?'PASS':'FAIL'}</td>
+      <td class="num">${b.calls ?? '-'}</td>
+      <td class="num">${b.guards_fired ?? 0}</td>
+    </tr>`;
+  }).join('');
+  $('#s-ab').innerHTML = `
+    <p class="sub">Two fresh agents, neither with memory. One has the docs. The other has the docs
+    plus the guards compiled from what skeptic learned.</p>
+    <table>
+      <tr><th>task</th><th>naive</th><th class="num">calls</th><th>shielded</th><th class="num">calls</th><th class="num">guards fired</th></tr>
+      ${body}
+      <tr><th>total</th><th>${n.passed}/${n.total}</th><th class="num">${n.calls}</th>
+          <th>${s.passed}/${s.total}</th><th class="num">${s.calls}</th><th class="num">${s.guards_fired}</th></tr>
+    </table>
+    <p class="sub" style="margin-top:14px">guards enforced</p>
+    <table>${(d.guards||[]).map(g => `<tr><td>${esc(g.guard)}</td><td class="muted">${esc(g.implements)}</td>
+      <td class="num">${g.fired}x</td><td class="muted">${esc((g.because||'').slice(0,70))}</td></tr>`).join('')}</table>`;
+}
+
+async function paintProbe() {
+  const d = await j('/api/probes');
+  const ps = (d.probes||[]).slice().reverse();
+  if (!ps.length) { $('#s-probe').innerHTML = '<div class="empty">No probes yet.</div>'; return; }
+  $('#s-probe').innerHTML = ps.map(p => {
+    const preds = Object.fromEntries((p.predictions||[]).map(x => [x.hypothesis_id, x.predicts]));
+    return `<div class="probe">
+      <div class="head"><strong>${esc(p.template)}</strong>
+        <span class="muted">${p.calls} calls &middot; ${p.wall_s}s &middot; ${esc(p.id)}</span></div>
+      <div class="body">
+        <div class="lbl">why this experiment</div><div>${esc(p.why)}</div>
+        <div class="lbl" style="margin-top:10px">what happened</div>
+        <pre>${esc(JSON.stringify(p.observation?.facts ?? {}, null, 1)).slice(0, 1400)}</pre>
+        <div class="lbl" style="margin-top:10px">verdicts &mdash; predictions were committed before the experiment ran</div>
+        ${(p.verdicts||[]).map(v => `<div class="hyp ${esc(v.verdict)}">
+          <strong>${esc((v.verdict||'').toUpperCase())}</strong>
+          <div class="muted">predicted: ${esc((preds[v.hypothesis_id]||'').slice(0,150))}</div>
+          <div>${esc(v.because)}</div></div>`).join('')}
+        ${p.learned ? `<div class="lbl" style="margin-top:10px">learned</div><div>${esc(p.learned)}</div>` : ''}
+      </div></div>`;
+  }).join('');
+}
+
+function tab(btn, sec) {
+  ['docs','ab','probe'].forEach(k => {
+    $('#t-'+k).setAttribute('aria-selected', String(k === btn));
+    $('#s-'+k).hidden = (k !== btn);
+  });
+  sec();
+}
+$('#t-docs').onclick = () => tab('docs', paintDocs);
+$('#t-ab').onclick = () => tab('ab', paintAB);
+$('#t-probe').onclick = () => tab('probe', paintProbe);
+
+async function refresh() { await paintStrip(); if (!$('#s-docs').hidden) paintDocs();
+  if (!$('#s-ab').hidden) paintAB(); if (!$('#s-probe').hidden) paintProbe(); }
+refresh();
+setInterval(refresh, 5000);
+</script>

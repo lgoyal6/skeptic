@@ -1,83 +1,99 @@
 tool: lab
-updated: '2026-09-06T00:13:33Z'
+updated: '2026-09-06T00:44:41Z'
 counts:
-  hypothesis: 24
-  confirmed: 0
-  falsified: 0
+  hypothesis: 9
+  confirmed: 5
+  falsified: 10
   retired: 0
 beliefs:
-- id: lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
+- id: lab.create.the_field_is_mapped_to_a_legacy_system_that
   tool: lab
-  operation: bulk_create
-  doc_claims: 'all 30 created (doc: bulk_max=100)'
-  belief: The API has a hard batch limit (e.g., 20 items) that was exceeded, causing the excess to be
-    silently dropped.
-  action: Split bulk requests into chunks of 20 items.
-  parameter: items
-  status: hypothesis
+  operation: create
+  doc_claims: stored as sent
+  belief: The due_date field was sent as '1969-12-31' but stored as null.
+  action: Ensure dates are within the supported range.
+  parameter: due_date
+  status: confirmed
   posterior:
     alpha: 2.0
-    beta: 2.6
+    beta: 4.3
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-003
   survived_falsification: null
   falsified_by: null
   replay: {}
   competing:
-  - lab.bulk_create.the_transaction_failed_for_the_first_10_item
+  - lab.create.the_api_expects_a_specific_date_format_e_g_i
   history:
   - t: 1788653613.038
     event: created
-    detail: 'all 30 created (doc: bulk_max=100)'
-    p_doc_correct: 0.5556
+    detail: stored as sent
+    p_doc_correct: 0.6061
     status: hypothesis
   - t: 1788653613.038
     event: contradiction
     detail: recon-000
-    p_doc_correct: 0.4348
+    p_doc_correct: 0.4651
     status: hypothesis
   - t: 1788653613.038
     event: hypothesis
-    detail: Try creating 21 items. If it returns 21, the limit is higher. Try creating 30 items again.
-      If it returns 20 again, the limit is fixed.
-    p_doc_correct: 0.4348
+    detail: Send a date in the current year (e.g., '2023-04-01'). If this is accepted, the issue is specific
+      to the year 1965.
+    p_doc_correct: 0.4651
     status: hypothesis
   - t: 1788653613.038
     event: signature
-    detail: bulk_create.items.silent_truncation
-    p_doc_correct: 0.4348
+    detail: create.due_date.silent_null
+    p_doc_correct: 0.4651
     status: hypothesis
-  p_doc_correct: 0.4348
-  class: idempotency_hazard
-- id: lab.bulk_create.the_transaction_failed_for_the_first_10_item
+  - t: 1788655481.318
+    event: confirmed_by_probe
+    detail: probe-003
+    p_doc_correct: 0.4651
+    status: confirmed
+  - t: 1788655481.318
+    event: probe_confirmed
+    detail: The stored value for due_date was null.
+    p_doc_correct: 0.3175
+    status: confirmed
+  - t: 1788655481.318
+    event: restated_from_evidence
+    detail: 'was: The field is mapped to a legacy system that does not support dates before a certain
+      threshold (e.g., 1970), defaulting t'
+    p_doc_correct: 0.3175
+    status: confirmed
+  p_doc_correct: 0.3175
+  class: silent_coercion
+- id: lab.get.the_get_request_is_being_made_from_a_differe
   tool: lab
-  operation: bulk_create
-  doc_claims: 'all 30 created (doc: bulk_max=100)'
-  belief: The transaction failed for the first 10 items (e.g., validation error), causing a rollback that
-    reported 30 successes but only committed 20.
-  action: Check response body for errors and retry failed items.
-  parameter: items
-  status: hypothesis
+  operation: get
+  doc_claims: GET returns the item regardless of archived state
+  belief: The item was returned successfully with the status 'active', matching the sent value.
+  action: Ensure context consistency (API keys, tenants) across operations.
+  parameter: null
+  status: confirmed
   posterior:
     alpha: 2.0
-    beta: 2.4
+    beta: 4.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-004
   survived_falsification: null
   falsified_by: null
   replay: {}
   competing:
-  - lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
+  - lab.get.the_item_is_created_with_a_default_status_of
   history:
   - t: 1788653613.038
     event: created
-    detail: 'all 30 created (doc: bulk_max=100)'
+    detail: GET returns the item regardless of archived state
     p_doc_correct: 0.5882
     status: hypothesis
   - t: 1788653613.038
@@ -87,63 +103,218 @@ beliefs:
     status: hypothesis
   - t: 1788653613.038
     event: hypothesis
-    detail: Check the response body for error messages. Try creating the 11th item again. If it succeeds,
-      the previous batch failed.
+    detail: Use the exact same API key and headers for the GET request as the POST request.
     p_doc_correct: 0.4545
     status: hypothesis
   - t: 1788653613.038
     event: signature
-    detail: bulk_create.items.silent_truncation
+    detail: get._.undocumented_flag
     p_doc_correct: 0.4545
     status: hypothesis
-  p_doc_correct: 0.4545
-  class: idempotency_hazard
-- id: lab.create.the_api_accepts_numeric_input_but_serializes
+  - t: 1788655481.418
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.4545
+    status: confirmed
+  - t: 1788655481.418
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.3125
+    status: confirmed
+  - t: 1788655481.418
+    event: restated_from_evidence
+    detail: 'was: The GET request is being made from a different context (e.g., different tenant or API
+      key) than the creation context.'
+    p_doc_correct: 0.3125
+    status: confirmed
+  p_doc_correct: 0.3125
+  class: undocumented_flag
+- id: lab.search.the_item_is_created_in_a_draft_state_and_is
   tool: lab
-  operation: create
-  doc_claims: number
-  belief: The API accepts numeric input but serializes all response fields as JSON strings (e.g., for
-    legacy compatibility or specific contract requirements).
-  action: Treat all numeric response fields as strings.
-  parameter: amount
-  status: hypothesis
+  operation: search
+  doc_claims: items are immediately searchable
+  belief: The search query returned zero rows after a 0.5 second wait.
+  action: Ensure items are published before searching.
+  parameter: null
+  status: confirmed
   posterior:
     alpha: 2.0
-    beta: 2.6
+    beta: 4.7
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-009
   survived_falsification: null
   falsified_by: null
   replay: {}
   competing:
-  - lab.create.the_underlying_database_stores_the_amount_as
+  - lab.search.the_search_index_is_updated_asynchronously_a
   history:
   - t: 1788653613.038
     event: created
-    detail: number
-    p_doc_correct: 0.5556
+    detail: items are immediately searchable
+    p_doc_correct: 0.5405
     status: hypothesis
   - t: 1788653613.038
     event: contradiction
     detail: recon-000
-    p_doc_correct: 0.4348
+    p_doc_correct: 0.4255
     status: hypothesis
   - t: 1788653613.038
     event: hypothesis
-    detail: Check the 'id' field in the response. If 'id' is also a string, the API likely serializes
-      everything as strings.
-    p_doc_correct: 0.4348
+    detail: 'Check the ''status'' field of the created item. Try creating it with ''status'': ''published''.
+      If it appears immediately, it was a draft.'
+    p_doc_correct: 0.4255
     status: hypothesis
   - t: 1788653613.038
     event: signature
-    detail: create.amount.type_coercion
-    p_doc_correct: 0.4348
+    detail: search._.write_not_visible
+    p_doc_correct: 0.4255
     status: hypothesis
-  p_doc_correct: 0.4348
-  class: silent_coercion
+  - t: 1788655481.814
+    event: confirmed_by_probe
+    detail: probe-009
+    p_doc_correct: 0.4255
+    status: confirmed
+  - t: 1788655481.814
+    event: probe_confirmed
+    detail: The search returned zero rows after waiting 0.5 seconds, matching the prediction that the
+      item would not appear.
+    p_doc_correct: 0.2985
+    status: confirmed
+  - t: 1788655481.814
+    event: restated_from_evidence
+    detail: 'was: The item is created in a ''draft'' state and is not searchable until explicitly published
+      or archived.'
+    p_doc_correct: 0.2985
+    status: confirmed
+  p_doc_correct: 0.2985
+  class: eventual_consistency
+- id: lab.search.the_rate_limit_is_global_shared_across_all_u
+  tool: lab
+  operation: search
+  doc_claims: no rate limit; 429 never returned
+  belief: 7 out of 10 requests were throttled, with the first throttling occurring on the 4th request.
+  action: Retry with exponential backoff.
+  parameter: null
+  status: confirmed
+  posterior:
+    alpha: 2.0
+    beta: 4.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-010
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.there_is_a_hidden_rate_limit_e_g_100_request
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: no rate limit; 429 never returned
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Wait 5 minutes and try again. If it works, the limit was global and saturated.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search._.undocumented_status
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788655481.69
+    event: confirmed_by_probe
+    detail: probe-010
+    p_doc_correct: 0.4444
+    status: confirmed
+  - t: 1788655481.69
+    event: probe_confirmed
+    detail: 7 out of 10 requests were throttled.
+    p_doc_correct: 0.3077
+    status: confirmed
+  - t: 1788655481.69
+    event: restated_from_evidence
+    detail: 'was: The rate limit is global (shared across all users) and is currently saturated.'
+    p_doc_correct: 0.3077
+    status: confirmed
+  p_doc_correct: 0.3077
+  class: rate_limit
+- id: lab.update.the_validation_logic_is_buggy_and_only_check
+  tool: lab
+  operation: update
+  doc_claims: 400 unknown_field
+  belief: The field `not_a_real_field` was present in the readback and stored as null, despite being sent
+    with the value 'test_value'.
+  action: Be cautious with required fields; assume the API might be lenient.
+  parameter: not_a_real_field
+  status: confirmed
+  posterior:
+    alpha: 2.0
+    beta: 4.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-011
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.update.the_api_is_designed_to_be_soft_and_ignores_u
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: 400 unknown_field
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send a valid field that is required but missing. If it returns 200, the validation is broken.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: update.not_a_real_field.silent_ignore
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788655481.777
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.4444
+    status: confirmed
+  - t: 1788655481.777
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.3077
+    status: confirmed
+  - t: 1788655481.777
+    event: restated_from_evidence
+    detail: 'was: The validation logic is buggy and only checks for missing required fields, failing to
+      reject extra unknown fields.'
+    p_doc_correct: 0.3077
+    status: confirmed
+  p_doc_correct: 0.3077
+  class: idempotency_hazard
 - id: lab.create.the_api_accepts_up_to_2000_characters_but_th
   tool: lab
   operation: create
@@ -236,97 +407,6 @@ beliefs:
     status: hypothesis
   p_doc_correct: 0.4444
   class: silent_truncation
-- id: lab.create.the_api_expects_a_specific_date_format_e_g_i
-  tool: lab
-  operation: create
-  doc_claims: stored as sent
-  belief: The API expects a specific date format (e.g., ISO 8601) and '1965-04-01' is invalid, causing
-    it to default to null.
-  action: Always send dates in ISO 8601 format.
-  parameter: due_date
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.7
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.create.the_field_is_mapped_to_a_legacy_system_that
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: stored as sent
-    p_doc_correct: 0.5405
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4255
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Send '1965-04-01T00:00:00Z' (ISO 8601). If this is accepted, the API requires ISO format.
-    p_doc_correct: 0.4255
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: create.due_date.silent_null
-    p_doc_correct: 0.4255
-    status: hypothesis
-  p_doc_correct: 0.4255
-  class: silent_coercion
-- id: lab.create.the_field_is_mapped_to_a_legacy_system_that
-  tool: lab
-  operation: create
-  doc_claims: stored as sent
-  belief: The field is mapped to a legacy system that does not support dates before a certain threshold
-    (e.g., 1970), defaulting to null.
-  action: Ensure dates are within the supported range.
-  parameter: due_date
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.3
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.create.the_api_expects_a_specific_date_format_e_g_i
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: stored as sent
-    p_doc_correct: 0.6061
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4651
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Send a date in the current year (e.g., '2023-04-01'). If this is accepted, the issue is specific
-      to the year 1965.
-    p_doc_correct: 0.4651
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: create.due_date.silent_null
-    p_doc_correct: 0.4651
-    status: hypothesis
-  p_doc_correct: 0.4651
-  class: silent_coercion
 - id: lab.create.the_underlying_database_stores_the_amount_as
   tool: lab
   operation: create
@@ -371,98 +451,14 @@ beliefs:
     detail: create.amount.type_coercion
     p_doc_correct: 0.4545
     status: hypothesis
+  - t: 1788655481.537
+    event: probe_inconclusive
+    detail: The evidence confirms the API behavior (echo matches sent) but does not reveal the underlying
+      database storage type.
+    p_doc_correct: 0.4545
+    status: hypothesis
   p_doc_correct: 0.4545
   class: silent_coercion
-- id: lab.get.the_get_request_is_being_made_from_a_differe
-  tool: lab
-  operation: get
-  doc_claims: GET returns the item regardless of archived state
-  belief: The GET request is being made from a different context (e.g., different tenant or API key) than
-    the creation context.
-  action: Ensure context consistency (API keys, tenants) across operations.
-  parameter: null
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.4
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.get.the_item_is_created_with_a_default_status_of
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: GET returns the item regardless of archived state
-    p_doc_correct: 0.5882
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Use the exact same API key and headers for the GET request as the POST request.
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: get._.undocumented_flag
-    p_doc_correct: 0.4545
-    status: hypothesis
-  p_doc_correct: 0.4545
-  class: undocumented_flag
-- id: lab.get.the_item_is_created_with_a_default_status_of
-  tool: lab
-  operation: get
-  doc_claims: GET returns the item regardless of archived state
-  belief: The item is created with a default status of 'archived' or 'deleted', making it invisible to
-    GET requests.
-  action: Check the status of items before attempting to GET them.
-  parameter: null
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.6
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.get.the_get_request_is_being_made_from_a_differe
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: GET returns the item regardless of archived state
-    p_doc_correct: 0.5556
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4348
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Check the 'status' field of the created item. If it is 'archived', the flag is the status.
-    p_doc_correct: 0.4348
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: get._.undocumented_flag
-    p_doc_correct: 0.4348
-    status: hypothesis
-  p_doc_correct: 0.4348
-  class: undocumented_flag
 - id: lab.search.cursors_expire_after_a_fixed_time_duration_e
   tool: lab
   operation: search
@@ -595,6 +591,11 @@ beliefs:
     detail: search.page_size.silent_truncation
     p_doc_correct: 0.4444
     status: hypothesis
+  - t: 1788655481.507
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.4444
+    status: hypothesis
   p_doc_correct: 0.4444
   class: silent_truncation
 - id: lab.search.the_api_enforces_a_hard_limit_of_50_results
@@ -638,6 +639,11 @@ beliefs:
   - t: 1788653613.038
     event: signature
     detail: search.page_size.silent_truncation
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788655481.507
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
     p_doc_correct: 0.4444
     status: hypothesis
   p_doc_correct: 0.4444
@@ -732,6 +738,268 @@ beliefs:
     status: hypothesis
   p_doc_correct: 0.4348
   class: mislabelled_semantics
+- id: lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
+  tool: lab
+  operation: bulk_create
+  doc_claims: 'all 30 created (doc: bulk_max=100)'
+  belief: The API has a hard batch limit (e.g., 20 items) that was exceeded, causing the excess to be
+    silently dropped.
+  action: Split bulk requests into chunks of 20 items.
+  parameter: items
+  status: falsified
+  posterior:
+    alpha: 3.0
+    beta: 2.6
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-000
+  survived_falsification: null
+  falsified_by: probe-000
+  replay: {}
+  competing:
+  - lab.bulk_create.the_transaction_failed_for_the_first_10_item
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: 'all 30 created (doc: bulk_max=100)'
+    p_doc_correct: 0.5556
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Try creating 21 items. If it returns 21, the limit is higher. Try creating 30 items again.
+      If it returns 20 again, the limit is fixed.
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: bulk_create.items.silent_truncation
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788655481.604
+    event: falsified
+    detail: The prediction was that 20 items would be created, but the read-back shows only one item was
+      created (with a null name).
+    p_doc_correct: 0.4348
+    status: falsified
+  p_doc_correct: 0.5357
+  class: idempotency_hazard
+- id: lab.bulk_create.the_transaction_failed_for_the_first_10_item
+  tool: lab
+  operation: bulk_create
+  doc_claims: 'all 30 created (doc: bulk_max=100)'
+  belief: The transaction failed for the first 10 items (e.g., validation error), causing a rollback that
+    reported 30 successes but only committed 20.
+  action: Check response body for errors and retry failed items.
+  parameter: items
+  status: falsified
+  posterior:
+    alpha: 3.0
+    beta: 2.4
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-000
+  survived_falsification: null
+  falsified_by: probe-000
+  replay: {}
+  competing:
+  - lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: 'all 30 created (doc: bulk_max=100)'
+    p_doc_correct: 0.5882
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Check the response body for error messages. Try creating the 11th item again. If it succeeds,
+      the previous batch failed.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: bulk_create.items.silent_truncation
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788655481.604
+    event: falsified
+    detail: The prediction was that 0 items would be created, but the read-back shows one item was created
+      (with a null name).
+    p_doc_correct: 0.4545
+    status: falsified
+  p_doc_correct: 0.5556
+  class: idempotency_hazard
+- id: lab.create.the_api_accepts_numeric_input_but_serializes
+  tool: lab
+  operation: create
+  doc_claims: number
+  belief: The API accepts numeric input but serializes all response fields as JSON strings (e.g., for
+    legacy compatibility or specific contract requirements).
+  action: Treat all numeric response fields as strings.
+  parameter: amount
+  status: falsified
+  posterior:
+    alpha: 3.0
+    beta: 2.6
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-001
+  survived_falsification: null
+  falsified_by: probe-001
+  replay: {}
+  competing:
+  - lab.create.the_underlying_database_stores_the_amount_as
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: number
+    p_doc_correct: 0.5556
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Check the 'id' field in the response. If 'id' is also a string, the API likely serializes
+      everything as strings.
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.amount.type_coercion
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788655481.537
+    event: falsified
+    detail: The read-back matches the sent value (100), which is a number, contradicting the prediction
+      that the read-back would be a string.
+    p_doc_correct: 0.4348
+    status: falsified
+  p_doc_correct: 0.5357
+  class: silent_coercion
+- id: lab.create.the_api_expects_a_specific_date_format_e_g_i
+  tool: lab
+  operation: create
+  doc_claims: stored as sent
+  belief: The API expects a specific date format (e.g., ISO 8601) and '1965-04-01' is invalid, causing
+    it to default to null.
+  action: Always send dates in ISO 8601 format.
+  parameter: due_date
+  status: falsified
+  posterior:
+    alpha: 3.0
+    beta: 2.7
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-003
+  survived_falsification: null
+  falsified_by: probe-003
+  replay: {}
+  competing:
+  - lab.create.the_field_is_mapped_to_a_legacy_system_that
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: stored as sent
+    p_doc_correct: 0.5405
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4255
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send '1965-04-01T00:00:00Z' (ISO 8601). If this is accepted, the API requires ISO format.
+    p_doc_correct: 0.4255
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.due_date.silent_null
+    p_doc_correct: 0.4255
+    status: hypothesis
+  - t: 1788655481.318
+    event: falsified
+    detail: The stored value was null, not the sent value '1969-12-31'.
+    p_doc_correct: 0.4255
+    status: falsified
+  p_doc_correct: 0.5263
+  class: silent_coercion
+- id: lab.get.the_item_is_created_with_a_default_status_of
+  tool: lab
+  operation: get
+  doc_claims: GET returns the item regardless of archived state
+  belief: The item is created with a default status of 'archived' or 'deleted', making it invisible to
+    GET requests.
+  action: Check the status of items before attempting to GET them.
+  parameter: null
+  status: falsified
+  posterior:
+    alpha: 3.0
+    beta: 2.6
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-004
+  survived_falsification: null
+  falsified_by: probe-004
+  replay: {}
+  competing:
+  - lab.get.the_get_request_is_being_made_from_a_differe
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: GET returns the item regardless of archived state
+    p_doc_correct: 0.5556
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Check the 'status' field of the created item. If it is 'archived', the flag is the status.
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: get._.undocumented_flag
+    p_doc_correct: 0.4348
+    status: hypothesis
+  - t: 1788655481.418
+    event: falsified
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active', not 'archived'.
+    p_doc_correct: 0.4348
+    status: falsified
+  p_doc_correct: 0.5357
+  class: undocumented_flag
 - id: lab.search.the_filter_field_name_vendorr_is_a_typo_for
   tool: lab
   operation: search
@@ -740,17 +1008,18 @@ beliefs:
     ignores the typo, returning empty results.
   action: Verify field names against the documentation.
   parameter: filter
-  status: hypothesis
+  status: falsified
   posterior:
-    alpha: 2.0
+    alpha: 3.0
     beta: 2.6
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-008
   survived_falsification: null
-  falsified_by: null
+  falsified_by: probe-008
   replay: {}
   competing:
   - lab.search.the_filter_is_valid_but_there_are_genuinely
@@ -776,7 +1045,12 @@ beliefs:
     detail: search.filter.silent_empty
     p_doc_correct: 0.4348
     status: hypothesis
-  p_doc_correct: 0.4348
+  - t: 1788655481.653
+    event: falsified
+    detail: The search with 'vendorr' returned 50 items, not empty results.
+    p_doc_correct: 0.4348
+    status: falsified
+  p_doc_correct: 0.5357
   class: mislabelled_semantics
 - id: lab.search.the_filter_is_valid_but_there_are_genuinely
   tool: lab
@@ -785,17 +1059,18 @@ beliefs:
   belief: The filter is valid, but there are genuinely no items matching 'Recon' in the database.
   action: Verify data existence before filtering.
   parameter: filter
-  status: hypothesis
+  status: falsified
   posterior:
-    alpha: 2.0
+    alpha: 3.0
     beta: 2.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-008
   survived_falsification: null
-  falsified_by: null
+  falsified_by: probe-008
   replay: {}
   competing:
   - lab.search.the_filter_field_name_vendorr_is_a_typo_for
@@ -821,97 +1096,13 @@ beliefs:
     detail: search.filter.silent_empty
     p_doc_correct: 0.4545
     status: hypothesis
-  p_doc_correct: 0.4545
+  - t: 1788655481.653
+    event: falsified
+    detail: Both searches returned 50 items, not empty results.
+    p_doc_correct: 0.4545
+    status: falsified
+  p_doc_correct: 0.5556
   class: mislabelled_semantics
-- id: lab.search.the_item_is_created_in_a_draft_state_and_is
-  tool: lab
-  operation: search
-  doc_claims: items are immediately searchable
-  belief: The item is created in a 'draft' state and is not searchable until explicitly published or archived.
-  action: Ensure items are published before searching.
-  parameter: null
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.7
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.search.the_search_index_is_updated_asynchronously_a
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: items are immediately searchable
-    p_doc_correct: 0.5405
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4255
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: 'Check the ''status'' field of the created item. Try creating it with ''status'': ''published''.
-      If it appears immediately, it was a draft.'
-    p_doc_correct: 0.4255
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search._.write_not_visible
-    p_doc_correct: 0.4255
-    status: hypothesis
-  p_doc_correct: 0.4255
-  class: eventual_consistency
-- id: lab.search.the_rate_limit_is_global_shared_across_all_u
-  tool: lab
-  operation: search
-  doc_claims: no rate limit; 429 never returned
-  belief: The rate limit is global (shared across all users) and is currently saturated.
-  action: Retry with exponential backoff.
-  parameter: null
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.search.there_is_a_hidden_rate_limit_e_g_100_request
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: no rate limit; 429 never returned
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Wait 5 minutes and try again. If it works, the limit was global and saturated.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search._.undocumented_status
-    p_doc_correct: 0.4444
-    status: hypothesis
-  p_doc_correct: 0.4444
-  class: rate_limit
 - id: lab.search.the_search_index_is_updated_asynchronously_a
   tool: lab
   operation: search
@@ -919,17 +1110,18 @@ beliefs:
   belief: The search index is updated asynchronously and has a lag of approximately 0.4 seconds.
   action: Implement a retry/backoff mechanism for search.
   parameter: null
-  status: hypothesis
+  status: falsified
   posterior:
-    alpha: 2.0
+    alpha: 3.0
     beta: 2.3
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-009
   survived_falsification: null
-  falsified_by: null
+  falsified_by: probe-009
   replay: {}
   competing:
   - lab.search.the_item_is_created_in_a_draft_state_and_is
@@ -954,7 +1146,13 @@ beliefs:
     detail: search._.write_not_visible
     p_doc_correct: 0.4651
     status: hypothesis
-  p_doc_correct: 0.4651
+  - t: 1788655481.814
+    event: falsified
+    detail: The search returned zero rows after waiting 0.5 seconds, contradicting the prediction that
+      the item would appear.
+    p_doc_correct: 0.4651
+    status: falsified
+  p_doc_correct: 0.566
   class: eventual_consistency
 - id: lab.search.there_is_a_hidden_rate_limit_e_g_100_request
   tool: lab
@@ -963,17 +1161,18 @@ beliefs:
   belief: There is a hidden rate limit (e.g., 100 requests per minute) that is rarely hit but exists.
   action: Implement rate limiting logic.
   parameter: null
-  status: hypothesis
+  status: falsified
   posterior:
-    alpha: 2.0
+    alpha: 3.0
     beta: 2.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-010
   survived_falsification: null
-  falsified_by: null
+  falsified_by: probe-010
   replay: {}
   competing:
   - lab.search.the_rate_limit_is_global_shared_across_all_u
@@ -999,7 +1198,12 @@ beliefs:
     detail: search._.undocumented_status
     p_doc_correct: 0.4444
     status: hypothesis
-  p_doc_correct: 0.4444
+  - t: 1788655481.69
+    event: falsified
+    detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
+    p_doc_correct: 0.4444
+    status: falsified
+  p_doc_correct: 0.5455
   class: rate_limit
 - id: lab.update.the_api_is_designed_to_be_soft_and_ignores_u
   tool: lab
@@ -1009,17 +1213,18 @@ beliefs:
     breaking existing clients.
   action: Assume unknown fields are ignored, but verify required fields are present.
   parameter: not_a_real_field
-  status: hypothesis
+  status: falsified
   posterior:
-    alpha: 2.0
+    alpha: 3.0
     beta: 2.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-011
   survived_falsification: null
-  falsified_by: null
+  falsified_by: probe-011
   replay: {}
   competing:
   - lab.update.the_validation_logic_is_buggy_and_only_check
@@ -1045,50 +1250,10 @@ beliefs:
     detail: update.not_a_real_field.silent_ignore
     p_doc_correct: 0.4444
     status: hypothesis
-  p_doc_correct: 0.4444
-  class: idempotency_hazard
-- id: lab.update.the_validation_logic_is_buggy_and_only_check
-  tool: lab
-  operation: update
-  doc_claims: 400 unknown_field
-  belief: The validation logic is buggy and only checks for missing required fields, failing to reject
-    extra unknown fields.
-  action: Be cautious with required fields; assume the API might be lenient.
-  parameter: not_a_real_field
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.update.the_api_is_designed_to_be_soft_and_ignores_u
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: 400 unknown_field
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
+  - t: 1788655481.777
+    event: falsified
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
     p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Send a valid field that is required but missing. If it returns 200, the validation is broken.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: update.not_a_real_field.silent_ignore
-    p_doc_correct: 0.4444
-    status: hypothesis
-  p_doc_correct: 0.4444
+    status: falsified
+  p_doc_correct: 0.5455
   class: idempotency_hazard
