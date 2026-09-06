@@ -9,3 +9,5 @@ probes/*.json
 node_modules/
 ui/dist/
 .DS_Store
+ADVERSARY_BRIEF.md
+.agent-work/
