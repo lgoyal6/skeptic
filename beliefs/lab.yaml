@@ -1,9 +1,9 @@
 tool: lab
-updated: '2026-09-06T00:59:41Z'
+updated: '2026-09-06T03:19:38Z'
 counts:
-  hypothesis: 5
+  hypothesis: 6
   confirmed: 5
-  falsified: 14
+  falsified: 13
   retired: 0
 beliefs:
 - id: lab.create.the_field_is_mapped_to_a_legacy_system_that
@@ -232,12 +232,13 @@ beliefs:
   status: confirmed
   posterior:
     alpha: 2.0
-    beta: 10.7
+    beta: 12.7
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-009
   - probe-009
   - probe-009
   - probe-009
@@ -345,7 +346,18 @@ beliefs:
       item would not appear.
     p_doc_correct: 0.1575
     status: confirmed
-  p_doc_correct: 0.1575
+  - t: 1788656668.642
+    event: confirmed_by_probe
+    detail: probe-009
+    p_doc_correct: 0.1575
+    status: confirmed
+  - t: 1788656668.642
+    event: probe_confirmed
+    detail: The search returned zero rows after waiting 0.5 seconds, matching the prediction that the
+      item would not appear.
+    p_doc_correct: 0.1361
+    status: confirmed
+  p_doc_correct: 0.1361
   class: eventual_consistency
 - id: lab.search.the_rate_limit_is_global_shared_across_all_u
   tool: lab
@@ -357,12 +369,13 @@ beliefs:
   status: confirmed
   posterior:
     alpha: 2.0
-    beta: 10.5
+    beta: 12.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-010
   - probe-010
   - probe-010
   - probe-010
@@ -534,7 +547,17 @@ beliefs:
     detail: 7 out of 10 requests were throttled.
     p_doc_correct: 0.16
     status: confirmed
-  p_doc_correct: 0.16
+  - t: 1788656668.588
+    event: confirmed_by_probe
+    detail: probe-010
+    p_doc_correct: 0.16
+    status: confirmed
+  - t: 1788656668.588
+    event: probe_confirmed
+    detail: 7 out of 10 requests were throttled.
+    p_doc_correct: 0.1379
+    status: confirmed
+  p_doc_correct: 0.1379
   class: rate_limit
 - id: lab.update.the_validation_logic_is_buggy_and_only_check
   tool: lab
@@ -547,12 +570,13 @@ beliefs:
   status: confirmed
   posterior:
     alpha: 2.0
-    beta: 10.5
+    beta: 12.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-011
   - probe-011
   - probe-011
   - probe-011
@@ -660,7 +684,17 @@ beliefs:
     detail: idempotency_hazard -> silent_coercion from update.not_a_real_field.silent_ignore
     p_doc_correct: 0.16
     status: confirmed
-  p_doc_correct: 0.16
+  - t: 1788656668.615
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.16
+    status: confirmed
+  - t: 1788656668.615
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.1379
+    status: confirmed
+  p_doc_correct: 0.1379
   class: silent_coercion
 - id: lab.create.the_api_accepts_up_to_2000_characters_but_th
   tool: lab
@@ -716,6 +750,12 @@ beliefs:
     event: probe_inconclusive
     detail: The evidence confirms the string was echoed back, but does not provide the character count
       to verify the 3000-character limit.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656668.763
+    event: probe_inconclusive
+    detail: The experiment sent a title of length 1, which is below the 2000 character limit, so the truncation
+      behavior was not observed.
     p_doc_correct: 0.4444
     status: hypothesis
   p_doc_correct: 0.4444
@@ -774,6 +814,12 @@ beliefs:
     event: probe_inconclusive
     detail: The evidence confirms the string was echoed back, but does not provide the character count
       to verify the 255-character limit.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656668.763
+    event: probe_inconclusive
+    detail: The experiment sent a title of length 1, which is below the 255 character limit, so the error
+      behavior was not observed.
     p_doc_correct: 0.4444
     status: hypothesis
   p_doc_correct: 0.4444
@@ -868,6 +914,98 @@ beliefs:
     status: hypothesis
   p_doc_correct: 0.4444
   class: expiry
+- id: lab.search.the_api_accepts_500_but_the_specific_query_s
+  tool: lab
+  operation: search
+  doc_claims: 'up to 500 (doc: page_size_max=500)'
+  belief: The API accepts 500, but the specific query scope or database only contains 50 items.
+  action: Check the 'has_more' flag to determine if more data exists.
+  parameter: page_size
+  status: hypothesis
+  posterior:
+    alpha: 5.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-003
+  - probe-003
+  - probe-003
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_api_enforces_a_hard_limit_of_50_results
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: 'up to 500 (doc: page_size_max=500)'
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Create 100 items and search with page_size=500. If it returns 100, the limit is data-dependent.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.page_size.silent_truncation
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788655481.507
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788655709.403
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656106.224
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656106.51
+    event: falsified
+    detail: The result set did not increase; the delta was 0.
+    p_doc_correct: 0.4444
+    status: falsified
+  - t: 1788656173.233
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.5455
+    status: falsified
+  - t: 1788656173.474
+    event: falsified
+    detail: The result set did not increase; the delta was 0.
+    p_doc_correct: 0.5455
+    status: falsified
+  - t: 1788656668.532
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.6154
+    status: falsified
+  - t: 1788656668.707
+    event: falsified
+    detail: The result set did not increase; the delta was 0.
+    p_doc_correct: 0.6154
+    status: falsified
+  - t: 1788656721.076
+    event: reopened
+    detail: falsified by an experiment that observed nothing (population=0)
+    p_doc_correct: 0.6667
+    status: hypothesis
+  p_doc_correct: 0.6667
+  class: silent_truncation
 - id: lab.search.the_api_enforces_a_hard_limit_of_50_results
   tool: lab
   operation: search
@@ -877,13 +1015,14 @@ beliefs:
   parameter: page_size
   status: hypothesis
   posterior:
-    alpha: 2.0
+    alpha: 3.0
     beta: 2.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-002
   survived_falsification: null
   falsified_by: null
   replay: {}
@@ -941,7 +1080,27 @@ beliefs:
     detail: The result set was 1, not 50, so the hard limit behavior could not be observed.
     p_doc_correct: 0.4444
     status: hypothesis
-  p_doc_correct: 0.4444
+  - t: 1788656668.532
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656668.707
+    event: probe_inconclusive
+    detail: The result set was 1, not 50, so the hard limit behavior could not be observed.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656668.797
+    event: falsified
+    detail: It predicted 50 results but the API returned 0.
+    p_doc_correct: 0.4444
+    status: falsified
+  - t: 1788656721.076
+    event: reopened
+    detail: falsified by an experiment that observed nothing (population=0)
+    p_doc_correct: 0.5455
+    status: hypothesis
+  p_doc_correct: 0.5455
   class: silent_truncation
 - id: lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
   tool: lab
@@ -1200,13 +1359,14 @@ beliefs:
   parameter: amount
   status: falsified
   posterior:
-    alpha: 4.0
+    alpha: 5.0
     beta: 2.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-001
   - probe-001
   - probe-001
   survived_falsification: null
@@ -1260,7 +1420,13 @@ beliefs:
       amount to a string.'
     p_doc_correct: 0.5556
     status: falsified
-  p_doc_correct: 0.625
+  - t: 1788656668.673
+    event: falsified
+    detail: 'The API echoed the sent data exactly (echo_matches_sent: true) instead of converting the
+      amount to a string.'
+    p_doc_correct: 0.625
+    status: falsified
+  p_doc_correct: 0.6757
   class: silent_coercion
 - id: lab.get.the_item_is_created_with_a_default_status_of
   tool: lab
@@ -1328,82 +1494,6 @@ beliefs:
     status: falsified
   p_doc_correct: 0.6579
   class: undocumented_flag
-- id: lab.search.the_api_accepts_500_but_the_specific_query_s
-  tool: lab
-  operation: search
-  doc_claims: 'up to 500 (doc: page_size_max=500)'
-  belief: The API accepts 500, but the specific query scope or database only contains 50 items.
-  action: Check the 'has_more' flag to determine if more data exists.
-  parameter: page_size
-  status: falsified
-  posterior:
-    alpha: 4.0
-    beta: 2.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes:
-  - probe-003
-  - probe-003
-  survived_falsification: null
-  falsified_by: probe-003
-  replay: {}
-  competing:
-  - lab.search.the_api_enforces_a_hard_limit_of_50_results
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: 'up to 500 (doc: page_size_max=500)'
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Create 100 items and search with page_size=500. If it returns 100, the limit is data-dependent.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search.page_size.silent_truncation
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788655481.507
-    event: probe_inconclusive
-    detail: Both hypotheses predict the same outcome (50 items for all inputs).
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788655709.403
-    event: probe_inconclusive
-    detail: Both hypotheses predict the same outcome (50 items for all inputs).
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788656106.224
-    event: probe_inconclusive
-    detail: Both hypotheses predict the same outcome (50 items for all inputs).
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788656106.51
-    event: falsified
-    detail: The result set did not increase; the delta was 0.
-    p_doc_correct: 0.4444
-    status: falsified
-  - t: 1788656173.233
-    event: probe_inconclusive
-    detail: Both hypotheses predict the same outcome (50 items for all inputs).
-    p_doc_correct: 0.5455
-    status: falsified
-  - t: 1788656173.474
-    event: falsified
-    detail: The result set did not increase; the delta was 0.
-    p_doc_correct: 0.5455
-    status: falsified
-  p_doc_correct: 0.6154
-  class: silent_truncation
 - id: lab.search.the_api_sorts_by_created_descending_but_the
   tool: lab
   operation: search
@@ -1413,13 +1503,14 @@ beliefs:
   parameter: sort
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 4.0
     beta: 2.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-004
   - probe-004
   survived_falsification: null
   falsified_by: probe-004
@@ -1453,7 +1544,13 @@ beliefs:
       chronological order.
     p_doc_correct: 0.4545
     status: falsified
-  p_doc_correct: 0.5556
+  - t: 1788656668.734
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not descending
+      chronological order.
+    p_doc_correct: 0.5556
+    status: falsified
+  p_doc_correct: 0.625
   class: mislabelled_semantics
 - id: lab.search.the_api_sorts_by_the_string_value_of_the_fie
   tool: lab
@@ -1465,13 +1562,14 @@ beliefs:
   parameter: sort
   status: falsified
   posterior:
-    alpha: 3.0
+    alpha: 4.0
     beta: 2.6
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-004
   - probe-004
   survived_falsification: null
   falsified_by: probe-004
@@ -1506,7 +1604,13 @@ beliefs:
       order of the timestamps (oldest first).
     p_doc_correct: 0.4348
     status: falsified
-  p_doc_correct: 0.5357
+  - t: 1788656668.734
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not lexicographical
+      order of the timestamps (oldest first).
+    p_doc_correct: 0.5357
+    status: falsified
+  p_doc_correct: 0.6061
   class: mislabelled_semantics
 - id: lab.search.the_filter_field_name_vendorr_is_a_typo_for
   tool: lab
@@ -1518,13 +1622,14 @@ beliefs:
   parameter: filter
   status: falsified
   posterior:
-    alpha: 6.0
+    alpha: 7.0
     beta: 2.6
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-008
   - probe-008
   - probe-008
   - probe-008
@@ -1581,7 +1686,12 @@ beliefs:
     detail: mislabelled_semantics -> silent_coercion from search.filter.silent_empty
     p_doc_correct: 0.6977
     status: falsified
-  p_doc_correct: 0.6977
+  - t: 1788656668.561
+    event: falsified
+    detail: The search with 'vendorr' returned 50 items, not empty results.
+    p_doc_correct: 0.6977
+    status: falsified
+  p_doc_correct: 0.7292
   class: silent_coercion
 - id: lab.search.the_filter_is_valid_but_there_are_genuinely
   tool: lab
@@ -1592,13 +1702,14 @@ beliefs:
   parameter: filter
   status: falsified
   posterior:
-    alpha: 6.0
+    alpha: 7.0
     beta: 2.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-008
   - probe-008
   - probe-008
   - probe-008
@@ -1655,7 +1766,12 @@ beliefs:
     detail: mislabelled_semantics -> silent_coercion from search.filter.silent_empty
     p_doc_correct: 0.7143
     status: falsified
-  p_doc_correct: 0.7143
+  - t: 1788656668.561
+    event: falsified
+    detail: Both searches returned 50 items, not empty results.
+    p_doc_correct: 0.7143
+    status: falsified
+  p_doc_correct: 0.7447
   class: silent_coercion
 - id: lab.search.the_search_index_is_updated_asynchronously_a
   tool: lab
@@ -1666,13 +1782,14 @@ beliefs:
   parameter: null
   status: falsified
   posterior:
-    alpha: 6.0
+    alpha: 7.0
     beta: 2.3
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-009
   - probe-009
   - probe-009
   - probe-009
@@ -1727,7 +1844,13 @@ beliefs:
       the item would appear.
     p_doc_correct: 0.6849
     status: falsified
-  p_doc_correct: 0.7229
+  - t: 1788656668.642
+    event: falsified
+    detail: The search returned zero rows after waiting 0.5 seconds, contradicting the prediction that
+      the item would appear.
+    p_doc_correct: 0.7229
+    status: falsified
+  p_doc_correct: 0.7527
   class: eventual_consistency
 - id: lab.search.there_is_a_hidden_rate_limit_e_g_100_request
   tool: lab
@@ -1738,13 +1861,14 @@ beliefs:
   parameter: null
   status: falsified
   posterior:
-    alpha: 6.0
+    alpha: 7.0
     beta: 2.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-010
   - probe-010
   - probe-010
   - probe-010
@@ -1796,7 +1920,12 @@ beliefs:
     detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
     p_doc_correct: 0.6667
     status: falsified
-  p_doc_correct: 0.7059
+  - t: 1788656668.588
+    event: falsified
+    detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
+    p_doc_correct: 0.7059
+    status: falsified
+  p_doc_correct: 0.7368
   class: rate_limit
 - id: lab.update.the_api_is_designed_to_be_soft_and_ignores_u
   tool: lab
@@ -1808,13 +1937,14 @@ beliefs:
   parameter: not_a_real_field
   status: falsified
   posterior:
-    alpha: 6.0
+    alpha: 7.0
     beta: 2.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-011
   - probe-011
   - probe-011
   - probe-011
@@ -1871,5 +2001,10 @@ beliefs:
     detail: idempotency_hazard -> silent_coercion from update.not_a_real_field.silent_ignore
     p_doc_correct: 0.7059
     status: falsified
-  p_doc_correct: 0.7059
+  - t: 1788656668.615
+    event: falsified
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.7059
+    status: falsified
+  p_doc_correct: 0.7368
   class: silent_coercion

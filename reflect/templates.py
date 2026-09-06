@@ -54,6 +54,31 @@ class ProbeTemplate:
 # ---------------------------------------------------------------------------
 
 
+def _ensure_population(a: LabAdapter, base: dict[str, Any], want: int = 60) -> int:
+    """Make sure enough rows exist for a search sweep to mean anything.
+
+    A page-size sweep against an empty vendor returns 0 for every value. That
+    is not evidence of a cap or of its absence -- it is no evidence at all.
+    It happened: a sweep over `vendor=Probe02` (zero rows) returned 0/0 and
+    the verdict read it as refuting a belief that was true. An experiment has
+    to establish the conditions under which its variable is observable.
+    """
+    vendor = ((base or {}).get("filter") or {}).get("vendor")
+    if not vendor:
+        return 0
+    sc, body = a.search(filter={"vendor": vendor}, page_size=50)
+    have = len((body or {}).get("results", [])) if sc == 200 else 0
+    if (body or {}).get("has_more") or have >= want:
+        return have
+    made = 0
+    while have + made < want:
+        n = min(20, want - have - made)  # bulk silently caps at 20
+        a.bulk_create([{"title": f"{vendor}-pop-{made + i}", "vendor": vendor} for i in range(n)])
+        made += n
+    time.sleep(2.4)  # outlast the write/search lag before measuring
+    return have + made
+
+
 def _boundary(a: LabAdapter, p: dict[str, Any]) -> Observation:
     """Sweep one parameter across values and record what comes back.
 
@@ -66,6 +91,12 @@ def _boundary(a: LabAdapter, p: dict[str, Any]) -> Observation:
     base = dict(p.get("base") or {})
     rows: list[dict[str, Any]] = []
     narrative: list[str] = []
+
+    populated = None
+    if op == "search":
+        populated = _ensure_population(a, base, want=max(60, max(
+            [v for v in values if isinstance(v, int)] or [60]) // 2))
+        narrative.append(f"population for sweep: {populated} rows")
 
     for v in values:
         if op == "search":
@@ -96,6 +127,7 @@ def _boundary(a: LabAdapter, p: dict[str, Any]) -> Observation:
         params=p,
         calls=len(values),
         facts={
+            "population": populated,
             "sweep": rows,
             "ceiling": ceiling,
             "saturates_at_ceiling": saturates,

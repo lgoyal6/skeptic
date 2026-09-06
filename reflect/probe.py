@@ -142,6 +142,21 @@ class ProbeRecord:
         return p
 
 
+def _uninformative(obs: Observation) -> bool:
+    """Did the experiment actually observe anything?"""
+    f = obs.facts or {}
+    if f.get("error"):
+        return True
+    sweep = f.get("sweep")
+    if isinstance(sweep, list) and sweep:
+        seen = [r.get("returned") for r in sweep if "returned" in r]
+        if seen and all((v or 0) == 0 for v in seen):
+            return True
+    if f.get("population") == 0:
+        return True
+    return False
+
+
 def _normalise(s: str) -> str:
     return "".join(c for c in str(s).lower() if c.isalnum() or c == " ").strip()
 
@@ -255,6 +270,26 @@ def run_probe(
         )
     finally:
         adapter.close()
+
+    if _uninformative(obs):
+        # Absence of evidence is not evidence of absence. A sweep that saw
+        # nothing cannot refute anything, and letting the model judge it
+        # anyway is how a true belief gets destroyed by an empty experiment.
+        rec = ProbeRecord(
+            id=probe_id, belief_ids=[b.id for b in beliefs], template=obs.template,
+            params=obs.params, why=str(plan.get("why_this_one", "")),
+            predictions=plan.get("predictions", []), observation=obs.to_dict(),
+            verdicts=[{"hypothesis_id": b.id, "verdict": "inconclusive",
+                       "because": "the experiment observed no signal; nothing to conclude"}
+                      for b in beliefs],
+            learned="", calls=obs.calls, wall_s=round(time.time() - t0, 2),
+            adversarial=adversarial,
+        )
+        rec.save(probes_dir)
+        rec._learned_payload = {}  # type: ignore[attr-defined]
+        if apply:
+            _apply(store, rec, adversarial=adversarial, learned={})
+        return rec
 
     verdict_data = reflector.json_chat(
         [

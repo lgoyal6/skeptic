@@ -2,3 +2,5 @@
     [probe-000] 2 rivals -> silent_truncation
     [probe-001] 2 rivals -> expiry
     [probe-002] 1 rivals -> silent_truncation
+    [probe-000] boundary 3 calls 61s -> ['inconclusive', 'inconclusive']
+    [probe-002] boundary 2 calls 81s -> ['falsified', 'falsified']
