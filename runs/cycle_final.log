@@ -5,3 +5,36 @@ minted 1 sets
 === reopen exhausted ===
   7 exhausted signatures, re-proposing with the refuting evidence
 
+    ! bulk_create.items.silent_truncation: RuntimeError: reflector llm failed after 4 attempts: 504: upstream request timeout
+    ! create.amount.type_coercion: RuntimeError: reflector llm failed after 4 attempts: [Errno 8] nodename nor servname provided, or not known
+    ! create.title.silent_truncation: RuntimeError: reflector llm failed after 4 attempts: [Errno 8] nodename nor servname provided, or not known
+    ! get._.undocumented_flag: RuntimeError: reflector llm failed after 4 attempts: [Errno 8] nodename nor servname provided, or not known
+    ! search.page_size.silent_truncation: RuntimeError: reflector llm failed after 4 attempts: [Errno 8] nodename nor servname provided, or not known
+    ! search.sort.mislabelled_semantics: RuntimeError: reflector llm failed after 4 attempts: [Errno 8] nodename nor servname provided, or not known
+    ! search.filter.silent_empty: RuntimeError: reflector llm failed after 4 attempts: [Errno 8] nodename nor servname provided, or not known
+
+  0 new hypotheses; {'hypothesis': 5, 'confirmed': 5, 'falsified': 20, 'retired': 0}
+=== settle ===
+  2 rival groups, 2 at a time
+    [probe-000] 3 rivals -> idempotency_hazard
+    [probe-001] 2 rivals -> expiry
+    ! probe failed: RuntimeError: reflector llm failed after 4 attempts: [Errno 8] nodename nor servname provided, or not known
+    ! probe failed: RuntimeError: reflector llm failed after 4 attempts: [Errno 8] nodename nor servname provided, or not known
+
+  settled 0 groups in 21s
+  beliefs: {'hypothesis': 5, 'confirmed': 5, 'falsified': 20, 'retired': 0}
+  reflector: None
+=== apply ===
+  applied 10 probe records
+  beliefs: {'hypothesis': 5, 'confirmed': 5, 'falsified': 20, 'retired': 0}
+    + [rate_limit] The endpoint enforces a rate limit where the first 3 requests succeed and subsequent req
+    + [silent_coercion] The system accepts '1969-12-31' during creation but returns null on read-back.
+    + [eventual_consistency] The search query returned zero rows after a 0.5 second wait.
+    + [rate_limit] The system throttles 7 out of 10 requests, with the first throttled request occurring at
+    + [silent_coercion] The system stored the field 'not_a_real_field' as 'null' despite being sent a value.
+    matched a real rule 4
+    FALSE beliefs       0
+    precision           0.80
+    recall (observable) 0.31   4/13
+    recall (all 14)     0.29
+    never triggered by this run (excluded from recall):

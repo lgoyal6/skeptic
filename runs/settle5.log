@@ -14,3 +14,8 @@
     [probe-006] header_burst 10 calls 82s -> ['confirmed']
     [probe-007] consistency 2 calls 66s -> ['confirmed']
     ! probe failed: RuntimeError: reflector llm failed after 4 attempts: 504: upstream request timeout
+    ! probe failed: RuntimeError: reflector llm failed after 4 attempts: [Errno 8] nodename nor servname provided, or not known
+
+  settled 6 groups in 8481s
+  beliefs: {'hypothesis': 5, 'confirmed': 6, 'falsified': 19, 'retired': 0}
+  reflector: {'calls': 13, 'prompt': 8666, 'completion': 33432}

@@ -10,3 +10,8 @@
     [probe-003] flag_discovery 2 calls 187s -> ['falsified', 'confirmed']
     [probe-005] 1 rivals -> silent_coercion
     [probe-005] consistency 2 calls 80s -> ['inconclusive', 'inconclusive', 'inconclusive']
+    ! probe failed: RuntimeError: reflector llm failed after 4 attempts: [Errno 8] nodename nor servname provided, or not known
+
+  settled 5 groups in 50798s
+  beliefs: {'hypothesis': 5, 'confirmed': 5, 'falsified': 20, 'retired': 0}
+  reflector: {'calls': 11, 'prompt': 7383, 'completion': 32747}

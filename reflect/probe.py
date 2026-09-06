@@ -397,7 +397,20 @@ def _rewrite_from_evidence(b: Belief, learned: dict[str, Any]) -> None:
 
     param = str(learned.get("learned_parameter", "")).strip()
     if param and param.lower() not in ("null", "none") and param != b.parameter:
-        b.parameter = param
+        # The parameter is half of the structural identity a belief is scored
+        # on, so the verdict step may not invent a new one. A cursor-expiry
+        # finding came back with parameter `wait_s`, the knob the experiment
+        # turned rather than the thing the API mishandles, and it then matched
+        # no rule at all. Only the parameter the anomaly itself named is
+        # admissible.
+        sig = next((h.get("detail") for h in b.history
+                    if h.get("event") == "signature"), "")
+        anomaly_param = sig.split(".")[1] if sig.count(".") >= 2 else ""
+        if anomaly_param and anomaly_param != "_" and param != anomaly_param:
+            b.note("parameter_restatement_rejected",
+                   f"verdict proposed {param!r}; the anomaly names {anomaly_param!r}")
+        else:
+            b.parameter = param
 
     action = str(learned.get("learned_action", "")).strip()
     if action:

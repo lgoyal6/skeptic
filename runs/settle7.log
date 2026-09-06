@@ -2,3 +2,8 @@
     [probe-000] 2 rivals -> expiry
     [probe-001] 1 rivals -> silent_coercion
     [probe-001] consistency 2 calls 57s -> ['confirmed']
+    [probe-000] timing 2 calls 51046s -> ['falsified', 'confirmed']
+
+  settled 2 groups in 51047s
+  beliefs: {'hypothesis': 3, 'confirmed': 6, 'falsified': 21, 'retired': 0}
+  reflector: {'calls': 4, 'prompt': 2654, 'completion': 9633}

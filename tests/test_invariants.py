@@ -448,3 +448,55 @@ def test_anomaly_signature_is_stable_and_shaped_operation_parameter_kind():
     without_param = Anomaly(kind="undocumented_status", operation="create", summary="s",
                              expected="e", observed="o", parameter=None)
     assert without_param.signature() == "create._.undocumented_status"
+
+
+# --- structural identity may not be invented by the verdict step -----------
+
+
+def test_restatement_may_not_invent_a_parameter():
+    """A cursor-expiry finding came back with parameter 'wait_s', the knob the
+    experiment turned rather than the thing the API mishandles, and then
+    matched no ground-truth rule at all."""
+    from agent.beliefs import Belief
+    from reflect.probe import _rewrite_from_evidence
+
+    b = Belief(
+        id="lab.search.x", tool="lab", operation="search", cls="expiry",
+        parameter="cursor", doc_claims="cursors never expire",
+        belief="cursors expire", action="reissue",
+    )
+    b.note("signature", "search.cursor.expiry")
+    _rewrite_from_evidence(b, {
+        "learned": "cursors expire after 60 seconds",
+        "learned_parameter": "wait_s",
+    })
+    assert b.parameter == "cursor", "the verdict must not rename the parameter"
+    assert any(h["event"] == "parameter_restatement_rejected" for h in b.history)
+
+
+def test_restatement_may_not_invent_a_class():
+    """A silent_null anomaly came back restated as silent_truncation, which no
+    wire evidence supported, and scored as a false belief."""
+    from agent.beliefs import Belief
+    from reflect.probe import _rewrite_from_evidence
+
+    b = Belief(
+        id="lab.create.y", tool="lab", operation="create", cls="silent_coercion",
+        parameter="due_date", doc_claims="any ISO date", belief="stored null",
+    )
+    b.note("signature", "create.due_date.silent_null")
+    _rewrite_from_evidence(b, {
+        "learned": "pre-1970 dates are stored as null",
+        "learned_class": "silent_truncation",
+    })
+    assert b.cls == "silent_coercion", "wire evidence admits only silent_coercion"
+
+
+def test_replay_total_does_not_double_count():
+    """Two beliefs can blame the same call; summing per-belief totals inflated
+    the headline by nearly 2x (219 attributions over 115 distinct calls)."""
+    from replay.counterfactual import replay_all
+    from agent.beliefs import BeliefStore
+
+    rep = replay_all(BeliefStore("lab"))
+    assert rep["total_wasted_calls_deduped"] <= rep["total_wasted_calls"]

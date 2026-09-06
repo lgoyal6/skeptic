@@ -16,11 +16,11 @@ The honest headline, verified at the end of the build:
 
 | | |
 | --- | --- |
-| precision | 0.75 |
+| precision | 0.83 |
 | false beliefs | 0 |
-| recall, observable | 0.23 (3 of 13) |
-| confirmed beliefs | 4, compiling to 3 guards |
-| invariant tests | 23 passed, 1 xpassed |
+| recall, observable | 0.38 (5 of 13) |
+| confirmed beliefs | 6 |
+| invariant tests | 26 passed, 1 xpassed |
 
 **Earlier in the build these numbers were higher, and they were withdrawn.**
 Precision touched 1.00 over five confirmed beliefs. Then an adversarial
@@ -119,15 +119,12 @@ current repository state, not copied from an earlier run.
 
 | | |
 | --- | --- |
-| confirmed beliefs | 4 |
-| matched a real rule | 3 |
+| confirmed beliefs | 6 |
+| matched a real rule | 5 |
 | false beliefs | 0 |
 | duplicates | 1 |
-| precision | 0.75 |
-| recall, observable rules | 0.23 (3/13) |
-| recall, all 14 rules | 0.21 |
-
-Found: `pre_epoch_date_null`, `rate_limit_flaky_header`, `write_search_lag`.
+| precision | 0.83 |
+| recall, observable rules | 0.38 (5/13) |
 
 Observable but not currently held: `archived_get_404`, `bulk_cap`,
 `cursor_expiry`, `include_archived_flag`, `page_size_cap`, and the rest.
