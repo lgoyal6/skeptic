@@ -1,0 +1,51 @@
+{
+  "ok": true,
+  "belief_id": "lab.create.the_field_is_mapped_to_a_legacy_system_that",
+  "belief_claim": "The due_date field was sent as '1969-12-31' but stored as null.",
+  "doc_claims": "stored as sent",
+  "rule_id": "pre_epoch_date_null",
+  "trust_threshold": 0.7,
+  "rounds_allotted": 5,
+  "rounds_run": 3,
+  "round_weight": 5.0,
+  "starting": {
+    "status": "confirmed",
+    "alpha": 2.0,
+    "beta": 6.3,
+    "p_doc_correct": 0.241
+  },
+  "trajectory": [
+    {
+      "round": 0,
+      "observation": "(before)",
+      "p_doc_correct": 0.241,
+      "status": "confirmed"
+    },
+    {
+      "round": 1,
+      "observation": "due_date=1965-01-01 stored as sent: 5/5, silently nulled: 0/5",
+      "p_doc_correct": 0.5263,
+      "status": "confirmed"
+    },
+    {
+      "round": 2,
+      "observation": "due_date=1965-01-01 stored as sent: 5/5, silently nulled: 0/5",
+      "p_doc_correct": 0.6557,
+      "status": "confirmed"
+    },
+    {
+      "round": 3,
+      "observation": "due_date=1965-01-01 stored as sent: 5/5, silently nulled: 0/5",
+      "p_doc_correct": 0.7296,
+      "status": "retired"
+    }
+  ],
+  "retired": true,
+  "final_status": "retired",
+  "final_p_doc_correct": 0.7296,
+  "rule_restored": true,
+  "relearnable": {
+    "old_behaviour_reappeared": true,
+    "observation": "due_date=1965-01-01 stored as sent: 0/5, silently nulled: 5/5"
+  }
+}

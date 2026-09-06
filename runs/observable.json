@@ -1,6 +1,7 @@
 [
   "bulk_cap",
   "cursor_expiry",
+  "include_archived_flag",
   "page_size_cap",
   "pre_epoch_date_null",
   "rate_limit_flaky_header",

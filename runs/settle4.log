@@ -2,3 +2,5 @@
     [probe-000] 2 rivals -> silent_truncation
     [probe-001] 2 rivals -> expiry
     [probe-002] 2 rivals -> silent_truncation
+    [probe-002] flag_discovery 2 calls 208s -> ['falsified', 'falsified']
+    [probe-000] consistency 2 calls 292s -> ['inconclusive', 'inconclusive']

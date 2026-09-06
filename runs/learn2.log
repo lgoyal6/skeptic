@@ -1,0 +1,9 @@
+=== recon ===
+recon: 26 calls 10.8s, 9 promises broken, 10 signatures
+1 signatures not yet explained
+minted 1 new hypothesis sets; {'hypothesis': 5, 'confirmed': 5, 'falsified': 16, 'retired': 1}
+=== settle ===
+  2 rival groups, 4 at a time
+    [probe-000] 3 rivals -> rate_limit
+    [probe-001] 2 rivals -> expiry
+    [probe-000] header_burst 10 calls 308s -> ['inconclusive', 'inconclusive', 'inconclusive']
