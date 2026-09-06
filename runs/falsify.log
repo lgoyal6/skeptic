@@ -1,0 +1,16 @@
+  attacking 4 confirmed beliefs
+  proposer: glm-4-7-flash   adversary: claude-code
+  brief written to ADVERSARY_BRIEF.md (8803 chars) and committed
+  spawned skeptic-6, waiting for falsification.json
+  ! skeptic-4 produced no falsification.json within 900s
+the_api_enforces_a_hard_internal_limit_of
+                       The only cited evidence (probe-000, header_burst) measures throttling of 10 requests and contains no
+    UNSUPPORTED_CAUSE  lab.search.the_item_is_created_in_a_draft_state_and_
+                       Zero rows before and after a single 0.5s wait (repeated six times with the same probe) never observe
+    OVERGENERALISED    lab.search.the_rate_limit_is_global_shared_across_al
+                       All ten calls in probe-010 came from one client with one credential, so 'global, shared across all u
+    UNSUPPORTED_CAUSE  lab.update.the_validation_logic_is_buggy_and_only_ch
+                       The evidence shows a create/read-back diff reporting sent 'test_value' vs stored null, which is equa
+
+  applied: {'sound': 0, 'downgraded': 4, 'unknown': 0}
+  beliefs: {'hypothesis': 11, 'confirmed': 0, 'falsified': 16, 'retired': 0}

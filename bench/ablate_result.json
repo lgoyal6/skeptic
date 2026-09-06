@@ -1,0 +1,215 @@
+{
+  "memory": {
+    "arm": "memory",
+    "memory": true,
+    "beliefs_root": "beliefs",
+    "context_tokens": 217,
+    "beliefs_active": 4,
+    "passed": 1,
+    "total": 3,
+    "calls": 22,
+    "tokens": 144102,
+    "wall_s": 61.0,
+    "rows": [
+      {
+        "task": "inventory",
+        "rep": 0,
+        "ok": false,
+        "detail": "count 18 != 73; total 1017169.0 != 7075628.0",
+        "calls": 18,
+        "tokens": 131190,
+        "wall_s": 43.75,
+        "expected": {
+          "count": 73,
+          "total_amount": 7075628.0
+        },
+        "got": {
+          "count": 18,
+          "total_amount": 1017169.0
+        },
+        "belief_context_tokens": 217,
+        "beliefs_active": 4
+      },
+      {
+        "task": "oldest_three",
+        "rep": 0,
+        "ok": false,
+        "detail": "wrong titles or order",
+        "calls": 1,
+        "tokens": 3567,
+        "wall_s": 4.09,
+        "expected": [
+          "AbVertex-invoice-0000",
+          "AbVertex-invoice-0001",
+          "AbVertex-invoice-0002"
+        ],
+        "got": [
+          "AbVertex-invoice-0002",
+          "AbVertex-invoice-0003",
+          "AbVertex-invoice-0004"
+        ],
+        "belief_context_tokens": 217,
+        "beliefs_active": 4
+      },
+      {
+        "task": "exactly_once",
+        "rep": 0,
+        "ok": true,
+        "detail": "exactly once",
+        "calls": 3,
+        "tokens": 9345,
+        "wall_s": 13.18,
+        "expected": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "got": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "belief_context_tokens": 217,
+        "beliefs_active": 4
+      }
+    ]
+  },
+  "wiped": {
+    "arm": "wiped",
+    "memory": false,
+    "beliefs_root": "beliefs",
+    "context_tokens": 0,
+    "beliefs_active": 0,
+    "passed": 1,
+    "total": 3,
+    "calls": 7,
+    "tokens": 26709,
+    "wall_s": 40.1,
+    "rows": [
+      {
+        "task": "inventory",
+        "rep": 0,
+        "ok": false,
+        "detail": "count 16 != 73; total 1016150.0 != 7075628.0",
+        "calls": 3,
+        "tokens": 13823,
+        "wall_s": 19.18,
+        "expected": {
+          "count": 73,
+          "total_amount": 7075628.0
+        },
+        "got": {
+          "count": 16,
+          "total_amount": 1016150.0
+        },
+        "belief_context_tokens": 0,
+        "beliefs_active": 0
+      },
+      {
+        "task": "oldest_three",
+        "rep": 0,
+        "ok": false,
+        "detail": "wrong titles or order",
+        "calls": 1,
+        "tokens": 3412,
+        "wall_s": 4.91,
+        "expected": [
+          "AbVertex-invoice-0000",
+          "AbVertex-invoice-0001",
+          "AbVertex-invoice-0002"
+        ],
+        "got": [
+          "AbVertex-invoice-0002",
+          "AbVertex-invoice-0003",
+          "AbVertex-invoice-0004"
+        ],
+        "belief_context_tokens": 0,
+        "beliefs_active": 0
+      },
+      {
+        "task": "exactly_once",
+        "rep": 0,
+        "ok": true,
+        "detail": "exactly once",
+        "calls": 3,
+        "tokens": 9474,
+        "wall_s": 15.96,
+        "expected": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "got": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "belief_context_tokens": 0,
+        "beliefs_active": 0
+      }
+    ]
+  },
+  "shuffled": {
+    "arm": "shuffled",
+    "memory": true,
+    "beliefs_root": "/var/folders/l1/j3t6t3ds2fg1r7d1ly3wzv_80000gn/T/skeptic-ablate-vud5po2u",
+    "context_tokens": 217,
+    "beliefs_active": 4,
+    "passed": 1,
+    "total": 3,
+    "calls": 33,
+    "tokens": 311294,
+    "wall_s": 82.2,
+    "rows": [
+      {
+        "task": "inventory",
+        "rep": 0,
+        "ok": false,
+        "detail": "no answer (step limit reached)",
+        "calls": 28,
+        "tokens": 296501,
+        "wall_s": 65.66,
+        "expected": null,
+        "got": null,
+        "belief_context_tokens": 217,
+        "beliefs_active": 4
+      },
+      {
+        "task": "oldest_three",
+        "rep": 0,
+        "ok": false,
+        "detail": "wrong titles or order",
+        "calls": 2,
+        "tokens": 5969,
+        "wall_s": 5.4,
+        "expected": [
+          "AbVertex-invoice-0000",
+          "AbVertex-invoice-0001",
+          "AbVertex-invoice-0002"
+        ],
+        "got": [
+          "AbVertex-invoice-0002",
+          "AbVertex-invoice-0003",
+          "AbVertex-invoice-0004"
+        ],
+        "belief_context_tokens": 217,
+        "beliefs_active": 4
+      },
+      {
+        "task": "exactly_once",
+        "rep": 0,
+        "ok": true,
+        "detail": "exactly once",
+        "calls": 3,
+        "tokens": 8824,
+        "wall_s": 11.09,
+        "expected": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "got": {
+          "distinct": 10,
+          "duplicates": 0
+        },
+        "belief_context_tokens": 217,
+        "beliefs_active": 4
+      }
+    ]
+  }
+}

@@ -1,8 +1,8 @@
 tool: lab
-updated: '2026-09-06T03:49:21Z'
+updated: '2026-09-06T04:54:31Z'
 counts:
-  hypothesis: 7
-  confirmed: 4
+  hypothesis: 11
+  confirmed: 0
   falsified: 16
   retired: 0
 beliefs:
@@ -14,9 +14,9 @@ beliefs:
     the read-back.
   action: Do not rely on the 'title' field containing the full input length; it will be truncated.
   parameter: title
-  status: confirmed
+  status: hypothesis
   posterior:
-    alpha: 2.0
+    alpha: 3.0
     beta: 4.5
   evidence_for: 1
   evidence_against: 0
@@ -108,8 +108,531 @@ beliefs:
       the documented 2000 limit.'
     p_doc_correct: 0.3077
     status: confirmed
-  p_doc_correct: 0.3077
+  - t: 1788670471.924
+    event: adversary_objection
+    detail: 'unsupported_cause: The only cited evidence (probe-000, header_burst) measures throttling
+      of 10 requests and contains no title-length data at all, so neither truncation nor a 25-character
+      limit was ever observed.'
+    p_doc_correct: 0.4
+    status: hypothesis
+  - t: 1788670471.924
+    event: suggested_attack
+    detail: Create items with titles of exactly 24, 25, 26, 100, and 2000 characters, read each back by
+      id, and compare stored length to sent length. Any read-back longer than 25 characters kills both
+      the truncation claim and the 'h
+    p_doc_correct: 0.4
+    status: hypothesis
+  p_doc_correct: 0.4
   class: silent_truncation
+- id: lab.create.the_api_enforces_a_rate_limit_based_on_the_s
+  tool: lab
+  operation: create
+  doc_claims: no rate limit; 429 never returned
+  belief: The API enforces a rate limit based on the source IP address (e.g., to mitigate abuse from shared
+    networks or specific regions), rather than the user identity.
+  action: Rotate IP addresses or use a proxy service.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-r2
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_api_enforces_a_strict_rate_limit_based_o
+  - lab.create.the_create_endpoint_is_currently_overloaded
+  history:
+  - t: 1788665131.099
+    event: created
+    detail: no rate limit; 429 never returned
+    p_doc_correct: 0.6667
+    status: hypothesis
+  - t: 1788665131.099
+    event: contradiction
+    detail: recon-r2
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: hypothesis
+    detail: Call the API from a different IP address (e.g., via a VPN or a different network). If the
+      request succeeds, the limit is IP-bound.
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: signature
+    detail: create._.undocumented_status
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: rate_limit
+- id: lab.create.the_api_enforces_a_strict_rate_limit_based_o
+  tool: lab
+  operation: create
+  doc_claims: no rate limit; 429 never returned
+  belief: The API enforces a strict rate limit based on the specific user account's subscription tier
+    (e.g., Free vs Pro), and the current account has exceeded its creation quota.
+  action: Upgrade the account plan or reduce the frequency of 'create' operations.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-r2
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_api_enforces_a_rate_limit_based_on_the_s
+  - lab.create.the_create_endpoint_is_currently_overloaded
+  history:
+  - t: 1788665131.099
+    event: created
+    detail: no rate limit; 429 never returned
+    p_doc_correct: 0.6667
+    status: hypothesis
+  - t: 1788665131.099
+    event: contradiction
+    detail: recon-r2
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: hypothesis
+    detail: Attempt the 'create' operation using a different user account (or a new one). If the request
+      succeeds, the limit is account-bound.
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: signature
+    detail: create._.undocumented_status
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: rate_limit
+- id: lab.create.the_create_endpoint_is_currently_overloaded
+  tool: lab
+  operation: create
+  doc_claims: no rate limit; 429 never returned
+  belief: The 'create' endpoint is currently overloaded globally, and the 429 is a generic backoff signal
+    triggered by high traffic volume across all clients.
+  action: Wait for a period of time and retry, or switch to a different endpoint.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-r2
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_api_enforces_a_strict_rate_limit_based_o
+  - lab.create.the_api_enforces_a_rate_limit_based_on_the_s
+  history:
+  - t: 1788665131.099
+    event: created
+    detail: no rate limit; 429 never returned
+    p_doc_correct: 0.6667
+    status: hypothesis
+  - t: 1788665131.099
+    event: contradiction
+    detail: recon-r2
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: hypothesis
+    detail: Call a different endpoint (e.g., 'read' or 'list') from the same IP address. If that endpoint
+      returns 200 OK, the overload is specific to 'create'.
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: signature
+    detail: create._.undocumented_status
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: rate_limit
+- id: lab.create.the_field_is_mapped_to_a_legacy_system_that
+  tool: lab
+  operation: create
+  doc_claims: stored as sent
+  belief: The due_date field was sent as '1969-12-31' but stored as null.
+  action: Ensure dates are within the supported range.
+  parameter: due_date
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 3
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay:
+    belief_id: lab.create.the_field_is_mapped_to_a_legacy_system_that
+    cls: silent_coercion
+    operation: create
+    parameter: due_date
+    signatures:
+    - create.due_date.silent_null
+    runs_affected: 2
+    calls_affected: 2
+    wasted_calls: 0
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: probe-003
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: probe-003
+      call_ns:
+      - 1
+      wasted: 0
+      reason: 'call 1: due_date=''1969-12-31'' sent, stored as null'
+    - run: recon-000
+      call_ns:
+      - 3
+      wasted: 0
+      reason: 'call 3: due_date=''1965-04-01'' sent, stored as null'
+  competing:
+  - lab.create.the_api_expects_a_specific_date_format_e_g_i
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: stored as sent
+    p_doc_correct: 0.6061
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send a date in the current year (e.g., '2023-04-01'). If this is accepted, the issue is specific
+      to the year 1965.
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.due_date.silent_null
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788655481.318
+    event: confirmed_by_probe
+    detail: probe-003
+    p_doc_correct: 0.4651
+    status: confirmed
+  - t: 1788655481.318
+    event: probe_confirmed
+    detail: The stored value for due_date was null.
+    p_doc_correct: 0.3175
+    status: confirmed
+  - t: 1788655481.318
+    event: restated_from_evidence
+    detail: 'was: The field is mapped to a legacy system that does not support dates before a certain
+      threshold (e.g., 1970), defaulting t'
+    p_doc_correct: 0.3175
+    status: confirmed
+  - t: 1788655709.343
+    event: confirmed_by_probe
+    detail: probe-003
+    p_doc_correct: 0.3175
+    status: confirmed
+  - t: 1788655709.343
+    event: probe_confirmed
+    detail: The stored value for due_date was null.
+    p_doc_correct: 0.241
+    status: confirmed
+  - t: 1788665226.877
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665224-round-1
+    p_doc_correct: 0.5263
+    status: confirmed
+  - t: 1788665228.892
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665224-round-2
+    p_doc_correct: 0.6557
+    status: confirmed
+  - t: 1788665230.907
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665224-round-3
+    p_doc_correct: 0.7296
+    status: confirmed
+  - t: 1788665230.907
+    event: auto_falsified
+    detail: posterior reverted above trust threshold
+    p_doc_correct: 0.7296
+    status: falsified
+  - t: 1788665230.94
+    event: retired
+    detail: world observed to match documentation for rule `pre_epoch_date_null` over 3 round(s) after
+      the rule was disabled; posterior crossed the trust threshold (0.7)
+    p_doc_correct: 0.7296
+    status: retired
+  - t: 1788665676.957
+    event: reopened_after_world_restored
+    detail: rule toggled back on by retire_demo
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: silent_coercion
+- id: lab.get.the_get_request_is_being_made_from_a_differe
+  tool: lab
+  operation: get
+  doc_claims: GET returns the item regardless of archived state
+  belief: The item was returned successfully with the status 'active', matching the sent value.
+  action: Ensure context consistency (API keys, tenants) across operations.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 4
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay:
+    belief_id: lab.get.the_get_request_is_being_made_from_a_differe
+    cls: undocumented_flag
+    operation: get
+    parameter: null
+    signatures:
+    - get._.undocumented_flag
+    runs_affected: 1
+    calls_affected: 1
+    wasted_calls: 1
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: recon-000
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: recon-000
+      call_ns:
+      - 15
+      wasted: 1
+      reason: call 15 got 404 for id itm_5c412648d863, created earlier in this run
+  competing:
+  - lab.get.the_item_is_created_with_a_default_status_of
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: GET returns the item regardless of archived state
+    p_doc_correct: 0.5882
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Use the exact same API key and headers for the GET request as the POST request.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: get._.undocumented_flag
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788655481.418
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.4545
+    status: confirmed
+  - t: 1788655481.418
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.3125
+    status: confirmed
+  - t: 1788655481.418
+    event: restated_from_evidence
+    detail: 'was: The GET request is being made from a different context (e.g., different tenant or API
+      key) than the creation context.'
+    p_doc_correct: 0.3125
+    status: confirmed
+  - t: 1788655709.375
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.3125
+    status: confirmed
+  - t: 1788655709.375
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.2381
+    status: confirmed
+  - t: 1788656106.19
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.2381
+    status: confirmed
+  - t: 1788656106.19
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.1923
+    status: confirmed
+  - t: 1788665077.34
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-1
+    p_doc_correct: 0.4545
+    status: confirmed
+  - t: 1788665083.384
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-2
+    p_doc_correct: 0.5882
+    status: confirmed
+  - t: 1788665089.431
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-3
+    p_doc_correct: 0.6693
+    status: confirmed
+  - t: 1788665095.887
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-4
+    p_doc_correct: 0.7237
+    status: confirmed
+  - t: 1788665095.887
+    event: auto_falsified
+    detail: posterior reverted above trust threshold
+    p_doc_correct: 0.7237
+    status: falsified
+  - t: 1788665095.92
+    event: retired
+    detail: world observed to match documentation for rule `archived_get_404` over 4 round(s) after the
+      rule was disabled; posterior crossed the trust threshold (0.7)
+    p_doc_correct: 0.7237
+    status: retired
+  - t: 1788665676.957
+    event: reopened_after_world_restored
+    detail: rule toggled back on by retire_demo
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: undocumented_flag
+- id: lab.search.cursors_expire_after_a_fixed_time_duration_e
+  tool: lab
+  operation: search
+  doc_claims: cursors remain valid indefinitely
+  belief: Cursors expire after a fixed time duration (e.g., 1 hour) to prevent stale data.
+  action: Refresh the cursor periodically (e.g., every hour).
+  parameter: cursor
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.cursors_expire_if_no_requests_are_made_for_a
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: cursors remain valid indefinitely
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Use the cursor immediately. If it works, wait 2 hours and try again. If it fails, the time
+      limit is the cause.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.cursor.expiry
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: expiry
+- id: lab.search.cursors_expire_if_no_requests_are_made_for_a
+  tool: lab
+  operation: search
+  doc_claims: cursors remain valid indefinitely
+  belief: Cursors expire if no requests are made for a specific duration (e.g., 30 minutes of inactivity).
+  action: Refresh the cursor periodically (e.g., every 15 minutes).
+  parameter: cursor
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.cursors_expire_after_a_fixed_time_duration_e
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: cursors remain valid indefinitely
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Use the cursor, then make a request with a different cursor. If the original cursor still
+      works, the limit is inactivity-based.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.cursor.expiry
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: expiry
 - id: lab.search.the_item_is_created_in_a_draft_state_and_is
   tool: lab
   operation: search
@@ -117,9 +640,9 @@ beliefs:
   belief: The search query returned zero rows after a 0.5 second wait.
   action: Ensure items are published before searching.
   parameter: null
-  status: confirmed
+  status: hypothesis
   posterior:
-    alpha: 2.0
+    alpha: 3.0
     beta: 14.7
   evidence_for: 1
   evidence_against: 0
@@ -272,7 +795,21 @@ beliefs:
       item would not appear.
     p_doc_correct: 0.1198
     status: confirmed
-  p_doc_correct: 0.1198
+  - t: 1788670471.924
+    event: adversary_objection
+    detail: 'unsupported_cause: Zero rows before and after a single 0.5s wait (repeated six times with
+      the same probe) never observed a draft status, never confirmed the create succeeded, and cannot
+      distinguish draft-gating from indexing lag longer tha'
+    p_doc_correct: 0.1695
+    status: hypothesis
+  - t: 1788670471.924
+    event: suggested_attack
+    detail: Create an item, confirm GET-by-id returns it with 200, read back its status field, then poll
+      search with no publish step at 1s, 5s, 30s, and 60s. The item appearing later without publishing
+      refutes draft-gating; a read-b
+    p_doc_correct: 0.1695
+    status: hypothesis
+  p_doc_correct: 0.1695
   class: eventual_consistency
 - id: lab.search.the_rate_limit_is_global_shared_across_all_u
   tool: lab
@@ -281,9 +818,9 @@ beliefs:
   belief: 7 out of 10 requests were throttled, with the first throttling occurring on the 4th request.
   action: Retry with exponential backoff.
   parameter: null
-  status: confirmed
+  status: hypothesis
   posterior:
-    alpha: 2.0
+    alpha: 3.0
     beta: 14.5
   evidence_for: 1
   evidence_against: 0
@@ -803,7 +1340,21 @@ beliefs:
     detail: 7 out of 10 requests were throttled.
     p_doc_correct: 0.1212
     status: confirmed
-  p_doc_correct: 0.1212
+  - t: 1788670471.924
+    event: adversary_objection
+    detail: 'overgeneralised: All ten calls in probe-010 came from one client with one credential, so
+      ''global, shared across all users'' was never varied; per-key, per-user, and per-IP limits all produce
+      identical single-client evidence.'
+    p_doc_correct: 0.1714
+    status: hypothesis
+  - t: 1788670471.924
+    event: suggested_attack
+    detail: Burst with credential A until throttled, then immediately send one search with a different
+      credential B from a different source. If B succeeds while A is still throttled, the limit is per-user
+      or per-key, not global shar
+    p_doc_correct: 0.1714
+    status: hypothesis
+  p_doc_correct: 0.1714
   class: rate_limit
 - id: lab.update.the_validation_logic_is_buggy_and_only_check
   tool: lab
@@ -813,9 +1364,9 @@ beliefs:
     with the value 'test_value'.
   action: Be cautious with required fields; assume the API might be lenient.
   parameter: not_a_real_field
-  status: confirmed
+  status: hypothesis
   posterior:
-    alpha: 2.0
+    alpha: 3.0
     beta: 14.5
   evidence_for: 1
   evidence_against: 0
@@ -966,517 +1517,22 @@ beliefs:
     detail: The read-back contained the 'not_a_real_field' (stored as null).
     p_doc_correct: 0.1212
     status: confirmed
-  p_doc_correct: 0.1212
+  - t: 1788670471.924
+    event: adversary_objection
+    detail: 'unsupported_cause: The evidence shows a create/read-back diff reporting sent ''test_value''
+      vs stored null, which is equally consistent with the field being silently dropped and the comparator
+      defaulting missing keys to null, and the update '
+    p_doc_correct: 0.1714
+    status: hypothesis
+  - t: 1788670471.924
+    event: suggested_attack
+    detail: 'Fetch the raw GET response and check whether the literal key ''not_a_real_field'' exists
+      (present with null vs absent entirely); a diff tool reporting absent keys as null would refute ''stored
+      as null''. Then send the bogus '
+    p_doc_correct: 0.1714
+    status: hypothesis
+  p_doc_correct: 0.1714
   class: silent_coercion
-- id: lab.create.the_api_enforces_a_rate_limit_based_on_the_s
-  tool: lab
-  operation: create
-  doc_claims: no rate limit; 429 never returned
-  belief: The API enforces a rate limit based on the source IP address (e.g., to mitigate abuse from shared
-    networks or specific regions), rather than the user identity.
-  action: Rotate IP addresses or use a proxy service.
-  parameter: null
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.0
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-r2
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.create.the_api_enforces_a_strict_rate_limit_based_o
-  - lab.create.the_create_endpoint_is_currently_overloaded
-  history:
-  - t: 1788665131.099
-    event: created
-    detail: no rate limit; 429 never returned
-    p_doc_correct: 0.6667
-    status: hypothesis
-  - t: 1788665131.099
-    event: contradiction
-    detail: recon-r2
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: hypothesis
-    detail: Call the API from a different IP address (e.g., via a VPN or a different network). If the
-      request succeeds, the limit is IP-bound.
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: signature
-    detail: create._.undocumented_status
-    p_doc_correct: 0.5
-    status: hypothesis
-  p_doc_correct: 0.5
-  class: rate_limit
-- id: lab.create.the_api_enforces_a_strict_rate_limit_based_o
-  tool: lab
-  operation: create
-  doc_claims: no rate limit; 429 never returned
-  belief: The API enforces a strict rate limit based on the specific user account's subscription tier
-    (e.g., Free vs Pro), and the current account has exceeded its creation quota.
-  action: Upgrade the account plan or reduce the frequency of 'create' operations.
-  parameter: null
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.0
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-r2
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.create.the_api_enforces_a_rate_limit_based_on_the_s
-  - lab.create.the_create_endpoint_is_currently_overloaded
-  history:
-  - t: 1788665131.099
-    event: created
-    detail: no rate limit; 429 never returned
-    p_doc_correct: 0.6667
-    status: hypothesis
-  - t: 1788665131.099
-    event: contradiction
-    detail: recon-r2
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: hypothesis
-    detail: Attempt the 'create' operation using a different user account (or a new one). If the request
-      succeeds, the limit is account-bound.
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: signature
-    detail: create._.undocumented_status
-    p_doc_correct: 0.5
-    status: hypothesis
-  p_doc_correct: 0.5
-  class: rate_limit
-- id: lab.create.the_create_endpoint_is_currently_overloaded
-  tool: lab
-  operation: create
-  doc_claims: no rate limit; 429 never returned
-  belief: The 'create' endpoint is currently overloaded globally, and the 429 is a generic backoff signal
-    triggered by high traffic volume across all clients.
-  action: Wait for a period of time and retry, or switch to a different endpoint.
-  parameter: null
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.0
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-r2
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.create.the_api_enforces_a_strict_rate_limit_based_o
-  - lab.create.the_api_enforces_a_rate_limit_based_on_the_s
-  history:
-  - t: 1788665131.099
-    event: created
-    detail: no rate limit; 429 never returned
-    p_doc_correct: 0.6667
-    status: hypothesis
-  - t: 1788665131.099
-    event: contradiction
-    detail: recon-r2
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: hypothesis
-    detail: Call a different endpoint (e.g., 'read' or 'list') from the same IP address. If that endpoint
-      returns 200 OK, the overload is specific to 'create'.
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: signature
-    detail: create._.undocumented_status
-    p_doc_correct: 0.5
-    status: hypothesis
-  p_doc_correct: 0.5
-  class: rate_limit
-- id: lab.create.the_field_is_mapped_to_a_legacy_system_that
-  tool: lab
-  operation: create
-  doc_claims: stored as sent
-  belief: The due_date field was sent as '1969-12-31' but stored as null.
-  action: Ensure dates are within the supported range.
-  parameter: due_date
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.0
-  evidence_for: 1
-  evidence_against: 3
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay:
-    belief_id: lab.create.the_field_is_mapped_to_a_legacy_system_that
-    cls: silent_coercion
-    operation: create
-    parameter: due_date
-    signatures:
-    - create.due_date.silent_null
-    runs_affected: 2
-    calls_affected: 2
-    wasted_calls: 0
-    tokens_saved_estimate: 0
-    runs_rescued: 0
-    rescued_run_ids: []
-    first_seen_run: recon-000
-    last_seen_run: probe-003
-    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
-      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
-      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
-      this belief's own minting signature(s).
-    notes:
-    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
-    evidence:
-    - run: probe-003
-      call_ns:
-      - 1
-      wasted: 0
-      reason: 'call 1: due_date=''1969-12-31'' sent, stored as null'
-    - run: recon-000
-      call_ns:
-      - 3
-      wasted: 0
-      reason: 'call 3: due_date=''1965-04-01'' sent, stored as null'
-  competing:
-  - lab.create.the_api_expects_a_specific_date_format_e_g_i
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: stored as sent
-    p_doc_correct: 0.6061
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4651
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Send a date in the current year (e.g., '2023-04-01'). If this is accepted, the issue is specific
-      to the year 1965.
-    p_doc_correct: 0.4651
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: create.due_date.silent_null
-    p_doc_correct: 0.4651
-    status: hypothesis
-  - t: 1788655481.318
-    event: confirmed_by_probe
-    detail: probe-003
-    p_doc_correct: 0.4651
-    status: confirmed
-  - t: 1788655481.318
-    event: probe_confirmed
-    detail: The stored value for due_date was null.
-    p_doc_correct: 0.3175
-    status: confirmed
-  - t: 1788655481.318
-    event: restated_from_evidence
-    detail: 'was: The field is mapped to a legacy system that does not support dates before a certain
-      threshold (e.g., 1970), defaulting t'
-    p_doc_correct: 0.3175
-    status: confirmed
-  - t: 1788655709.343
-    event: confirmed_by_probe
-    detail: probe-003
-    p_doc_correct: 0.3175
-    status: confirmed
-  - t: 1788655709.343
-    event: probe_confirmed
-    detail: The stored value for due_date was null.
-    p_doc_correct: 0.241
-    status: confirmed
-  - t: 1788665226.877
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665224-round-1
-    p_doc_correct: 0.5263
-    status: confirmed
-  - t: 1788665228.892
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665224-round-2
-    p_doc_correct: 0.6557
-    status: confirmed
-  - t: 1788665230.907
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665224-round-3
-    p_doc_correct: 0.7296
-    status: confirmed
-  - t: 1788665230.907
-    event: auto_falsified
-    detail: posterior reverted above trust threshold
-    p_doc_correct: 0.7296
-    status: falsified
-  - t: 1788665230.94
-    event: retired
-    detail: world observed to match documentation for rule `pre_epoch_date_null` over 3 round(s) after
-      the rule was disabled; posterior crossed the trust threshold (0.7)
-    p_doc_correct: 0.7296
-    status: retired
-  - t: 1788665676.957
-    event: reopened_after_world_restored
-    detail: rule toggled back on by retire_demo
-    p_doc_correct: 0.5
-    status: hypothesis
-  p_doc_correct: 0.5
-  class: silent_coercion
-- id: lab.get.the_get_request_is_being_made_from_a_differe
-  tool: lab
-  operation: get
-  doc_claims: GET returns the item regardless of archived state
-  belief: The item was returned successfully with the status 'active', matching the sent value.
-  action: Ensure context consistency (API keys, tenants) across operations.
-  parameter: null
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.0
-  evidence_for: 1
-  evidence_against: 4
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay:
-    belief_id: lab.get.the_get_request_is_being_made_from_a_differe
-    cls: undocumented_flag
-    operation: get
-    parameter: null
-    signatures:
-    - get._.undocumented_flag
-    runs_affected: 1
-    calls_affected: 1
-    wasted_calls: 1
-    tokens_saved_estimate: 0
-    runs_rescued: 0
-    rescued_run_ids: []
-    first_seen_run: recon-000
-    last_seen_run: recon-000
-    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
-      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
-      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
-      this belief's own minting signature(s).
-    notes:
-    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
-    evidence:
-    - run: recon-000
-      call_ns:
-      - 15
-      wasted: 1
-      reason: call 15 got 404 for id itm_5c412648d863, created earlier in this run
-  competing:
-  - lab.get.the_item_is_created_with_a_default_status_of
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: GET returns the item regardless of archived state
-    p_doc_correct: 0.5882
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Use the exact same API key and headers for the GET request as the POST request.
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: get._.undocumented_flag
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788655481.418
-    event: confirmed_by_probe
-    detail: probe-004
-    p_doc_correct: 0.4545
-    status: confirmed
-  - t: 1788655481.418
-    event: probe_confirmed
-    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
-      with the status 'active'.
-    p_doc_correct: 0.3125
-    status: confirmed
-  - t: 1788655481.418
-    event: restated_from_evidence
-    detail: 'was: The GET request is being made from a different context (e.g., different tenant or API
-      key) than the creation context.'
-    p_doc_correct: 0.3125
-    status: confirmed
-  - t: 1788655709.375
-    event: confirmed_by_probe
-    detail: probe-004
-    p_doc_correct: 0.3125
-    status: confirmed
-  - t: 1788655709.375
-    event: probe_confirmed
-    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
-      with the status 'active'.
-    p_doc_correct: 0.2381
-    status: confirmed
-  - t: 1788656106.19
-    event: confirmed_by_probe
-    detail: probe-004
-    p_doc_correct: 0.2381
-    status: confirmed
-  - t: 1788656106.19
-    event: probe_confirmed
-    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
-      with the status 'active'.
-    p_doc_correct: 0.1923
-    status: confirmed
-  - t: 1788665077.34
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-1
-    p_doc_correct: 0.4545
-    status: confirmed
-  - t: 1788665083.384
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-2
-    p_doc_correct: 0.5882
-    status: confirmed
-  - t: 1788665089.431
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-3
-    p_doc_correct: 0.6693
-    status: confirmed
-  - t: 1788665095.887
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-4
-    p_doc_correct: 0.7237
-    status: confirmed
-  - t: 1788665095.887
-    event: auto_falsified
-    detail: posterior reverted above trust threshold
-    p_doc_correct: 0.7237
-    status: falsified
-  - t: 1788665095.92
-    event: retired
-    detail: world observed to match documentation for rule `archived_get_404` over 4 round(s) after the
-      rule was disabled; posterior crossed the trust threshold (0.7)
-    p_doc_correct: 0.7237
-    status: retired
-  - t: 1788665676.957
-    event: reopened_after_world_restored
-    detail: rule toggled back on by retire_demo
-    p_doc_correct: 0.5
-    status: hypothesis
-  p_doc_correct: 0.5
-  class: undocumented_flag
-- id: lab.search.cursors_expire_after_a_fixed_time_duration_e
-  tool: lab
-  operation: search
-  doc_claims: cursors remain valid indefinitely
-  belief: Cursors expire after a fixed time duration (e.g., 1 hour) to prevent stale data.
-  action: Refresh the cursor periodically (e.g., every hour).
-  parameter: cursor
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.search.cursors_expire_if_no_requests_are_made_for_a
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: cursors remain valid indefinitely
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Use the cursor immediately. If it works, wait 2 hours and try again. If it fails, the time
-      limit is the cause.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search.cursor.expiry
-    p_doc_correct: 0.4444
-    status: hypothesis
-  p_doc_correct: 0.4444
-  class: expiry
-- id: lab.search.cursors_expire_if_no_requests_are_made_for_a
-  tool: lab
-  operation: search
-  doc_claims: cursors remain valid indefinitely
-  belief: Cursors expire if no requests are made for a specific duration (e.g., 30 minutes of inactivity).
-  action: Refresh the cursor periodically (e.g., every 15 minutes).
-  parameter: cursor
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.search.cursors_expire_after_a_fixed_time_duration_e
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: cursors remain valid indefinitely
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Use the cursor, then make a request with a different cursor. If the original cursor still
-      works, the limit is inactivity-based.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search.cursor.expiry
-    p_doc_correct: 0.4444
-    status: hypothesis
-  p_doc_correct: 0.4444
-  class: expiry
 - id: lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
   tool: lab
   operation: bulk_create

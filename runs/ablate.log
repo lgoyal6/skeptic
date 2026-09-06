@@ -1,0 +1,30 @@
+
+  4 confirmed beliefs; running 3 tasks x 1 repeat(s) x 3 arms (memory, wiped, shuffled)
+
+    [memory  ] inventory      rep=0 FAIL  calls= 18 tokens= 131190  count 18 != 73; total 1017169.0 != 7075628.0
+    [memory  ] oldest_three   rep=0 FAIL  calls=  1 tokens=   3567  wrong titles or order
+    [memory  ] exactly_once   rep=0 PASS  calls=  3 tokens=   9345  exactly once
+    [wiped   ] inventory      rep=0 FAIL  calls=  3 tokens=  13823  count 16 != 73; total 1016150.0 != 7075628.0
+    [wiped   ] oldest_three   rep=0 FAIL  calls=  1 tokens=   3412  wrong titles or order
+    [wiped   ] exactly_once   rep=0 PASS  calls=  3 tokens=   9474  exactly once
+    [shuffled] inventory      rep=0 FAIL  calls= 28 tokens= 296501  no answer (step limit reached)
+    [shuffled] oldest_three   rep=0 FAIL  calls=  2 tokens=   5969  wrong titles or order
+    [shuffled] exactly_once   rep=0 PASS  calls=  3 tokens=   8824  exactly once
+
+  memory-wipe ablation -- is it the knowledge, or just the tokens?
+
+                       memory      wiped   shuffled
+  -------------------------------------------------
+  inventory               0/1        0/1        0/1
+  oldest_three            0/1        0/1        0/1
+  exactly_once            1/1        1/1        1/1
+  -------------------------------------------------
+  passed                  1/3        1/3        1/3
+  tool calls               22          7         33
+  tokens              144,102     26,709    311,294
+  context tokens          217          0        217
+
+  reading: memory (1/3) did not clearly beat wiped (1/3) here, so this run gives no evidence that belief memory is driving performance -- it may be small-sample noise, but it is not a confirmation either. (n=1 repeat per task; treat as noisy below --repeats 3)
+
+  written to bench/ablate_result.json
+

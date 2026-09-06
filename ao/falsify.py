@@ -108,6 +108,13 @@ def _fmt_beliefs(store: BeliefStore) -> tuple[str, str]:
     return "\n".join(bl), "\n".join(ev)
 
 
+BRIEF_FILE = "ADVERSARY_BRIEF.md"
+
+SHORT_PROMPT = """You are the adversary. Read `{brief}` in this repository root and
+follow it exactly. Write your answer to `{out}` as described there, then stop.
+Do not modify any other file."""
+
+
 def spawn(prompt: str, name: str = "falsifier", harness: str = "claude-code") -> str:
     out = subprocess.run(
         ["ao", "spawn", "--project", PROJECT, "--kind", "worker",
@@ -177,11 +184,24 @@ def main() -> int:
         return 0
 
     bl, ev = _fmt_beliefs(store)
-    prompt = BRIEF.format(beliefs=bl, evidence=ev, outfile=OUTFILE)
+    brief = BRIEF.format(beliefs=bl, evidence=ev, outfile=OUTFILE)
+
+    # AO rejects a long --prompt (PROMPT_TOO_LONG), and a worker reads from its
+    # own worktree anyway, so the brief travels as a committed file and the
+    # prompt is a pointer to it. The worktree is created from the branch at
+    # spawn time, so the brief has to be committed before spawning.
+    Path(BRIEF_FILE).write_text(brief)
+    subprocess.run(["git", "add", BRIEF_FILE], check=False, capture_output=True)
+    subprocess.run(
+        ["git", "-c", "user.name=Laksh Goyal", "-c", "user.email=laksh.g@gmicloud.ai",
+         "commit", "-q", "-m", "ao: adversary brief for the current confirmed set"],
+        check=False, capture_output=True,
+    )
 
     print(f"  attacking {len(active)} confirmed beliefs")
     print(f"  proposer: glm-4-7-flash   adversary: {a.harness}")
-    sid = spawn(prompt, harness=a.harness)
+    print(f"  brief written to {BRIEF_FILE} ({len(brief)} chars) and committed")
+    sid = spawn(SHORT_PROMPT.format(brief=BRIEF_FILE, out=OUTFILE), harness=a.harness)
     print(f"  spawned {sid}, waiting for {OUTFILE}")
 
     try:
