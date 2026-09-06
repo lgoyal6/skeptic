@@ -39,6 +39,7 @@ have them enforced for you.
 """
 
 ENTRY = """## {title}
+{warning}
 
 **The docs say:** {doc_claims}
 
@@ -85,8 +86,23 @@ def to_markdown(store: BeliefStore) -> str:
         out.append(f"\n# {cls_name.replace('_', ' ')}\n")
         for b in by_class[cls_name]:
             title = f"`{b.operation}`" + (f" / `{b.parameter}`" if b.parameter else "")
+            # A belief an adversary objected to, and which has not since been
+            # re-settled, is still published (withholding it would be its own
+            # kind of lie) but it is labelled. A corrected spec that quietly
+            # includes claims a reviewer already dismantled is not corrected.
+            objection = next(
+                (h.get("detail") for h in reversed(b.history)
+                 if h.get("event") == "adversary_objection"), None
+            )
+            warning = ""
+            if objection and not b.survived_falsification:
+                warning = (
+                    f"\n> **Contested.** An adversarial reviewer objected to this "
+                    f"entry and it has not been re-settled since: {objection}\n"
+                )
             out.append(ENTRY.format(
                 title=title,
+                warning=warning,
                 doc_claims=b.doc_claims or "(nothing specific)",
                 belief=b.belief,
                 action=b.action or "(no action recorded)",
