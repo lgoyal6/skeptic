@@ -49,11 +49,53 @@ def main() -> int:
     ap.add_argument("--beliefs", default="beliefs")
     ap.add_argument("--probes-per-cycle", type=int, default=1)
     ap.add_argument("--max-hypotheses", type=int, default=1)
+    ap.add_argument("--no-recon", action="store_true")
+    ap.add_argument("--recon-calls", type=int, default=80)
+    ap.add_argument("--recon-hypotheses", type=int, default=8)
     a = ap.parse_args()
 
     ex, refl, usage = build()
     seed_world()
     t0 = time.time()
+
+    # Recon first. Learning must not depend on a task run being unlucky in a
+    # productive way: one earlier session did three calls, tripped nothing and
+    # learned nothing. A bounded deliberate sweep of the documented promises
+    # surfaces the whole lie surface in ~30 calls, and the probe designer then
+    # settles what it found.
+    if not a.no_recon:
+        from reflect.recon import sweep
+        r = sweep(run_id="recon-000", budget_calls=a.recon_calls)
+        print(f"recon: {r.calls} calls, {r.wall_s:.1f}s, "
+              f"{len(r.promises_broken)}/{len(r.promises_tested)} promises broken, "
+              f"{len(set(x.signature() for x in r.anomalies))} signatures", flush=True)
+        for pb in r.promises_broken:
+            print(f"   x {pb}", flush=True)
+        store = BeliefStore("lab", root=a.beliefs)
+        covered = set()
+        minted = 0
+        calls_log = _read_log("recon-000")
+        for an in r.anomalies:
+            if minted >= a.recon_hypotheses:
+                break
+            if an.signature() in covered:
+                continue
+            covered.add(an.signature())
+            try:
+                hyps = propose(refl, an, calls_log)
+            except Exception as e:
+                print(f"   ! hypothesis failed for {an.signature()}: {e}", flush=True)
+                continue
+            if not hyps:
+                continue
+            made = mint(store, hyps, an, run_id="recon-000")
+            for b in made:
+                if not any(h.get("event") == "signature" for h in b.history):
+                    b.note("signature", an.signature())
+            minted += 1
+            print(f"   + {len(made)} rivals for {an.signature()}", flush=True)
+        store.save()
+        print(f"recon minted {minted} hypothesis sets; {store.counts()}", flush=True)
 
     for i in range(a.cycles):
         task_id, cfg = SCHEDULE[i % len(SCHEDULE)]

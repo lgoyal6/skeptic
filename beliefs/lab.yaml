@@ -1,0 +1,149 @@
+tool: lab
+updated: '2026-09-06T00:03:35Z'
+counts:
+  hypothesis: 3
+  confirmed: 0
+  falsified: 0
+  retired: 0
+beliefs:
+- id: lab.search.the_api_attempts_to_honor_page_size_but_if_t
+  tool: lab
+  operation: search
+  doc_claims: 'up to 500 (doc: page_size_max=500)'
+  belief: The API attempts to honor `page_size`, but if the requested size is too high (or the query is
+    heavy), it silently caps the response at 50 as a safety measure.
+  action: Request `page_size=50` to ensure the API does not cap the response.
+  parameter: page_size
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.4
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: s003-inventory
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_api_enforces_a_hard_limit_of_50_results
+  - lab.search.the_limit_of_50_is_specific_to_the_current_q
+  history:
+  - t: 1788653015.245
+    event: created
+    detail: 'up to 500 (doc: page_size_max=500)'
+    p_doc_correct: 0.5882
+    status: hypothesis
+  - t: 1788653015.245
+    event: contradiction
+    detail: s003-inventory
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653015.245
+    event: hypothesis
+    detail: Call search with `page_size=50`. If the response contains exactly 50 items, the safety cap
+      is confirmed.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653015.245
+    event: signature
+    detail: search.page_size.silent_truncation
+    p_doc_correct: 0.4545
+    status: hypothesis
+  p_doc_correct: 0.4545
+  class: silent_coercion
+- id: lab.search.the_api_enforces_a_hard_limit_of_50_results
+  tool: lab
+  operation: search
+  doc_claims: 'up to 500 (doc: page_size_max=500)'
+  belief: The API enforces a hard limit of 50 results per page for this endpoint, ignoring the `page_size`
+    parameter entirely.
+  action: Always request `page_size=50` and rely on `has_more` for pagination.
+  parameter: page_size
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.4
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: s003-inventory
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_api_attempts_to_honor_page_size_but_if_t
+  - lab.search.the_limit_of_50_is_specific_to_the_current_q
+  history:
+  - t: 1788653015.245
+    event: created
+    detail: 'up to 500 (doc: page_size_max=500)'
+    p_doc_correct: 0.5882
+    status: hypothesis
+  - t: 1788653015.245
+    event: contradiction
+    detail: s003-inventory
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653015.245
+    event: hypothesis
+    detail: Call search with `page_size=100`. If the response contains exactly 50 items, the hard limit
+      is confirmed.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653015.245
+    event: signature
+    detail: search.page_size.silent_truncation
+    p_doc_correct: 0.4545
+    status: hypothesis
+  p_doc_correct: 0.4545
+  class: silent_truncation
+- id: lab.search.the_limit_of_50_is_specific_to_the_current_q
+  tool: lab
+  operation: search
+  doc_claims: 'up to 500 (doc: page_size_max=500)'
+  belief: The limit of 50 is specific to the current query context (e.g., the 'Northwind' vendor filter),
+    and other queries might allow 500.
+  action: Test with different filters to determine if the limit is global or specific.
+  parameter: filter
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.2
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: s003-inventory
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.the_api_enforces_a_hard_limit_of_50_results
+  - lab.search.the_api_attempts_to_honor_page_size_but_if_t
+  history:
+  - t: 1788653015.245
+    event: created
+    detail: 'up to 500 (doc: page_size_max=500)'
+    p_doc_correct: 0.625
+    status: hypothesis
+  - t: 1788653015.245
+    event: contradiction
+    detail: s003-inventory
+    p_doc_correct: 0.4762
+    status: hypothesis
+  - t: 1788653015.245
+    event: hypothesis
+    detail: Call search with `page_size=500` and an empty filter or a different vendor. If it returns
+      500 results, the limit is query-dependent.
+    p_doc_correct: 0.4762
+    status: hypothesis
+  - t: 1788653015.245
+    event: signature
+    detail: search.page_size.silent_truncation
+    p_doc_correct: 0.4762
+    status: hypothesis
+  p_doc_correct: 0.4762
+  class: mislabelled_semantics
