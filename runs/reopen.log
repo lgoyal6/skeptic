@@ -1,2 +1,6 @@
   5 exhausted signatures, re-proposing with the refuting evidence
 
+    bulk_create.items.silent_truncation: 3 new hypotheses
+        The API performs strict input validation; if the majority of items in the batch fail val
+        The API has a per-request rate limit on item creation. The probe shows 7 items were thro
+        The API has a logic bug where it only processes the first item in the list and ignores t

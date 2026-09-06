@@ -9,3 +9,5 @@ recon: 31 calls 14.7s, 12 promises broken, 12 signatures
     [probe-003] 2 rivals -> expiry
     [probe-001] consistency 2 calls 42s -> ['confirmed']
     [probe-002] flag_discovery 2 calls 63s -> ['falsified']
+    [probe-000] header_burst 10 calls 420s -> ['falsified', 'falsified', 'confirmed']
+/tmp/learn.sh: line 22: 69330 Terminated: 15          ./.venv/bin/python -u -m bench.settle --workers 4

@@ -1,5 +1,5 @@
 tool: lab
-updated: '2026-09-06T03:34:36Z'
+updated: '2026-09-06T03:49:21Z'
 counts:
   hypothesis: 7
   confirmed: 4
@@ -26,7 +26,30 @@ beliefs:
   - probe-000
   survived_falsification: null
   falsified_by: null
-  replay: {}
+  replay:
+    belief_id: lab.create.the_api_enforces_a_hard_internal_limit_of_25
+    cls: silent_truncation
+    operation: create
+    parameter: title
+    signatures:
+    - create.title.silent_truncation
+    runs_affected: 0
+    calls_affected: 0
+    wasted_calls: 0
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: null
+    last_seen_run: null
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no replay rule implemented for signature(s) ['create.title.silent_truncation'] (belief classed 'silent_truncation');
+      reporting zero rather than guessing
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence: []
   competing:
   - lab.create.the_api_accepts_up_to_2000_characters_but_th
   history:
@@ -118,14 +141,14 @@ beliefs:
     parameter: null
     signatures:
     - search._.write_not_visible
-    runs_affected: 1
-    calls_affected: 1
-    wasted_calls: 1
+    runs_affected: 3
+    calls_affected: 3
+    wasted_calls: 4
     tokens_saved_estimate: 0
     runs_rescued: 0
     rescued_run_ids: []
     first_seen_run: recon-000
-    last_seen_run: recon-000
+    last_seen_run: recon-r2
     method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
       from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
       = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
@@ -134,6 +157,21 @@ beliefs:
     - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
     evidence:
     - run: recon-000
+      call_ns:
+      - 12
+      wasted: 1
+      reason: call 12 searched 0.40s after create 11 (vendor='ReconFresh') and missed the new row
+    - run: recon-obs
+      call_ns:
+      - 12
+      wasted: 1
+      reason: call 12 searched 0.40s after create 11 (vendor='ReconFresh') and missed the new row
+    - run: recon-r2
+      call_ns:
+      - 12
+      wasted: 1
+      reason: call 12 searched 0.40s after create 11 (vendor='ReconFresh') and missed the new row
+    - run: recon-r2
       call_ns:
       - 12
       wasted: 1
@@ -267,14 +305,14 @@ beliefs:
     parameter: null
     signatures:
     - search._.undocumented_status
-    runs_affected: 2
-    calls_affected: 15
-    wasted_calls: 15
+    runs_affected: 10
+    calls_affected: 69
+    wasted_calls: 79
     tokens_saved_estimate: 0
     runs_rescued: 0
     rescued_run_ids: []
     first_seen_run: recon-000
-    last_seen_run: probe-010
+    last_seen_run: retire-demo-1788665224-relearn
     method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
       from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
       = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
@@ -282,6 +320,111 @@ beliefs:
     notes:
     - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
     evidence:
+    - run: ab-naive-exactly_once-0
+      call_ns:
+      - 5
+      wasted: 1
+      reason: call 5 hit 429 despite the no-rate-limit doc
+    - run: ab-naive-exactly_once-0
+      call_ns:
+      - 6
+      wasted: 1
+      reason: call 6 hit 429 despite the no-rate-limit doc
+    - run: ab-naive-exactly_once-0
+      call_ns:
+      - 7
+      wasted: 1
+      reason: call 7 hit 429 despite the no-rate-limit doc
+    - run: ablate-memory-exactly_once-0
+      call_ns:
+      - 5
+      wasted: 1
+      reason: call 5 hit 429 despite the no-rate-limit doc
+    - run: ablate-memory-exactly_once-0
+      call_ns:
+      - 6
+      wasted: 1
+      reason: call 6 hit 429 despite the no-rate-limit doc
+    - run: ablate-memory-exactly_once-0
+      call_ns:
+      - 7
+      wasted: 1
+      reason: call 7 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 1
+      wasted: 1
+      reason: call 1 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 4
+      wasted: 1
+      reason: call 4 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 4
+      wasted: 1
+      reason: call 4 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 5
+      wasted: 1
+      reason: call 5 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 5
+      wasted: 1
+      reason: call 5 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 6
+      wasted: 1
+      reason: call 6 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 6
+      wasted: 1
+      reason: call 6 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 7
+      wasted: 1
+      reason: call 7 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 7
+      wasted: 1
+      reason: call 7 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 8
+      wasted: 1
+      reason: call 8 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 8
+      wasted: 1
+      reason: call 8 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 9
+      wasted: 1
+      reason: call 9 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 9
+      wasted: 1
+      reason: call 9 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 10
+      wasted: 1
+      reason: call 10 hit 429 despite the no-rate-limit doc
+    - run: probe-000
+      call_ns:
+      - 10
+      wasted: 1
+      reason: call 10 hit 429 despite the no-rate-limit doc
     - run: probe-010
       call_ns:
       - 4
@@ -357,6 +500,221 @@ beliefs:
       - 31
       wasted: 1
       reason: call 31 hit 429 despite the no-rate-limit doc
+    - run: recon-obs
+      call_ns:
+      - 21
+      wasted: 1
+      reason: call 21 hit 429 despite the no-rate-limit doc
+    - run: recon-obs
+      call_ns:
+      - 22
+      wasted: 1
+      reason: call 22 hit 429 despite the no-rate-limit doc
+    - run: recon-obs
+      call_ns:
+      - 23
+      wasted: 1
+      reason: call 23 hit 429 despite the no-rate-limit doc
+    - run: recon-obs
+      call_ns:
+      - 24
+      wasted: 1
+      reason: call 24 hit 429 despite the no-rate-limit doc
+    - run: recon-obs
+      call_ns:
+      - 25
+      wasted: 1
+      reason: call 25 hit 429 despite the no-rate-limit doc
+    - run: recon-obs
+      call_ns:
+      - 26
+      wasted: 1
+      reason: call 26 hit 429 despite the no-rate-limit doc
+    - run: recon-obs
+      call_ns:
+      - 27
+      wasted: 1
+      reason: call 27 hit 429 despite the no-rate-limit doc
+    - run: recon-obs
+      call_ns:
+      - 28
+      wasted: 1
+      reason: call 28 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 13
+      wasted: 1
+      reason: call 13 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 14
+      wasted: 1
+      reason: call 14 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 15
+      wasted: 1
+      reason: call 15 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 16
+      wasted: 1
+      reason: call 16 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 17
+      wasted: 1
+      reason: call 17 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 18
+      wasted: 1
+      reason: call 18 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 19
+      wasted: 1
+      reason: call 19 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 20
+      wasted: 1
+      reason: call 20 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 21
+      wasted: 1
+      reason: call 21 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 22
+      wasted: 1
+      reason: call 22 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 23
+      wasted: 1
+      reason: call 23 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 24
+      wasted: 1
+      reason: call 24 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 24
+      wasted: 1
+      reason: call 24 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 25
+      wasted: 1
+      reason: call 25 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 25
+      wasted: 1
+      reason: call 25 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 26
+      wasted: 1
+      reason: call 26 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 26
+      wasted: 1
+      reason: call 26 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 27
+      wasted: 1
+      reason: call 27 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 28
+      wasted: 1
+      reason: call 28 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 29
+      wasted: 1
+      reason: call 29 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 30
+      wasted: 1
+      reason: call 30 hit 429 despite the no-rate-limit doc
+    - run: recon-r2
+      call_ns:
+      - 31
+      wasted: 1
+      reason: call 31 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071-relearn
+      call_ns:
+      - 1
+      wasted: 1
+      reason: call 1 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071-relearn
+      call_ns:
+      - 2
+      wasted: 1
+      reason: call 2 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071
+      call_ns:
+      - 47
+      wasted: 1
+      reason: call 47 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071
+      call_ns:
+      - 48
+      wasted: 1
+      reason: call 48 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071
+      call_ns:
+      - 49
+      wasted: 1
+      reason: call 49 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071
+      call_ns:
+      - 50
+      wasted: 1
+      reason: call 50 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071
+      call_ns:
+      - 51
+      wasted: 1
+      reason: call 51 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071
+      call_ns:
+      - 52
+      wasted: 1
+      reason: call 52 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071
+      call_ns:
+      - 53
+      wasted: 1
+      reason: call 53 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071
+      call_ns:
+      - 54
+      wasted: 1
+      reason: call 54 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071
+      call_ns:
+      - 55
+      wasted: 1
+      reason: call 55 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665071
+      call_ns:
+      - 61
+      wasted: 1
+      reason: call 61 hit 429 despite the no-rate-limit doc
+    - run: retire-demo-1788665224-relearn
+      call_ns:
+      - 1
+      wasted: 1
+      reason: call 1 hit 429 despite the no-rate-limit doc
   competing:
   - lab.search.there_is_a_hidden_rate_limit_e_g_100_request
   history:
@@ -474,19 +832,19 @@ beliefs:
   falsified_by: null
   replay:
     belief_id: lab.update.the_validation_logic_is_buggy_and_only_check
-    cls: idempotency_hazard
+    cls: silent_coercion
     operation: update
     parameter: not_a_real_field
     signatures:
     - update.not_a_real_field.silent_ignore
-    runs_affected: 1
-    calls_affected: 1
+    runs_affected: 3
+    calls_affected: 3
     wasted_calls: 0
     tokens_saved_estimate: 0
     runs_rescued: 0
     rescued_run_ids: []
     first_seen_run: recon-000
-    last_seen_run: recon-000
+    last_seen_run: recon-r2
     method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
       from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
       = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
@@ -495,6 +853,21 @@ beliefs:
     - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
     evidence:
     - run: recon-000
+      call_ns:
+      - 5
+      wasted: 0
+      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
+    - run: recon-obs
+      call_ns:
+      - 5
+      wasted: 0
+      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
+    - run: recon-r2
+      call_ns:
+      - 5
+      wasted: 0
+      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
+    - run: recon-r2
       call_ns:
       - 5
       wasted: 0

@@ -1,4 +1,5 @@
 [
+  "archived_get_404",
   "bulk_cap",
   "cursor_expiry",
   "include_archived_flag",

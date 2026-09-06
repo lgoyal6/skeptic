@@ -7,3 +7,4 @@ minted 1 new hypothesis sets; {'hypothesis': 5, 'confirmed': 5, 'falsified': 16,
     [probe-000] 3 rivals -> rate_limit
     [probe-001] 2 rivals -> expiry
     [probe-000] header_burst 10 calls 308s -> ['inconclusive', 'inconclusive', 'inconclusive']
+/tmp/learn.sh: line 22: 25238 Terminated: 15          ./.venv/bin/python -u -m bench.settle --workers 4

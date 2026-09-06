@@ -207,6 +207,91 @@ class IdempotentCreate(Guard):
 
 
 @dataclass
+class Throttle(Guard):
+    """Pace requests, and back off on a 429 whether or not it tells you to.
+
+    The tool throttles at roughly 3 requests per second and only sends
+    Retry-After about 60% of the time, so an agent that waits for the header
+    waits forever on the other 40%. Counterfactual replay found 15 calls
+    burned on 429s across the run history, every one of them avoidable.
+    """
+
+    min_interval: float = 0.4
+    backoff_s: float = 1.2
+    _last: float = 0.0
+
+    def before(self, op, payload):
+        gap = time.time() - self._last
+        if self._last and gap < self.min_interval:
+            time.sleep(self.min_interval - gap)
+            self.fired += 1
+        self._last = time.time()
+        return payload, None
+
+    def after(self, op, payload, status, body, adapter):
+        if status == 429:
+            # Honour the header when present; fall back to a fixed backoff
+            # when it is not, which is the case roughly two times in five.
+            wait = self.backoff_s
+            if isinstance(body, dict) and body.get("_retry_after_present"):
+                wait = max(wait, 1.0)
+            self.fired += 1
+            time.sleep(wait)
+            self._last = time.time()
+        return body
+
+
+@dataclass
+class NormaliseDate(Guard):
+    """Pre-1970 dates are silently stored as null, so refuse rather than lose data."""
+
+    cutoff: str = "1970-01-01"
+
+    def before(self, op, payload):
+        if op in ("create", "update") and payload:
+            d = payload.get("due_date")
+            if isinstance(d, str) and d < self.cutoff:
+                self.fired += 1
+                return payload, (
+                    f"due_date {d!r} is before {self.cutoff}; this tool stores such dates "
+                    f"as null without reporting an error, so the value would be lost silently"
+                )
+        return payload, None
+
+
+@dataclass
+class RejectUnknownUpdateField(Guard):
+    known: tuple[str, ...] = ("title", "amount", "due_date", "status", "assignee", "vendor")
+
+    def before(self, op, payload):
+        if op == "update" and payload:
+            bad = [k for k in payload if k not in self.known]
+            if bad:
+                self.fired += 1
+                return payload, (
+                    f"field(s) {bad} are not in this tool's schema; it returns 200 and "
+                    f"silently discards them rather than erroring. Known: {list(self.known)}"
+                )
+        return payload, None
+
+
+@dataclass
+class TruncateTitle(Guard):
+    cap: int = 255
+
+    def before(self, op, payload):
+        if op in ("create", "update") and payload:
+            t = payload.get("title")
+            if isinstance(t, str) and len(t) > self.cap:
+                self.fired += 1
+                return payload, (
+                    f"title is {len(t)} characters; this tool silently truncates at "
+                    f"{self.cap} and reports success, so the tail would be lost"
+                )
+        return payload, None
+
+
+@dataclass
 class BulkChunk(Guard):
     cap: int = 20
 
@@ -247,6 +332,11 @@ REGISTRY: list[tuple[str, str | None, type[Guard], dict[str, Any]]] = [
     ("eventual_consistency", None, WaitForWrite, {"name": "wait_for_write"}),
     ("idempotency_hazard", None, IdempotentCreate, {"name": "idempotent_create"}),
     ("mislabelled_semantics", "sort", SortByEdited, {"name": "sort_by_created"}),
+    ("rate_limit", None, Throttle, {"name": "throttle"}),
+    ("silent_coercion", "due_date", NormaliseDate, {"name": "reject_pre_epoch_date"}),
+    ("silent_coercion", "not_a_real_field", RejectUnknownUpdateField,
+     {"name": "reject_unknown_update_field"}),
+    ("silent_truncation", "title", TruncateTitle, {"name": "warn_title_truncation"}),
 ]
 
 

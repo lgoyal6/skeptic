@@ -2,37 +2,37 @@
   "naive": {
     "arm": "naive",
     "guards": false,
-    "passed": 1,
+    "passed": 0,
     "total": 3,
-    "calls": 27,
-    "tokens": 98296,
-    "wall_s": 87.3,
+    "calls": 29,
+    "tokens": 67566,
+    "wall_s": 48.6,
     "guards_fired": 0,
     "rows": [
       {
         "task": "inventory",
         "ok": false,
-        "detail": "count 17 != 73; total 1016150.0 != 7075628.0",
+        "detail": "count 19 != 73; total 1017169.0 != 7075628.0",
         "calls": 7,
-        "tokens": 66327,
-        "wall_s": 56.25,
+        "tokens": 33426,
+        "wall_s": 21.71,
         "guards_fired": 0,
         "expected": {
           "count": 73,
           "total_amount": 7075628.0
         },
         "got": {
-          "count": 17,
-          "total_amount": 1016150.0
+          "count": 19,
+          "total_amount": 1017169.0
         }
       },
       {
         "task": "oldest_three",
         "ok": false,
         "detail": "wrong titles or order",
-        "calls": 3,
-        "tokens": 8848,
-        "wall_s": 10.69,
+        "calls": 1,
+        "tokens": 3267,
+        "wall_s": 3.85,
         "guards_fired": 0,
         "expected": [
           "AbVertex-invoice-0000",
@@ -47,11 +47,11 @@
       },
       {
         "task": "exactly_once",
-        "ok": true,
-        "detail": "exactly once",
-        "calls": 17,
-        "tokens": 23121,
-        "wall_s": 20.33,
+        "ok": false,
+        "detail": "10 distinct titles, 2 duplicates (wanted 10, 0)",
+        "calls": 21,
+        "tokens": 30873,
+        "wall_s": 22.97,
         "guards_fired": 0,
         "expected": {
           "distinct": 10,
@@ -59,7 +59,7 @@
         },
         "got": {
           "distinct": 10,
-          "duplicates": 0
+          "duplicates": 2
         }
       }
     ]
@@ -70,25 +70,25 @@
     "passed": 1,
     "total": 3,
     "calls": 12,
-    "tokens": 81710,
-    "wall_s": 59.1,
-    "guards_fired": 12,
+    "tokens": 80028,
+    "wall_s": 31.0,
+    "guards_fired": 1,
     "rows": [
       {
         "task": "inventory",
         "ok": false,
-        "detail": "count 23 != 73; total 23511.0 != 7075628.0",
+        "detail": "count 16 != 73; total 16016.0 != 7075628.0",
         "calls": 9,
-        "tokens": 71949,
-        "wall_s": 42.95,
-        "guards_fired": 9,
+        "tokens": 70452,
+        "wall_s": 16.77,
+        "guards_fired": 0,
         "expected": {
           "count": 73,
           "total_amount": 7075628.0
         },
         "got": {
-          "count": 23,
-          "total_amount": 23511.0
+          "count": 16,
+          "total_amount": 16016.0
         }
       },
       {
@@ -96,9 +96,9 @@
         "ok": false,
         "detail": "wrong titles or order",
         "calls": 1,
-        "tokens": 3438,
-        "wall_s": 5.23,
-        "guards_fired": 1,
+        "tokens": 3216,
+        "wall_s": 3.28,
+        "guards_fired": 0,
         "expected": [
           "AbVertex-invoice-0000",
           "AbVertex-invoice-0001",
@@ -115,9 +115,9 @@
         "ok": true,
         "detail": "exactly once",
         "calls": 2,
-        "tokens": 6323,
-        "wall_s": 10.94,
-        "guards_fired": 2,
+        "tokens": 6360,
+        "wall_s": 10.96,
+        "guards_fired": 1,
         "expected": {
           "distinct": 10,
           "duplicates": 0
@@ -131,23 +131,30 @@
   },
   "guards": [
     {
-      "guard": "include_archived",
-      "implements": "undocumented_flag",
-      "parameter": null,
+      "guard": "warn_title_truncation",
+      "implements": "silent_truncation",
+      "parameter": "title",
       "fired": 0,
-      "because": "The item was returned successfully with the status 'active', matching the sent value."
+      "because": "The API silently truncates the 'title' field upon storage, returning the truncated version in the read-back."
     },
     {
       "guard": "wait_for_write",
       "implements": "eventual_consistency",
       "parameter": null,
-      "fired": 0,
+      "fired": 1,
       "because": "The search query returned zero rows after a 0.5 second wait."
     },
     {
-      "guard": "idempotent_create",
-      "implements": "idempotency_hazard",
+      "guard": "throttle",
+      "implements": "rate_limit",
       "parameter": null,
+      "fired": 0,
+      "because": "7 out of 10 requests were throttled, with the first throttling occurring on the 4th request."
+    },
+    {
+      "guard": "reject_unknown_update_field",
+      "implements": "silent_coercion",
+      "parameter": "not_a_real_field",
       "fired": 0,
       "because": "The field `not_a_real_field` was present in the readback and stored as null, despite being sent with the value 'test_val"
     }
