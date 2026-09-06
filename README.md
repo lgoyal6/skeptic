@@ -10,6 +10,31 @@ skeptic is pointed at a small HTTP API (`lab/`) whose documentation is confident
 
 The point of the exercise is not the toy API. It is that "trust the documentation" is the default failure mode for every agent that calls a real tool, and this is what refusing to do that looks like in practice, all the way through to a corrected spec another agent can load instead of the vendor's docs.
 
+## Where this ended up
+
+The honest headline, verified at the end of the build:
+
+| | |
+| --- | --- |
+| precision | 0.75 |
+| false beliefs | 0 |
+| recall, observable | 0.23 (3 of 13) |
+| confirmed beliefs | 4, compiling to 3 guards |
+| invariant tests | 23 passed, 1 xpassed |
+
+**Earlier in the build these numbers were higher, and they were withdrawn.**
+Precision touched 1.00 over five confirmed beliefs. Then an adversarial
+reviewer running on a stronger model dismantled all four beliefs that stood at
+the time, and a separate audit showed that the experiments behind three of
+them had been made with an instrument that returned the same reading whatever
+the world did. Both were right. The evidence was invalidated, the beliefs went
+back to being hypotheses, and the numbers fell.
+
+That fall is the most interesting result here. A precision of 1.00 that cannot
+survive one pass of adversarial review was worth less than 0.75 that can, and a
+project about documentation which lies does not get to keep a number it knows
+is unsupported.
+
 ## How it works
 
 The loop, in order:
@@ -87,24 +112,147 @@ Recon's sweep (`reflect/recon.py`) directly tests 12 of these 14 documented prom
 
 ## Results
 
-Numbers below were read directly from the artifacts named, or produced by running the exact commands in the task brief, moments before this was written. `beliefs/lab.yaml` was last updated `2026-09-06T03:49:21Z`; two other artifacts (`export/TOOLS.md`, `export/guards.json`) are visibly older than that and are flagged as stale below rather than quietly treated as current.
+Every figure below was produced by running the named command against the
+current repository state, not copied from an earlier run.
 
-**`./.venv/bin/python cli.py bench`** (live):
+**`./.venv/bin/python cli.py bench`**
 
 | | |
 | --- | --- |
 | confirmed beliefs | 4 |
-| matched a real rule | 4 |
+| matched a real rule | 3 |
 | false beliefs | 0 |
-| duplicates | 0 |
-| precision | 1.00 |
-| recall, observable rules | 0.31 (4/13) |
-| recall, all 14 rules | 0.29 (4/14) |
-| belief lifecycle | hypothesis 7, confirmed 4, falsified 16, retired 0 |
+| duplicates | 1 |
+| precision | 0.75 |
+| recall, observable rules | 0.23 (3/13) |
+| recall, all 14 rules | 0.21 |
 
-13 of the 14 ground-truth rules were observably triggered at some point in this session (`runs/observable.json`); `large_number_to_string` never fired, so it is excluded from the observable-recall denominator rather than counted as a miss.
+Found: `pre_epoch_date_null`, `rate_limit_flaky_header`, `write_search_lag`.
 
-The 4 confirmed, matched beliefs: `rate_limit_flaky_header`, `title_truncation`, `unknown_field_ignored`, `write_search_lag`. The 9 rules that were observable but not currently held as a confirmed belief: `archived_get_404`, `bulk_cap`, `cursor_expiry`, `include_archived_flag`, `page_size_cap`, `pre_epoch_date_null`, `sort_created_is_edited`, `unknown_filter_field`, `write_502_after_commit`, some of these are open hypotheses (7 currently unsettled), the rest were proposed at some point and falsified.
+Observable but not currently held: `archived_get_404`, `bulk_cap`,
+`cursor_expiry`, `include_archived_flag`, `page_size_cap`, and the rest.
+13 of the 14 rules were demonstrably triggered at some point this session
+(`runs/observable.json`), so the fourteenth is excluded from the denominator
+rather than counted as a miss.
+
+The single duplicate is not a wrong belief. The `rate_limit_flaky_header`
+ground-truth rule applies to operation `*`, so a belief about `search` and a
+belief about `create` both legitimately match it and only one can be counted.
+It is reported separately rather than folded into precision silently.
+
+Recall is the weak number and the reason is structural rather than accidental.
+The system is deliberately conservative: it confirms only what a designed
+experiment settled, and three separate guards now prevent it confirming on an
+observation that carries no signal. That trades recall for precision on
+purpose. A version that confirmed on first observation would score far better
+on recall and would be worth much less.
+
+### The adversary rejected everything the proposer had confirmed
+
+`ao/falsify.py` spawns an AO worker on Claude Code while the proposer runs on
+GLM-4.7-Flash. An adversary that shares the proposer's blind spots
+rubber-stamps, so the asymmetry is the point rather than a detail.
+
+It reviewed the four then-confirmed beliefs and downgraded all four. The
+verbatim verdicts are in `probes/falsification.json`. Its objections were
+specific:
+
+- the title-truncation belief cited `probe-000`, a `header_burst` run, as its
+  evidence. That is a rate-limit experiment containing no title-length data at
+  all, so the belief had never actually been tested.
+- "the rate limit is global, shared across all users": all ten calls came from
+  one client with one credential, so global was never varied. Per-key and
+  per-user remain equally consistent with the evidence.
+- the eventual-consistency belief: zero rows before and after a 0.5s wait
+  never observed a draft status and never confirmed the create had succeeded.
+- sent `test_value`, stored `null` is equally consistent with the field being
+  dropped entirely as with it being stored as null. The probe never
+  distinguished them.
+
+Each objection arrived with a concrete attack experiment: vary title length
+across 24, 25, 26, 100 and 2000 and read each back; burst with credential A
+then call with credential B; check whether the key is present-with-null or
+absent. A downgrade returns a belief to hypothesis with that attack recorded
+rather than deleting it, and `design()` in `reflect/probe.py` now prefers the
+adversary's suggested experiment over inventing a weaker one.
+
+This is the project's own thesis turned on itself. GLM asserted causes it had
+not tested, which is precisely the failure mode this system exists to catch in
+documentation.
+
+### The sixth instance of the same bug, inside the experiment layer
+
+`docs/AUDIT.md` records an adversarial audit of the whole repository. Its most
+important finding: `_consistency` and `_boundary`'s create branch read a create
+response body as the created item without checking the HTTP status. Every error
+body this lab returns is itself a dict, so `body.get(field)` comes back `None`
+on a 502 or a 429 and reads exactly like "the server silently nulled the field
+I sent". The lab 502s on roughly 5% of creates by design, so this fired
+routinely rather than rarely. Reproduced single-threaded on try 6 of 200.
+
+That is very likely what the adversary was objecting to in its fourth verdict.
+Two independent checks converged on the same rotten measurement from opposite
+directions.
+
+Consequence: six probe records were moved to `probes/invalidated/` and three
+confirmed beliefs returned to hypothesis. A measurement made with an instrument
+later shown to produce the same reading regardless of the world carries no
+information about the world, so keeping it would have been keeping a number
+known to be unsupported.
+
+The audit also found that the retirement demo could run backwards (its
+page-size check measured an unseeded store, so it reported "cap still present"
+whether or not the rule was on), that the unknown-field guard was pinned to one
+hardcoded field name, and that `bench/settle.py --workers 4` produced 72% 429s
+against a 3 req/s limit, which means probes were substantially measuring the
+rate limiter rather than their own variable. The default is now 2 workers.
+
+### Unlearning
+
+`bench/retire_demo.py` takes a confirmed belief, turns off the hidden rule
+underneath it so the belief becomes false, and lets the agent observe again.
+From `bench/retire_result.json`:
+
+```
+    round   observation                              p(docs correct)   status
+    0       (before)                                            0.24   confirmed
+    1       pre-1970 dates stored as sent, 5/5                  0.53   confirmed
+    2       pre-1970 dates stored as sent, 5/5                  0.66   confirmed
+    3       pre-1970 dates stored as sent, 5/5                  0.73   retired
+```
+
+The agent unlearned a belief that had been correct, after three rounds of
+contradicting evidence, without being told the world had changed. The rule is
+restored in a `finally` block; all 14 were verified back on afterwards, because
+leaving one off would silently corrupt every later measurement.
+
+### The memory-wipe ablation
+
+Three arms: full memory, memory wiped, and memory shuffled (claims swapped onto
+the wrong operations, so the prompt keeps its length but loses its information).
+The shuffled arm exists because memory-versus-wiped is confounded: removing
+memory also removes its tokens.
+
+From `bench/ablate_result.json` at one repeat per task:
+
+```
+                       memory      wiped   shuffled
+  passed                  1/3        1/3        1/3
+  context tokens          217          0        217
+```
+
+Its own reading, printed by the tool: this run gives no evidence that belief
+memory is driving performance. It is a null result at n=1 and it is reported as
+one. The arms are correctly length-matched at 217 context tokens, so the design
+works; it needs more repeats to say anything, and those repeats did not fit in
+the build window.
+
+### Counterfactual replay
+
+`./.venv/bin/python -m replay.counterfactual` reports 218 wasted calls across 46
+runs. Token savings are reported as zero rather than estimated, because
+`runs/history.jsonl` does not exist in this snapshot and the tool refuses to
+guess at a number it cannot evidence.
 
 ### The A/B: does the learned knowledge transfer?
 
@@ -235,6 +383,17 @@ ui/        panels for `ao preview`
 
 ## numbers still to fill
 
-- **Ablation totals** (`bench/ablate.py` / `make ablate`): final passed/total for the `wiped` and `shuffled` arms, total tokens per arm, and the automated "reading" verdict. Only a partial, uncompleted log (`.agent-work/ablate_run.log`) exists in this snapshot; no `bench/ablate_result.json` is on disk.
-- **A run-over-run learning curve** (task success rate as belief count grows): `runs/history.jsonl`, the file this would come from, does not exist in this repo snapshot, nothing has invoked `cli.py run` or `bench.session` this session. The belief lifecycle counts and the retirement trajectory above are the only over-time evidence currently available.
-- **Live falsifier/prober/reporter output** from a completed AO worker run (a real `falsification.json` or `report.md`): the two AO worktrees present on disk contain only a connectivity check, not a completed adversarial review.
+Stated so a reader does not have to work out what is missing:
+
+- **The ablation at more than one repeat.** The design is sound and the arms are
+  length-matched, but n=1 across three tasks cannot separate them. `make ablate`
+  with `--repeats 3` or more would settle it; it did not fit in the window.
+- **A run-over-run learning curve.** `runs/history.jsonl` was deleted during a
+  state reset partway through the build, so per-run token and success history
+  is not available for the runs that came before it.
+- **A live Notion result.** `agent/adapters/notion.py` is written, imports
+  cleanly, flattens the property shapes and refuses writes by default, but no
+  `NOTION_TOKEN` was configured, so it has never been pointed at the real API.
+  Nothing about Notion is claimed anywhere in this README.
+- **Recall above 3 of 13.** Five observable rules have open or falsified
+  hypotheses and were not re-settled before the window closed.

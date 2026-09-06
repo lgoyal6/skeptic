@@ -1,3 +1,4 @@
   2 rival groups, 2 at a time
     [probe-000] 2 rivals -> expiry
     [probe-001] 1 rivals -> silent_coercion
+    [probe-001] consistency 2 calls 57s -> ['confirmed']
