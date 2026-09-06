@@ -1,0 +1,59 @@
+{
+  "id": "probe-001",
+  "belief_ids": [
+    "lab.create.the_field_is_mapped_to_a_legacy_system_that"
+  ],
+  "template": "consistency",
+  "params": {
+    "fields": {
+      "due_date": "1969-12-31"
+    },
+    "vendor": "Probe01"
+  },
+  "why": "This template writes a specific value and reads it back, directly exposing if the value was silently coerced to null.",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.create.the_field_is_mapped_to_a_legacy_system_that",
+      "predicts": "The read-back will return null because the legacy system coerced the specific date value to null."
+    }
+  ],
+  "observation": {
+    "template": "consistency",
+    "params": {
+      "fields": {
+        "due_date": "1969-12-31"
+      },
+      "vendor": "Probe01"
+    },
+    "calls": 2,
+    "facts": {
+      "create_status": 200,
+      "get_status": 200,
+      "echo_matches_sent": false,
+      "mismatches": {
+        "due_date": {
+          "sent": "1969-12-31",
+          "stored": null
+        }
+      },
+      "readback_matches_echo": true
+    },
+    "narrative": [
+      "sent ['due_date', 'vendor'], mismatched ['due_date']"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.create.the_field_is_mapped_to_a_legacy_system_that",
+      "verdict": "confirmed",
+      "because": "The read-back stored the due_date as null."
+    }
+  ],
+  "learned": "The due_date field was stored as null when sent as 1969-12-31.",
+  "calls": 2,
+  "wall_s": 42.16,
+  "adversarial": false,
+  "learned_class": "silent_coercion",
+  "learned_parameter": "due_date",
+  "learned_action": "Expect null for due_date when sent as 1969-12-31."
+}

@@ -1,0 +1,54 @@
+{
+  "id": "probe-003",
+  "belief_ids": [
+    "lab.get.the_get_request_is_being_made_from_a_differe"
+  ],
+  "template": "consistency",
+  "params": {
+    "vendor": "Probe03",
+    "fields": {
+      "status": "active"
+    }
+  },
+  "why": "This template directly tests the core claim of the hypothesis (that the value matches) against the failure modes of silent coercion or truncation.",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.get.the_get_request_is_being_made_from_a_differe",
+      "predicts": "The read-back value for the 'status' field will be exactly 'active', matching the sent value."
+    }
+  ],
+  "observation": {
+    "template": "consistency",
+    "params": {
+      "vendor": "Probe03",
+      "fields": {
+        "status": "active"
+      }
+    },
+    "calls": 2,
+    "facts": {
+      "create_status": 200,
+      "get_status": 200,
+      "echo_matches_sent": true,
+      "mismatches": {},
+      "readback_matches_echo": true
+    },
+    "narrative": [
+      "sent ['status', 'vendor'], mismatched nothing"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.get.the_get_request_is_being_made_from_a_differe",
+      "verdict": "confirmed",
+      "because": "The facts show echo_matches_sent and readback_matches_echo are true."
+    }
+  ],
+  "learned": "The read-back value for the 'status' field matched the sent value.",
+  "calls": 2,
+  "wall_s": 197.23,
+  "adversarial": false,
+  "learned_class": "",
+  "learned_parameter": "status",
+  "learned_action": ""
+}

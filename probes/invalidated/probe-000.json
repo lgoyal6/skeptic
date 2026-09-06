@@ -1,0 +1,105 @@
+{
+  "id": "probe-000",
+  "belief_ids": [
+    "lab.create.the_api_enforces_a_hard_internal_limit_of_25"
+  ],
+  "template": "boundary",
+  "params": {
+    "op": "create",
+    "param": "title",
+    "values": [
+      "aaaaaaaaaaaaaaaaaaaaaaaa",
+      "aaaaaaaaaaaaaaaaaaaaaaaaa",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "a",
+      "a"
+    ],
+    "base": {
+      "vendor": "Probe00"
+    }
+  },
+  "why": "The boundary template allows testing specific input values against a suspected cap. By sending titles of varying lengths (including those exceeding 25), we can observe if the API silently cuts off the excess characters or accepts them.",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.create.the_api_enforces_a_hard_internal_limit_of_25",
+      "predicts": "The read-back 'title' will be exactly 25 characters long for all inputs (24, 25, 26, 100, and 2000), confirming the API silently truncates any value exceeding the limit."
+    }
+  ],
+  "observation": {
+    "template": "boundary",
+    "params": {
+      "op": "create",
+      "param": "title",
+      "values": [
+        "aaaaaaaaaaaaaaaaaaaaaaaa",
+        "aaaaaaaaaaaaaaaaaaaaaaaaa",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "a",
+        "a"
+      ],
+      "base": {
+        "vendor": "Probe00"
+      }
+    },
+    "calls": 5,
+    "facts": {
+      "population": null,
+      "sweep": [
+        {
+          "sent": "<len 24>",
+          "status": 200,
+          "stored": 24,
+          "stored_type": "str"
+        },
+        {
+          "sent": "<len 25>",
+          "status": 200,
+          "stored": 25,
+          "stored_type": "str"
+        },
+        {
+          "sent": "<len 26>",
+          "status": 200,
+          "stored": 26,
+          "stored_type": "str"
+        },
+        {
+          "sent": "<len 1>",
+          "status": 200,
+          "stored": 1,
+          "stored_type": "str"
+        },
+        {
+          "sent": "<len 1>",
+          "status": 200,
+          "stored": 1,
+          "stored_type": "str"
+        }
+      ],
+      "ceiling": null,
+      "saturates_at_ceiling": false,
+      "tracks_request": true
+    },
+    "narrative": [
+      "title sent <len 24> -> stored 24 (str)",
+      "title sent <len 25> -> stored 25 (str)",
+      "title sent <len 26> -> stored 26 (str)",
+      "title sent <len 1> -> stored 1 (str)",
+      "title sent <len 1> -> stored 1 (str)"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.create.the_api_enforces_a_hard_internal_limit_of_25",
+      "verdict": "falsified",
+      "because": "The read-back length matched the input length for values of 24 and 26 characters, contradicting the prediction of a hard limit of 25."
+    }
+  ],
+  "learned": "The API accepted inputs of 24, 25, and 26 characters without truncation.",
+  "calls": 5,
+  "wall_s": 429.75,
+  "adversarial": false,
+  "learned_class": "",
+  "learned_parameter": "25",
+  "learned_action": "Do not assume truncation at 25 characters."
+}

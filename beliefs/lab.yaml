@@ -1,246 +1,11 @@
 tool: lab
-updated: '2026-09-06T05:18:22Z'
+updated: '2026-09-06T05:19:55Z'
 counts:
-  hypothesis: 4
-  confirmed: 5
+  hypothesis: 7
+  confirmed: 2
   falsified: 18
   retired: 0
 beliefs:
-- id: lab.create.the_create_endpoint_is_currently_overloaded
-  tool: lab
-  operation: create
-  doc_claims: no rate limit; 429 never returned
-  belief: The endpoint throttles requests, allowing at most 3 requests before throttling begins.
-  action: Do not send more than 3 requests in rapid succession.
-  parameter: limit
-  status: confirmed
-  posterior:
-    alpha: 2.0
-    beta: 4.0
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-r2
-  last_confirmed: ''
-  probes:
-  - probe-000
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.create.the_api_enforces_a_strict_rate_limit_based_o
-  - lab.create.the_api_enforces_a_rate_limit_based_on_the_s
-  history:
-  - t: 1788665131.099
-    event: created
-    detail: no rate limit; 429 never returned
-    p_doc_correct: 0.6667
-    status: hypothesis
-  - t: 1788665131.099
-    event: contradiction
-    detail: recon-r2
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: hypothesis
-    detail: Call a different endpoint (e.g., 'read' or 'list') from the same IP address. If that endpoint
-      returns 200 OK, the overload is specific to 'create'.
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: signature
-    detail: create._.undocumented_status
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788671207.301
-    event: confirmed_by_probe
-    detail: probe-000
-    p_doc_correct: 0.5
-    status: confirmed
-  - t: 1788671207.301
-    event: probe_confirmed
-    detail: The hypothesis predicted the endpoint would throttle traffic, and 7 out of 10 requests were
-      throttled.
-    p_doc_correct: 0.3333
-    status: confirmed
-  - t: 1788671207.301
-    event: restated_from_evidence
-    detail: 'was: The ''create'' endpoint is currently overloaded globally, and the 429 is a generic backoff
-      signal triggered by high traffi'
-    p_doc_correct: 0.3333
-    status: confirmed
-  p_doc_correct: 0.3333
-  class: rate_limit
-- id: lab.create.the_field_is_mapped_to_a_legacy_system_that
-  tool: lab
-  operation: create
-  doc_claims: stored as sent
-  belief: The due_date field was stored as null when sent as 1969-12-31.
-  action: Expect null for due_date when sent as 1969-12-31.
-  parameter: due_date
-  status: confirmed
-  posterior:
-    alpha: 2.0
-    beta: 8.0
-  evidence_for: 1
-  evidence_against: 3
-  first_seen: recon-000
-  last_confirmed: ''
-  probes:
-  - probe-001
-  - probe-001
-  - probe-001
-  survived_falsification: null
-  falsified_by: null
-  replay:
-    belief_id: lab.create.the_field_is_mapped_to_a_legacy_system_that
-    cls: silent_coercion
-    operation: create
-    parameter: due_date
-    signatures:
-    - create.due_date.silent_null
-    runs_affected: 2
-    calls_affected: 2
-    wasted_calls: 0
-    tokens_saved_estimate: 0
-    runs_rescued: 0
-    rescued_run_ids: []
-    first_seen_run: recon-000
-    last_seen_run: probe-003
-    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
-      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
-      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
-      this belief's own minting signature(s).
-    notes:
-    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
-    evidence:
-    - run: probe-003
-      call_ns:
-      - 1
-      wasted: 0
-      reason: 'call 1: due_date=''1969-12-31'' sent, stored as null'
-    - run: recon-000
-      call_ns:
-      - 3
-      wasted: 0
-      reason: 'call 3: due_date=''1965-04-01'' sent, stored as null'
-  competing:
-  - lab.create.the_api_expects_a_specific_date_format_e_g_i
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: stored as sent
-    p_doc_correct: 0.6061
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4651
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Send a date in the current year (e.g., '2023-04-01'). If this is accepted, the issue is specific
-      to the year 1965.
-    p_doc_correct: 0.4651
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: create.due_date.silent_null
-    p_doc_correct: 0.4651
-    status: hypothesis
-  - t: 1788655481.318
-    event: confirmed_by_probe
-    detail: probe-003
-    p_doc_correct: 0.4651
-    status: confirmed
-  - t: 1788655481.318
-    event: probe_confirmed
-    detail: The stored value for due_date was null.
-    p_doc_correct: 0.3175
-    status: confirmed
-  - t: 1788655481.318
-    event: restated_from_evidence
-    detail: 'was: The field is mapped to a legacy system that does not support dates before a certain
-      threshold (e.g., 1970), defaulting t'
-    p_doc_correct: 0.3175
-    status: confirmed
-  - t: 1788655709.343
-    event: confirmed_by_probe
-    detail: probe-003
-    p_doc_correct: 0.3175
-    status: confirmed
-  - t: 1788655709.343
-    event: probe_confirmed
-    detail: The stored value for due_date was null.
-    p_doc_correct: 0.241
-    status: confirmed
-  - t: 1788665226.877
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665224-round-1
-    p_doc_correct: 0.5263
-    status: confirmed
-  - t: 1788665228.892
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665224-round-2
-    p_doc_correct: 0.6557
-    status: confirmed
-  - t: 1788665230.907
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665224-round-3
-    p_doc_correct: 0.7296
-    status: confirmed
-  - t: 1788665230.907
-    event: auto_falsified
-    detail: posterior reverted above trust threshold
-    p_doc_correct: 0.7296
-    status: falsified
-  - t: 1788665230.94
-    event: retired
-    detail: world observed to match documentation for rule `pre_epoch_date_null` over 3 round(s) after
-      the rule was disabled; posterior crossed the trust threshold (0.7)
-    p_doc_correct: 0.7296
-    status: retired
-  - t: 1788665676.957
-    event: reopened_after_world_restored
-    detail: rule toggled back on by retire_demo
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788671207.262
-    event: confirmed_by_probe
-    detail: probe-001
-    p_doc_correct: 0.5
-    status: confirmed
-  - t: 1788671207.262
-    event: probe_confirmed
-    detail: The read-back stored the due_date as null.
-    p_doc_correct: 0.3333
-    status: confirmed
-  - t: 1788671207.262
-    event: restated_from_evidence
-    detail: 'was: The due_date field was sent as ''1969-12-31'' but stored as null.'
-    p_doc_correct: 0.3333
-    status: confirmed
-  - t: 1788671831.19
-    event: confirmed_by_probe
-    detail: probe-001
-    p_doc_correct: 0.3333
-    status: confirmed
-  - t: 1788671831.19
-    event: probe_confirmed
-    detail: The read-back stored the due_date as null.
-    p_doc_correct: 0.25
-    status: confirmed
-  - t: 1788671902.191
-    event: confirmed_by_probe
-    detail: probe-001
-    p_doc_correct: 0.25
-    status: confirmed
-  - t: 1788671902.191
-    event: probe_confirmed
-    detail: The read-back stored the due_date as null.
-    p_doc_correct: 0.2
-    status: confirmed
-  p_doc_correct: 0.2
-  class: silent_coercion
 - id: lab.search.the_item_is_created_in_a_draft_state_and_is
   tool: lab
   operation: search
@@ -1033,216 +798,6 @@ beliefs:
     status: confirmed
   p_doc_correct: 0.1277
   class: rate_limit
-- id: lab.update.the_validation_logic_is_buggy_and_only_check
-  tool: lab
-  operation: update
-  doc_claims: 400 unknown_field
-  belief: The field `not_a_real_field` was present in the readback and stored as null, despite being sent
-    with the value 'test_value'.
-  action: Be cautious with required fields; assume the API might be lenient.
-  parameter: not_a_real_field
-  status: confirmed
-  posterior:
-    alpha: 3.0
-    beta: 20.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes:
-  - probe-011
-  - probe-011
-  - probe-011
-  - probe-011
-  - probe-011
-  - probe-011
-  - probe-011
-  - probe-011
-  - probe-011
-  survived_falsification: null
-  falsified_by: null
-  replay:
-    belief_id: lab.update.the_validation_logic_is_buggy_and_only_check
-    cls: silent_coercion
-    operation: update
-    parameter: not_a_real_field
-    signatures:
-    - update.not_a_real_field.silent_ignore
-    runs_affected: 3
-    calls_affected: 3
-    wasted_calls: 0
-    tokens_saved_estimate: 0
-    runs_rescued: 0
-    rescued_run_ids: []
-    first_seen_run: recon-000
-    last_seen_run: recon-r2
-    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
-      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
-      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
-      this belief's own minting signature(s).
-    notes:
-    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
-    evidence:
-    - run: recon-000
-      call_ns:
-      - 5
-      wasted: 0
-      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
-    - run: recon-obs
-      call_ns:
-      - 5
-      wasted: 0
-      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
-    - run: recon-r2
-      call_ns:
-      - 5
-      wasted: 0
-      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
-    - run: recon-r2
-      call_ns:
-      - 5
-      wasted: 0
-      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
-  competing:
-  - lab.update.the_api_is_designed_to_be_soft_and_ignores_u
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: 400 unknown_field
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Send a valid field that is required but missing. If it returns 200, the validation is broken.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: update.not_a_real_field.silent_ignore
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788655481.777
-    event: confirmed_by_probe
-    detail: probe-011
-    p_doc_correct: 0.4444
-    status: confirmed
-  - t: 1788655481.777
-    event: probe_confirmed
-    detail: The read-back contained the 'not_a_real_field' (stored as null).
-    p_doc_correct: 0.3077
-    status: confirmed
-  - t: 1788655481.777
-    event: restated_from_evidence
-    detail: 'was: The validation logic is buggy and only checks for missing required fields, failing to
-      reject extra unknown fields.'
-    p_doc_correct: 0.3077
-    status: confirmed
-  - t: 1788655709.521
-    event: confirmed_by_probe
-    detail: probe-011
-    p_doc_correct: 0.3077
-    status: confirmed
-  - t: 1788655709.521
-    event: probe_confirmed
-    detail: The read-back contained the 'not_a_real_field' (stored as null).
-    p_doc_correct: 0.2353
-    status: confirmed
-  - t: 1788656106.326
-    event: confirmed_by_probe
-    detail: probe-011
-    p_doc_correct: 0.2353
-    status: confirmed
-  - t: 1788656106.326
-    event: probe_confirmed
-    detail: The read-back contained the 'not_a_real_field' (stored as null).
-    p_doc_correct: 0.1905
-    status: confirmed
-  - t: 1788656173.336
-    event: confirmed_by_probe
-    detail: probe-011
-    p_doc_correct: 0.1905
-    status: confirmed
-  - t: 1788656173.336
-    event: probe_confirmed
-    detail: The read-back contained the 'not_a_real_field' (stored as null).
-    p_doc_correct: 0.16
-    status: confirmed
-  - t: 1788656381.998
-    event: class_corrected_retroactively
-    detail: idempotency_hazard -> silent_coercion from update.not_a_real_field.silent_ignore
-    p_doc_correct: 0.16
-    status: confirmed
-  - t: 1788656668.615
-    event: confirmed_by_probe
-    detail: probe-011
-    p_doc_correct: 0.16
-    status: confirmed
-  - t: 1788656668.615
-    event: probe_confirmed
-    detail: The read-back contained the 'not_a_real_field' (stored as null).
-    p_doc_correct: 0.1379
-    status: confirmed
-  - t: 1788665056.121
-    event: confirmed_by_probe
-    detail: probe-011
-    p_doc_correct: 0.1379
-    status: confirmed
-  - t: 1788665056.121
-    event: probe_confirmed
-    detail: The read-back contained the 'not_a_real_field' (stored as null).
-    p_doc_correct: 0.1212
-    status: confirmed
-  - t: 1788670471.924
-    event: adversary_objection
-    detail: 'unsupported_cause: The evidence shows a create/read-back diff reporting sent ''test_value''
-      vs stored null, which is equally consistent with the field being silently dropped and the comparator
-      defaulting missing keys to null, and the update '
-    p_doc_correct: 0.1714
-    status: hypothesis
-  - t: 1788670471.924
-    event: suggested_attack
-    detail: 'Fetch the raw GET response and check whether the literal key ''not_a_real_field'' exists
-      (present with null vs absent entirely); a diff tool reporting absent keys as null would refute ''stored
-      as null''. Then send the bogus '
-    p_doc_correct: 0.1714
-    status: hypothesis
-  - t: 1788671207.142
-    event: confirmed_by_probe
-    detail: probe-011
-    p_doc_correct: 0.1714
-    status: confirmed
-  - t: 1788671207.142
-    event: probe_confirmed
-    detail: The read-back contained the 'not_a_real_field' (stored as null).
-    p_doc_correct: 0.1538
-    status: confirmed
-  - t: 1788671831.064
-    event: confirmed_by_probe
-    detail: probe-011
-    p_doc_correct: 0.1538
-    status: confirmed
-  - t: 1788671831.064
-    event: probe_confirmed
-    detail: The read-back contained the 'not_a_real_field' (stored as null).
-    p_doc_correct: 0.1395
-    status: confirmed
-  - t: 1788671902.054
-    event: confirmed_by_probe
-    detail: probe-011
-    p_doc_correct: 0.1395
-    status: confirmed
-  - t: 1788671902.054
-    event: probe_confirmed
-    detail: The read-back contained the 'not_a_real_field' (stored as null).
-    p_doc_correct: 0.1277
-    status: confirmed
-  p_doc_correct: 0.1277
-  class: silent_coercion
 - id: lab.create.the_api_enforces_a_hard_internal_limit_of_25
   tool: lab
   operation: create
@@ -1361,6 +916,249 @@ beliefs:
     status: hypothesis
   p_doc_correct: 0.4
   class: silent_truncation
+- id: lab.create.the_create_endpoint_is_currently_overloaded
+  tool: lab
+  operation: create
+  doc_claims: no rate limit; 429 never returned
+  belief: The endpoint throttles requests, allowing at most 3 requests before throttling begins.
+  action: Do not send more than 3 requests in rapid succession.
+  parameter: limit
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-r2
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.create.the_api_enforces_a_strict_rate_limit_based_o
+  - lab.create.the_api_enforces_a_rate_limit_based_on_the_s
+  history:
+  - t: 1788665131.099
+    event: created
+    detail: no rate limit; 429 never returned
+    p_doc_correct: 0.6667
+    status: hypothesis
+  - t: 1788665131.099
+    event: contradiction
+    detail: recon-r2
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: hypothesis
+    detail: Call a different endpoint (e.g., 'read' or 'list') from the same IP address. If that endpoint
+      returns 200 OK, the overload is specific to 'create'.
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: signature
+    detail: create._.undocumented_status
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788671207.301
+    event: confirmed_by_probe
+    detail: probe-000
+    p_doc_correct: 0.5
+    status: confirmed
+  - t: 1788671207.301
+    event: probe_confirmed
+    detail: The hypothesis predicted the endpoint would throttle traffic, and 7 out of 10 requests were
+      throttled.
+    p_doc_correct: 0.3333
+    status: confirmed
+  - t: 1788671207.301
+    event: restated_from_evidence
+    detail: 'was: The ''create'' endpoint is currently overloaded globally, and the 429 is a generic backoff
+      signal triggered by high traffi'
+    p_doc_correct: 0.3333
+    status: confirmed
+  - t: 1788671995.262
+    event: evidence_invalidated
+    detail: confirmed by ['probe-000'], whose template could not distinguish a failed create from a silently
+      nulled field
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: rate_limit
+- id: lab.create.the_field_is_mapped_to_a_legacy_system_that
+  tool: lab
+  operation: create
+  doc_claims: stored as sent
+  belief: The due_date field was stored as null when sent as 1969-12-31.
+  action: Expect null for due_date when sent as 1969-12-31.
+  parameter: due_date
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 3
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay:
+    belief_id: lab.create.the_field_is_mapped_to_a_legacy_system_that
+    cls: silent_coercion
+    operation: create
+    parameter: due_date
+    signatures:
+    - create.due_date.silent_null
+    runs_affected: 2
+    calls_affected: 2
+    wasted_calls: 0
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: probe-003
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: probe-003
+      call_ns:
+      - 1
+      wasted: 0
+      reason: 'call 1: due_date=''1969-12-31'' sent, stored as null'
+    - run: recon-000
+      call_ns:
+      - 3
+      wasted: 0
+      reason: 'call 3: due_date=''1965-04-01'' sent, stored as null'
+  competing:
+  - lab.create.the_api_expects_a_specific_date_format_e_g_i
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: stored as sent
+    p_doc_correct: 0.6061
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send a date in the current year (e.g., '2023-04-01'). If this is accepted, the issue is specific
+      to the year 1965.
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.due_date.silent_null
+    p_doc_correct: 0.4651
+    status: hypothesis
+  - t: 1788655481.318
+    event: confirmed_by_probe
+    detail: probe-003
+    p_doc_correct: 0.4651
+    status: confirmed
+  - t: 1788655481.318
+    event: probe_confirmed
+    detail: The stored value for due_date was null.
+    p_doc_correct: 0.3175
+    status: confirmed
+  - t: 1788655481.318
+    event: restated_from_evidence
+    detail: 'was: The field is mapped to a legacy system that does not support dates before a certain
+      threshold (e.g., 1970), defaulting t'
+    p_doc_correct: 0.3175
+    status: confirmed
+  - t: 1788655709.343
+    event: confirmed_by_probe
+    detail: probe-003
+    p_doc_correct: 0.3175
+    status: confirmed
+  - t: 1788655709.343
+    event: probe_confirmed
+    detail: The stored value for due_date was null.
+    p_doc_correct: 0.241
+    status: confirmed
+  - t: 1788665226.877
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665224-round-1
+    p_doc_correct: 0.5263
+    status: confirmed
+  - t: 1788665228.892
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665224-round-2
+    p_doc_correct: 0.6557
+    status: confirmed
+  - t: 1788665230.907
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665224-round-3
+    p_doc_correct: 0.7296
+    status: confirmed
+  - t: 1788665230.907
+    event: auto_falsified
+    detail: posterior reverted above trust threshold
+    p_doc_correct: 0.7296
+    status: falsified
+  - t: 1788665230.94
+    event: retired
+    detail: world observed to match documentation for rule `pre_epoch_date_null` over 3 round(s) after
+      the rule was disabled; posterior crossed the trust threshold (0.7)
+    p_doc_correct: 0.7296
+    status: retired
+  - t: 1788665676.957
+    event: reopened_after_world_restored
+    detail: rule toggled back on by retire_demo
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788671207.262
+    event: confirmed_by_probe
+    detail: probe-001
+    p_doc_correct: 0.5
+    status: confirmed
+  - t: 1788671207.262
+    event: probe_confirmed
+    detail: The read-back stored the due_date as null.
+    p_doc_correct: 0.3333
+    status: confirmed
+  - t: 1788671207.262
+    event: restated_from_evidence
+    detail: 'was: The due_date field was sent as ''1969-12-31'' but stored as null.'
+    p_doc_correct: 0.3333
+    status: confirmed
+  - t: 1788671831.19
+    event: confirmed_by_probe
+    detail: probe-001
+    p_doc_correct: 0.3333
+    status: confirmed
+  - t: 1788671831.19
+    event: probe_confirmed
+    detail: The read-back stored the due_date as null.
+    p_doc_correct: 0.25
+    status: confirmed
+  - t: 1788671902.191
+    event: confirmed_by_probe
+    detail: probe-001
+    p_doc_correct: 0.25
+    status: confirmed
+  - t: 1788671902.191
+    event: probe_confirmed
+    detail: The read-back stored the due_date as null.
+    p_doc_correct: 0.2
+    status: confirmed
+  - t: 1788671995.262
+    event: evidence_invalidated
+    detail: confirmed by ['probe-001', 'probe-001', 'probe-001'], whose template could not distinguish
+      a failed create from a silently nulled field
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: silent_coercion
 - id: lab.get.the_get_request_is_being_made_from_a_differe
   tool: lab
   operation: get
@@ -1596,6 +1394,214 @@ beliefs:
     status: hypothesis
   p_doc_correct: 0.4444
   class: expiry
+- id: lab.update.the_validation_logic_is_buggy_and_only_check
+  tool: lab
+  operation: update
+  doc_claims: 400 unknown_field
+  belief: The field `not_a_real_field` was present in the readback and stored as null, despite being sent
+    with the value 'test_value'.
+  action: Be cautious with required fields; assume the API might be lenient.
+  parameter: not_a_real_field
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay:
+    belief_id: lab.update.the_validation_logic_is_buggy_and_only_check
+    cls: silent_coercion
+    operation: update
+    parameter: not_a_real_field
+    signatures:
+    - update.not_a_real_field.silent_ignore
+    runs_affected: 3
+    calls_affected: 3
+    wasted_calls: 0
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: recon-r2
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: recon-000
+      call_ns:
+      - 5
+      wasted: 0
+      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
+    - run: recon-obs
+      call_ns:
+      - 5
+      wasted: 0
+      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
+    - run: recon-r2
+      call_ns:
+      - 5
+      wasted: 0
+      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
+    - run: recon-r2
+      call_ns:
+      - 5
+      wasted: 0
+      reason: 'call 5: unknown field ''not_a_real_field'' accepted with 200 instead of 400'
+  competing:
+  - lab.update.the_api_is_designed_to_be_soft_and_ignores_u
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: 400 unknown_field
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send a valid field that is required but missing. If it returns 200, the validation is broken.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: update.not_a_real_field.silent_ignore
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788655481.777
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.4444
+    status: confirmed
+  - t: 1788655481.777
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.3077
+    status: confirmed
+  - t: 1788655481.777
+    event: restated_from_evidence
+    detail: 'was: The validation logic is buggy and only checks for missing required fields, failing to
+      reject extra unknown fields.'
+    p_doc_correct: 0.3077
+    status: confirmed
+  - t: 1788655709.521
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.3077
+    status: confirmed
+  - t: 1788655709.521
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.2353
+    status: confirmed
+  - t: 1788656106.326
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.2353
+    status: confirmed
+  - t: 1788656106.326
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.1905
+    status: confirmed
+  - t: 1788656173.336
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.1905
+    status: confirmed
+  - t: 1788656173.336
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.16
+    status: confirmed
+  - t: 1788656381.998
+    event: class_corrected_retroactively
+    detail: idempotency_hazard -> silent_coercion from update.not_a_real_field.silent_ignore
+    p_doc_correct: 0.16
+    status: confirmed
+  - t: 1788656668.615
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.16
+    status: confirmed
+  - t: 1788656668.615
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.1379
+    status: confirmed
+  - t: 1788665056.121
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.1379
+    status: confirmed
+  - t: 1788665056.121
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.1212
+    status: confirmed
+  - t: 1788670471.924
+    event: adversary_objection
+    detail: 'unsupported_cause: The evidence shows a create/read-back diff reporting sent ''test_value''
+      vs stored null, which is equally consistent with the field being silently dropped and the comparator
+      defaulting missing keys to null, and the update '
+    p_doc_correct: 0.1714
+    status: hypothesis
+  - t: 1788670471.924
+    event: suggested_attack
+    detail: 'Fetch the raw GET response and check whether the literal key ''not_a_real_field'' exists
+      (present with null vs absent entirely); a diff tool reporting absent keys as null would refute ''stored
+      as null''. Then send the bogus '
+    p_doc_correct: 0.1714
+    status: hypothesis
+  - t: 1788671207.142
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.1714
+    status: confirmed
+  - t: 1788671207.142
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.1538
+    status: confirmed
+  - t: 1788671831.064
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.1538
+    status: confirmed
+  - t: 1788671831.064
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.1395
+    status: confirmed
+  - t: 1788671902.054
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.1395
+    status: confirmed
+  - t: 1788671902.054
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.1277
+    status: confirmed
+  - t: 1788671995.262
+    event: evidence_invalidated
+    detail: confirmed by ['probe-011', 'probe-011', 'probe-011', 'probe-011', 'probe-011', 'probe-011',
+      'probe-011', 'probe-011', 'probe-011'], whose template could not distinguish a failed create from
+      a silently nulled field
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: silent_coercion
 - id: lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
   tool: lab
   operation: bulk_create

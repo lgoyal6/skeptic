@@ -1,0 +1,66 @@
+{
+  "id": "probe-011",
+  "belief_ids": [
+    "lab.update.the_api_is_designed_to_be_soft_and_ignores_u",
+    "lab.update.the_validation_logic_is_buggy_and_only_check"
+  ],
+  "template": "consistency",
+  "params": {
+    "fields": {
+      "not_a_real_field": "test_value"
+    },
+    "vendor": "Probe11"
+  },
+  "why": "This directly tests whether the unknown field is persisted to storage, distinguishing between being silently dropped (H1) and erroneously accepted (H2).",
+  "predictions": [
+    {
+      "hypothesis_id": "lab.update.the_api_is_designed_to_be_soft_and_ignores_u",
+      "predicts": "The read-back will not contain the 'not_a_real_field'."
+    },
+    {
+      "hypothesis_id": "lab.update.the_validation_logic_is_buggy_and_only_check",
+      "predicts": "The read-back will contain the 'not_a_real_field'."
+    }
+  ],
+  "observation": {
+    "template": "consistency",
+    "params": {
+      "fields": {
+        "not_a_real_field": "test_value"
+      },
+      "vendor": "Probe11"
+    },
+    "calls": 2,
+    "facts": {
+      "create_status": 200,
+      "get_status": 200,
+      "echo_matches_sent": false,
+      "mismatches": {
+        "not_a_real_field": {
+          "sent": "test_value",
+          "stored": null
+        }
+      },
+      "readback_matches_echo": true
+    },
+    "narrative": [
+      "sent ['not_a_real_field', 'vendor'], mismatched ['not_a_real_field']"
+    ]
+  },
+  "verdicts": [
+    {
+      "hypothesis_id": "lab.update.the_api_is_designed_to_be_soft_and_ignores_u",
+      "verdict": "falsified",
+      "because": "The read-back contained the 'not_a_real_field' (stored as null)."
+    },
+    {
+      "hypothesis_id": "lab.update.the_validation_logic_is_buggy_and_only_check",
+      "verdict": "confirmed",
+      "because": "The read-back contained the 'not_a_real_field' (stored as null)."
+    }
+  ],
+  "learned": "The field `not_a_real_field` was present in the readback and stored as null, despite being sent with the value 'test_value'.",
+  "calls": 2,
+  "wall_s": 65.69,
+  "adversarial": false
+}

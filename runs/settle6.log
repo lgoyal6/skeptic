@@ -1,0 +1,3 @@
+  6 rival groups, 2 at a time
+    [probe-000] 1 rivals -> silent_truncation
+    [probe-001] 1 rivals -> rate_limit
