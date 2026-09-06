@@ -227,6 +227,32 @@ class BeliefStore:
             out[b.status.value] += 1
         return out
 
+    def dedupe(self) -> int:
+        """Two confirmed beliefs about the same class, operation and parameter
+        are one belief.
+
+        The loop can confirm the same behaviour twice: once from a task run and
+        once from recon, worded differently. Both are true, but carrying both
+        inflates the store and costs precision, since only one can match the
+        single ground-truth rule they describe. Keep the best-supported and
+        retire the rest, recording which one absorbed which.
+        """
+        by_key: dict[tuple, list[Belief]] = {}
+        for b in self.active():
+            by_key.setdefault((b.cls, b.operation, b.parameter), []).append(b)
+        merged = 0
+        for key, group in by_key.items():
+            if len(group) < 2:
+                continue
+            keeper = min(group, key=lambda x: x.posterior.p_doc_correct)
+            for b in group:
+                if b.id == keeper.id:
+                    continue
+                b.retire(f"duplicate of {keeper.id}: same {key}")
+                keeper.note("absorbed_duplicate", b.id)
+                merged += 1
+        return merged
+
     def add(self, b: Belief) -> Belief:
         existing = self.beliefs.get(b.id)
         if existing:

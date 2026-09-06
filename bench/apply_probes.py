@@ -37,7 +37,12 @@ def load(path: Path) -> ProbeRecord | None:
         "observation", "verdicts", "learned", "calls", "wall_s", "adversarial",
         "learned_class", "learned_parameter", "learned_action",
     }
-    return ProbeRecord(**{k: v for k, v in d.items() if k in fields})
+    kept = {k: v for k, v in d.items() if k in fields}
+    required = {"id", "belief_ids", "template", "params", "why", "predictions",
+                "observation", "verdicts", "learned", "calls", "wall_s"}
+    if not required.issubset(kept):
+        return None   # not a probe record
+    return ProbeRecord(**kept)
 
 
 def main() -> int:
@@ -47,7 +52,10 @@ def main() -> int:
     a = ap.parse_args()
 
     store = BeliefStore("lab", root=a.beliefs)
-    files = sorted(Path(a.probes).glob("*.json"), key=lambda p: p.stat().st_mtime)
+    # Only probe records. probes/ also holds falsification.json, the
+    # adversary's review, which is a different shape entirely and used to
+    # crash the loop partway through, silently leaving later records unapplied.
+    files = sorted(Path(a.probes).glob("probe-*.json"), key=lambda p: p.stat().st_mtime)
     if not files:
         print("  no probe records found")
         return 0
@@ -71,8 +79,10 @@ def main() -> int:
         except Exception as e:  # noqa: BLE001
             print(f"  ! {f.name}: {type(e).__name__}: {e}")
 
+    merged = store.dedupe()
     store.save()
-    print(f"  applied {applied} probe records")
+    print(f"  applied {applied} probe records"
+          + (f", merged {merged} duplicate belief(s)" if merged else ""))
     print(f"  beliefs: {store.counts()}")
     for b in store.active():
         print(f"    + [{b.cls}] {b.belief[:88]}")

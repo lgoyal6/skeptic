@@ -376,8 +376,24 @@ def _rewrite_from_evidence(b: Belief, learned: dict[str, Any]) -> None:
 
     cls = str(learned.get("learned_class", "")).strip()
     if cls in CLASSES and cls != b.cls:
-        b.note("class_corrected", f"{b.cls} -> {cls}")
-        b.cls = cls
+        # The same wire-evidence constraint that governs minting has to govern
+        # restatement, or the verdict step becomes a way around it. It was: a
+        # `silent_null` anomaly on due_date came back restated as
+        # `silent_truncation`, which no evidence supported, and it scored as a
+        # false belief.
+        from reflect.hypothesis import constrain_class
+
+        sig = next((h.get("detail") for h in b.history
+                    if h.get("event") == "signature"), "")
+        kind = sig.split(".", 2)[2] if sig.count(".") >= 2 else ""
+        allowed = constrain_class(kind, cls) if kind else cls
+        if allowed != cls:
+            b.note("class_restatement_rejected",
+                   f"verdict proposed {cls}; wire evidence ({kind}) admits only {allowed}")
+            cls = allowed
+        if cls != b.cls:
+            b.note("class_corrected", f"{b.cls} -> {cls}")
+            b.cls = cls
 
     param = str(learned.get("learned_parameter", "")).strip()
     if param and param.lower() not in ("null", "none") and param != b.parameter:

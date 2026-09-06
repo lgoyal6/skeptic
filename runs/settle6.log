@@ -1,3 +1,12 @@
   6 rival groups, 2 at a time
     [probe-000] 1 rivals -> silent_truncation
     [probe-001] 1 rivals -> rate_limit
+    [probe-000] boundary 5 calls 42s -> ['falsified']
+    [probe-002] 1 rivals -> silent_coercion
+    [probe-001] header_burst 10 calls 44s -> ['confirmed']
+    [probe-003] 1 rivals -> undocumented_flag
+    [probe-002] consistency 2 calls 60s -> ['confirmed']
+    [probe-004] 2 rivals -> expiry
+    [probe-003] flag_discovery 2 calls 187s -> ['falsified', 'confirmed']
+    [probe-005] 1 rivals -> silent_coercion
+    [probe-005] consistency 2 calls 80s -> ['inconclusive', 'inconclusive', 'inconclusive']
