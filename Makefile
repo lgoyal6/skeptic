@@ -1,7 +1,7 @@
 PY   := ./.venv/bin/python
 SEED ?= 1337
 PORT ?= 8077
-WORKERS ?= 4
+WORKERS ?= 2
 
 # Every target listed in `help` is defined below. An earlier version of this
 # file advertised bench, ab and export without defining them -- documentation

@@ -111,11 +111,22 @@ def _boundary(a: LabAdapter, p: dict[str, Any]) -> Observation:
             args = dict(base)
             args[param] = v
             sc, body = a.create(**args)
-            got = (body or {}).get(param) if isinstance(body, dict) else None
+            # A failed create is not evidence about how a field is stored. The
+            # lab's own error bodies are dicts, so `body.get(param)` returns
+            # None on a 502 or 429 and reads exactly like "the server silently
+            # nulled the field I sent". The lab 502s on ~5% of creates BY
+            # DESIGN, so this fires routinely rather than rarely.
+            if sc != 200 or not isinstance(body, dict):
+                rows.append({"sent": v if not isinstance(v, str) else f"<len {len(v)}>",
+                             "status": sc, "stored": None, "stored_type": "n/a",
+                             "usable": False})
+                narrative.append(f"{param}={v!r} -> HTTP {sc}, no evidence about storage")
+                continue
+            got = body.get(param)
             stored = len(got) if isinstance(got, str) else got
             rows.append({"sent": v if not isinstance(v, str) else f"<len {len(v)}>",
                          "status": sc, "stored": stored,
-                         "stored_type": type(got).__name__})
+                         "stored_type": type(got).__name__, "usable": True})
             narrative.append(f"{param} sent {rows[-1]['sent']} -> stored {stored} ({type(got).__name__})")
 
     returned = [r.get("returned") for r in rows if r.get("returned") is not None]
@@ -206,8 +217,18 @@ def _consistency(a: LabAdapter, p: dict[str, Any]) -> Observation:
     fields.setdefault("vendor", vendor)
 
     sc, created = a.create(**fields)
-    item_id = (created or {}).get("id") if isinstance(created, dict) else None
-    echo = {k: (created or {}).get(k) for k in fields} if isinstance(created, dict) else {}
+    # Same trap as the boundary sweep: an error body is still a dict, so every
+    # field the caller sent reads back as None and looks like silent coercion.
+    # The create has to have actually succeeded before its echo means anything.
+    if sc != 200 or not isinstance(created, dict) or "id" not in created:
+        return Observation(
+            template="consistency", params=p, calls=1,
+            facts={"create_status": sc, "usable": False,
+                   "error": f"create returned HTTP {sc}; no evidence about field storage"},
+            narrative=[f"create failed with HTTP {sc}; nothing can be concluded about storage"],
+        )
+    item_id = created.get("id")
+    echo = {k: created.get(k) for k in fields}
 
     readback = {}
     get_status = None

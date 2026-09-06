@@ -334,7 +334,11 @@ REGISTRY: list[tuple[str, str | None, type[Guard], dict[str, Any]]] = [
     ("mislabelled_semantics", "sort", SortByEdited, {"name": "sort_by_created"}),
     ("rate_limit", None, Throttle, {"name": "throttle"}),
     ("silent_coercion", "due_date", NormaliseDate, {"name": "reject_pre_epoch_date"}),
-    ("silent_coercion", "not_a_real_field", RejectUnknownUpdateField,
+    # Matched on operation rather than a literal field name. It used to be
+    # pinned to "not_a_real_field", the name one hardcoded recon probe happens
+    # to use, so the same rule discovered by any other path compiled to no
+    # guard at all despite being correctly confirmed and correctly scored.
+    ("silent_coercion", "__update_any__", RejectUnknownUpdateField,
      {"name": "reject_unknown_update_field"}),
     ("silent_truncation", "title", TruncateTitle, {"name": "warn_title_truncation"}),
 ]
@@ -345,11 +349,16 @@ def compile_guards(store: BeliefStore, only_confirmed: bool = True) -> list[Guar
     beliefs = store.active() if only_confirmed else store.ordered()
     out: list[Guard] = []
     seen: set[str] = set()
+    known_fields = {"title", "amount", "due_date", "status", "assignee", "vendor"}
     for b in beliefs:
         for cls, param, klass, kw in REGISTRY:
             if b.cls != cls:
                 continue
-            if param is not None and b.parameter != param:
+            if param == "__update_any__":
+                # any belief about a field the schema does not define
+                if b.operation != "update" or b.parameter in known_fields or not b.parameter:
+                    continue
+            elif param is not None and b.parameter != param:
                 continue
             if kw["name"] in seen:
                 continue

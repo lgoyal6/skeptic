@@ -1,0 +1,16 @@
+  8 rival groups, 4 at a time
+    [probe-000] 1 rivals -> silent_truncation
+    [probe-001] 3 rivals -> rate_limit
+    [probe-002] 1 rivals -> silent_coercion
+    [probe-003] 1 rivals -> undocumented_flag
+    [probe-002] consistency 2 calls 50s -> ['confirmed']
+    [probe-004] 2 rivals -> expiry
+    [probe-003] consistency 2 calls 197s -> ['confirmed']
+    [probe-005] 1 rivals -> eventual_consistency
+    [probe-005] timing 2 calls 173s -> ['confirmed']
+    [probe-006] 1 rivals -> rate_limit
+    [probe-000] boundary 5 calls 430s -> ['falsified']
+    [probe-007] 1 rivals -> silent_coercion
+    [probe-006] header_burst 10 calls 82s -> ['confirmed']
+    [probe-007] consistency 2 calls 66s -> ['confirmed']
+    ! probe failed: RuntimeError: reflector llm failed after 4 attempts: 504: upstream request timeout

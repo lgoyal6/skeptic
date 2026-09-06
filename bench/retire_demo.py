@@ -164,22 +164,34 @@ def _check_unknown_field_ignored(adapter: LabAdapter) -> tuple[bool, str]:
     return doc_side > old_side, msg
 
 
-def _check_page_size_cap(adapter: LabAdapter) -> tuple[bool, str]:
-    status, resp = _retry_429(lambda: adapter.search(page_size=100, sort="last_edited"))
-    if status != 200:
-        return False, f"search failed with status {status}"
-    n = len(resp.get("results", []))
-    msg = f"requested page_size=100, got {n} results back"
-    return n > 50, msg
+def _check_page_size_cap(adapter: Any) -> tuple[bool, str]:
+    """Is the page-size cap still in force?
 
+    This has to seed its own population first. Measuring against the whole
+    unfiltered store means that right after a lab reset there are fewer rows
+    than the cap, every request returns everything, and the check reports
+    "cap still present" whether or not the rule is on. That is the retirement
+    demo running backwards, and it was reproduced against a fresh lab.
+    """
+    vendor = "RetireProbePage"
+    seen = _retry_429(lambda: adapter.search(filter={"vendor": vendor}, page_size=50))
+    have = len((seen[1] or {}).get("results", [])) if seen and seen[0] == 200 else 0
+    while have < 60:
+        n = min(20, 60 - have)
+        _retry_429(lambda: adapter.bulk_create(
+            [{"title": f"{vendor}-{have + i}", "vendor": vendor} for i in range(n)]))
+        have += n
+    time.sleep(2.4)
 
-CHECKS: dict[str, Callable[[LabAdapter], tuple[bool, str]]] = {
-    "include_archived_flag": _check_include_archived_flag,
-    "archived_get_404": _check_archived_get_404,
-    "pre_epoch_date_null": _check_pre_epoch_date_null,
-    "unknown_field_ignored": _check_unknown_field_ignored,
-    "page_size_cap": _check_page_size_cap,
-}
+    sc, body = _retry_429(lambda: adapter.search(
+        filter={"vendor": vendor}, page_size=200))
+    got = len((body or {}).get("results", [])) if sc == 200 else 0
+    still_capped = got <= 50 and bool((body or {}).get("has_more"))
+    return still_capped, (
+        f"asked 200 against {have} rows, got {got}"
+        f"{'; cap still in force' if still_capped else '; full page returned, cap gone'}"
+    )
+
 
 
 def check_behaviour(rule_id: str, adapter: LabAdapter) -> tuple[bool, str]:

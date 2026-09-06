@@ -2,7 +2,7 @@
   proposer: glm-4-7-flash   adversary: claude-code
   brief written to ADVERSARY_BRIEF.md (8803 chars) and committed
   spawned skeptic-6, waiting for falsification.json
-  ! skeptic-4 produced no falsification.json within 900s
+  ! skeptic-5 produced no falsification.json within 900s
 the_api_enforces_a_hard_internal_limit_of
                        The only cited evidence (probe-000, header_burst) measures throttling of 10 requests and contains no
     UNSUPPORTED_CAUSE  lab.search.the_item_is_created_in_a_draft_state_and_

@@ -1,240 +1,28 @@
 tool: lab
-updated: '2026-09-06T04:54:31Z'
+updated: '2026-09-06T05:18:22Z'
 counts:
-  hypothesis: 11
-  confirmed: 0
-  falsified: 16
+  hypothesis: 4
+  confirmed: 5
+  falsified: 18
   retired: 0
 beliefs:
-- id: lab.create.the_api_enforces_a_hard_internal_limit_of_25
-  tool: lab
-  operation: create
-  doc_claims: 'stored as sent (doc: title_max=2000)'
-  belief: The API silently truncates the 'title' field upon storage, returning the truncated version in
-    the read-back.
-  action: Do not rely on the 'title' field containing the full input length; it will be truncated.
-  parameter: title
-  status: hypothesis
-  posterior:
-    alpha: 3.0
-    beta: 4.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes:
-  - probe-000
-  survived_falsification: null
-  falsified_by: null
-  replay:
-    belief_id: lab.create.the_api_enforces_a_hard_internal_limit_of_25
-    cls: silent_truncation
-    operation: create
-    parameter: title
-    signatures:
-    - create.title.silent_truncation
-    runs_affected: 0
-    calls_affected: 0
-    wasted_calls: 0
-    tokens_saved_estimate: 0
-    runs_rescued: 0
-    rescued_run_ids: []
-    first_seen_run: null
-    last_seen_run: null
-    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
-      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
-      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
-      this belief's own minting signature(s).
-    notes:
-    - no replay rule implemented for signature(s) ['create.title.silent_truncation'] (belief classed 'silent_truncation');
-      reporting zero rather than guessing
-    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
-    evidence: []
-  competing:
-  - lab.create.the_api_accepts_up_to_2000_characters_but_th
-  history:
-  - t: 1788653613.037
-    event: created
-    detail: 'stored as sent (doc: title_max=2000)'
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Send a title of exactly 255 characters. If it succeeds, send 256 characters. If 256 fails
-      with a 400 error, it is a hard limit. If 256 succeeds but the response
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: create.title.silent_truncation
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788656106.469
-    event: probe_inconclusive
-    detail: The evidence confirms the string was echoed back, but does not provide the character count
-      to verify the 255-character limit.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788656173.439
-    event: probe_inconclusive
-    detail: The evidence confirms the string was echoed back, but does not provide the character count
-      to verify the 255-character limit.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788656668.763
-    event: probe_inconclusive
-    detail: The experiment sent a title of length 1, which is below the 255 character limit, so the error
-      behavior was not observed.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788665056.336
-    event: confirmed_by_probe
-    detail: probe-000
-    p_doc_correct: 0.4444
-    status: confirmed
-  - t: 1788665056.336
-    event: probe_confirmed
-    detail: The read-back contained a truncated version of the sent data, matching the prediction of truncation.
-    p_doc_correct: 0.3077
-    status: confirmed
-  - t: 1788665056.336
-    event: restated_from_evidence
-    detail: 'was: The API enforces a hard internal limit of 255 characters for the ''title'' field, overriding
-      the documented 2000 limit.'
-    p_doc_correct: 0.3077
-    status: confirmed
-  - t: 1788670471.924
-    event: adversary_objection
-    detail: 'unsupported_cause: The only cited evidence (probe-000, header_burst) measures throttling
-      of 10 requests and contains no title-length data at all, so neither truncation nor a 25-character
-      limit was ever observed.'
-    p_doc_correct: 0.4
-    status: hypothesis
-  - t: 1788670471.924
-    event: suggested_attack
-    detail: Create items with titles of exactly 24, 25, 26, 100, and 2000 characters, read each back by
-      id, and compare stored length to sent length. Any read-back longer than 25 characters kills both
-      the truncation claim and the 'h
-    p_doc_correct: 0.4
-    status: hypothesis
-  p_doc_correct: 0.4
-  class: silent_truncation
-- id: lab.create.the_api_enforces_a_rate_limit_based_on_the_s
-  tool: lab
-  operation: create
-  doc_claims: no rate limit; 429 never returned
-  belief: The API enforces a rate limit based on the source IP address (e.g., to mitigate abuse from shared
-    networks or specific regions), rather than the user identity.
-  action: Rotate IP addresses or use a proxy service.
-  parameter: null
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.0
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-r2
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.create.the_api_enforces_a_strict_rate_limit_based_o
-  - lab.create.the_create_endpoint_is_currently_overloaded
-  history:
-  - t: 1788665131.099
-    event: created
-    detail: no rate limit; 429 never returned
-    p_doc_correct: 0.6667
-    status: hypothesis
-  - t: 1788665131.099
-    event: contradiction
-    detail: recon-r2
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: hypothesis
-    detail: Call the API from a different IP address (e.g., via a VPN or a different network). If the
-      request succeeds, the limit is IP-bound.
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: signature
-    detail: create._.undocumented_status
-    p_doc_correct: 0.5
-    status: hypothesis
-  p_doc_correct: 0.5
-  class: rate_limit
-- id: lab.create.the_api_enforces_a_strict_rate_limit_based_o
-  tool: lab
-  operation: create
-  doc_claims: no rate limit; 429 never returned
-  belief: The API enforces a strict rate limit based on the specific user account's subscription tier
-    (e.g., Free vs Pro), and the current account has exceeded its creation quota.
-  action: Upgrade the account plan or reduce the frequency of 'create' operations.
-  parameter: null
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.0
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-r2
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.create.the_api_enforces_a_rate_limit_based_on_the_s
-  - lab.create.the_create_endpoint_is_currently_overloaded
-  history:
-  - t: 1788665131.099
-    event: created
-    detail: no rate limit; 429 never returned
-    p_doc_correct: 0.6667
-    status: hypothesis
-  - t: 1788665131.099
-    event: contradiction
-    detail: recon-r2
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: hypothesis
-    detail: Attempt the 'create' operation using a different user account (or a new one). If the request
-      succeeds, the limit is account-bound.
-    p_doc_correct: 0.5
-    status: hypothesis
-  - t: 1788665131.099
-    event: signature
-    detail: create._.undocumented_status
-    p_doc_correct: 0.5
-    status: hypothesis
-  p_doc_correct: 0.5
-  class: rate_limit
 - id: lab.create.the_create_endpoint_is_currently_overloaded
   tool: lab
   operation: create
   doc_claims: no rate limit; 429 never returned
-  belief: The 'create' endpoint is currently overloaded globally, and the 429 is a generic backoff signal
-    triggered by high traffic volume across all clients.
-  action: Wait for a period of time and retry, or switch to a different endpoint.
-  parameter: null
-  status: hypothesis
+  belief: The endpoint throttles requests, allowing at most 3 requests before throttling begins.
+  action: Do not send more than 3 requests in rapid succession.
+  parameter: limit
+  status: confirmed
   posterior:
     alpha: 2.0
-    beta: 2.0
+    beta: 4.0
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-r2
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-000
   survived_falsification: null
   falsified_by: null
   replay: {}
@@ -263,24 +51,44 @@ beliefs:
     detail: create._.undocumented_status
     p_doc_correct: 0.5
     status: hypothesis
-  p_doc_correct: 0.5
+  - t: 1788671207.301
+    event: confirmed_by_probe
+    detail: probe-000
+    p_doc_correct: 0.5
+    status: confirmed
+  - t: 1788671207.301
+    event: probe_confirmed
+    detail: The hypothesis predicted the endpoint would throttle traffic, and 7 out of 10 requests were
+      throttled.
+    p_doc_correct: 0.3333
+    status: confirmed
+  - t: 1788671207.301
+    event: restated_from_evidence
+    detail: 'was: The ''create'' endpoint is currently overloaded globally, and the 429 is a generic backoff
+      signal triggered by high traffi'
+    p_doc_correct: 0.3333
+    status: confirmed
+  p_doc_correct: 0.3333
   class: rate_limit
 - id: lab.create.the_field_is_mapped_to_a_legacy_system_that
   tool: lab
   operation: create
   doc_claims: stored as sent
-  belief: The due_date field was sent as '1969-12-31' but stored as null.
-  action: Ensure dates are within the supported range.
+  belief: The due_date field was stored as null when sent as 1969-12-31.
+  action: Expect null for due_date when sent as 1969-12-31.
   parameter: due_date
-  status: hypothesis
+  status: confirmed
   posterior:
     alpha: 2.0
-    beta: 2.0
+    beta: 8.0
   evidence_for: 1
   evidence_against: 3
   first_seen: recon-000
   last_confirmed: ''
-  probes: []
+  probes:
+  - probe-001
+  - probe-001
+  - probe-001
   survived_falsification: null
   falsified_by: null
   replay:
@@ -396,243 +204,43 @@ beliefs:
     detail: rule toggled back on by retire_demo
     p_doc_correct: 0.5
     status: hypothesis
-  p_doc_correct: 0.5
-  class: silent_coercion
-- id: lab.get.the_get_request_is_being_made_from_a_differe
-  tool: lab
-  operation: get
-  doc_claims: GET returns the item regardless of archived state
-  belief: The item was returned successfully with the status 'active', matching the sent value.
-  action: Ensure context consistency (API keys, tenants) across operations.
-  parameter: null
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.0
-  evidence_for: 1
-  evidence_against: 4
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay:
-    belief_id: lab.get.the_get_request_is_being_made_from_a_differe
-    cls: undocumented_flag
-    operation: get
-    parameter: null
-    signatures:
-    - get._.undocumented_flag
-    runs_affected: 1
-    calls_affected: 1
-    wasted_calls: 1
-    tokens_saved_estimate: 0
-    runs_rescued: 0
-    rescued_run_ids: []
-    first_seen_run: recon-000
-    last_seen_run: recon-000
-    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
-      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
-      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
-      this belief's own minting signature(s).
-    notes:
-    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
-    evidence:
-    - run: recon-000
-      call_ns:
-      - 15
-      wasted: 1
-      reason: call 15 got 404 for id itm_5c412648d863, created earlier in this run
-  competing:
-  - lab.get.the_item_is_created_with_a_default_status_of
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: GET returns the item regardless of archived state
-    p_doc_correct: 0.5882
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Use the exact same API key and headers for the GET request as the POST request.
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: get._.undocumented_flag
-    p_doc_correct: 0.4545
-    status: hypothesis
-  - t: 1788655481.418
+  - t: 1788671207.262
     event: confirmed_by_probe
-    detail: probe-004
-    p_doc_correct: 0.4545
-    status: confirmed
-  - t: 1788655481.418
-    event: probe_confirmed
-    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
-      with the status 'active'.
-    p_doc_correct: 0.3125
-    status: confirmed
-  - t: 1788655481.418
-    event: restated_from_evidence
-    detail: 'was: The GET request is being made from a different context (e.g., different tenant or API
-      key) than the creation context.'
-    p_doc_correct: 0.3125
-    status: confirmed
-  - t: 1788655709.375
-    event: confirmed_by_probe
-    detail: probe-004
-    p_doc_correct: 0.3125
-    status: confirmed
-  - t: 1788655709.375
-    event: probe_confirmed
-    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
-      with the status 'active'.
-    p_doc_correct: 0.2381
-    status: confirmed
-  - t: 1788656106.19
-    event: confirmed_by_probe
-    detail: probe-004
-    p_doc_correct: 0.2381
-    status: confirmed
-  - t: 1788656106.19
-    event: probe_confirmed
-    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
-      with the status 'active'.
-    p_doc_correct: 0.1923
-    status: confirmed
-  - t: 1788665077.34
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-1
-    p_doc_correct: 0.4545
-    status: confirmed
-  - t: 1788665083.384
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-2
-    p_doc_correct: 0.5882
-    status: confirmed
-  - t: 1788665089.431
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-3
-    p_doc_correct: 0.6693
-    status: confirmed
-  - t: 1788665095.887
-    event: doc_behaved_as_written
-    detail: retire-demo-1788665071-round-4
-    p_doc_correct: 0.7237
-    status: confirmed
-  - t: 1788665095.887
-    event: auto_falsified
-    detail: posterior reverted above trust threshold
-    p_doc_correct: 0.7237
-    status: falsified
-  - t: 1788665095.92
-    event: retired
-    detail: world observed to match documentation for rule `archived_get_404` over 4 round(s) after the
-      rule was disabled; posterior crossed the trust threshold (0.7)
-    p_doc_correct: 0.7237
-    status: retired
-  - t: 1788665676.957
-    event: reopened_after_world_restored
-    detail: rule toggled back on by retire_demo
+    detail: probe-001
     p_doc_correct: 0.5
-    status: hypothesis
-  p_doc_correct: 0.5
-  class: undocumented_flag
-- id: lab.search.cursors_expire_after_a_fixed_time_duration_e
-  tool: lab
-  operation: search
-  doc_claims: cursors remain valid indefinitely
-  belief: Cursors expire after a fixed time duration (e.g., 1 hour) to prevent stale data.
-  action: Refresh the cursor periodically (e.g., every hour).
-  parameter: cursor
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.search.cursors_expire_if_no_requests_are_made_for_a
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: cursors remain valid indefinitely
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Use the cursor immediately. If it works, wait 2 hours and try again. If it fails, the time
-      limit is the cause.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search.cursor.expiry
-    p_doc_correct: 0.4444
-    status: hypothesis
-  p_doc_correct: 0.4444
-  class: expiry
-- id: lab.search.cursors_expire_if_no_requests_are_made_for_a
-  tool: lab
-  operation: search
-  doc_claims: cursors remain valid indefinitely
-  belief: Cursors expire if no requests are made for a specific duration (e.g., 30 minutes of inactivity).
-  action: Refresh the cursor periodically (e.g., every 15 minutes).
-  parameter: cursor
-  status: hypothesis
-  posterior:
-    alpha: 2.0
-    beta: 2.5
-  evidence_for: 1
-  evidence_against: 0
-  first_seen: recon-000
-  last_confirmed: ''
-  probes: []
-  survived_falsification: null
-  falsified_by: null
-  replay: {}
-  competing:
-  - lab.search.cursors_expire_after_a_fixed_time_duration_e
-  history:
-  - t: 1788653613.038
-    event: created
-    detail: cursors remain valid indefinitely
-    p_doc_correct: 0.5714
-    status: hypothesis
-  - t: 1788653613.038
-    event: contradiction
-    detail: recon-000
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: hypothesis
-    detail: Use the cursor, then make a request with a different cursor. If the original cursor still
-      works, the limit is inactivity-based.
-    p_doc_correct: 0.4444
-    status: hypothesis
-  - t: 1788653613.038
-    event: signature
-    detail: search.cursor.expiry
-    p_doc_correct: 0.4444
-    status: hypothesis
-  p_doc_correct: 0.4444
-  class: expiry
+    status: confirmed
+  - t: 1788671207.262
+    event: probe_confirmed
+    detail: The read-back stored the due_date as null.
+    p_doc_correct: 0.3333
+    status: confirmed
+  - t: 1788671207.262
+    event: restated_from_evidence
+    detail: 'was: The due_date field was sent as ''1969-12-31'' but stored as null.'
+    p_doc_correct: 0.3333
+    status: confirmed
+  - t: 1788671831.19
+    event: confirmed_by_probe
+    detail: probe-001
+    p_doc_correct: 0.3333
+    status: confirmed
+  - t: 1788671831.19
+    event: probe_confirmed
+    detail: The read-back stored the due_date as null.
+    p_doc_correct: 0.25
+    status: confirmed
+  - t: 1788671902.191
+    event: confirmed_by_probe
+    detail: probe-001
+    p_doc_correct: 0.25
+    status: confirmed
+  - t: 1788671902.191
+    event: probe_confirmed
+    detail: The read-back stored the due_date as null.
+    p_doc_correct: 0.2
+    status: confirmed
+  p_doc_correct: 0.2
+  class: silent_coercion
 - id: lab.search.the_item_is_created_in_a_draft_state_and_is
   tool: lab
   operation: search
@@ -640,15 +248,18 @@ beliefs:
   belief: The search query returned zero rows after a 0.5 second wait.
   action: Ensure items are published before searching.
   parameter: null
-  status: hypothesis
+  status: confirmed
   posterior:
     alpha: 3.0
-    beta: 14.7
+    beta: 20.7
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-009
+  - probe-009
+  - probe-009
   - probe-009
   - probe-009
   - probe-009
@@ -809,7 +420,40 @@ beliefs:
       refutes draft-gating; a read-b
     p_doc_correct: 0.1695
     status: hypothesis
-  p_doc_correct: 0.1695
+  - t: 1788671207.181
+    event: confirmed_by_probe
+    detail: probe-009
+    p_doc_correct: 0.1695
+    status: confirmed
+  - t: 1788671207.181
+    event: probe_confirmed
+    detail: The search returned zero rows after waiting 0.5 seconds, matching the prediction that the
+      item would not appear.
+    p_doc_correct: 0.1523
+    status: confirmed
+  - t: 1788671831.105
+    event: confirmed_by_probe
+    detail: probe-009
+    p_doc_correct: 0.1523
+    status: confirmed
+  - t: 1788671831.105
+    event: probe_confirmed
+    detail: The search returned zero rows after waiting 0.5 seconds, matching the prediction that the
+      item would not appear.
+    p_doc_correct: 0.1382
+    status: confirmed
+  - t: 1788671902.098
+    event: confirmed_by_probe
+    detail: probe-009
+    p_doc_correct: 0.1382
+    status: confirmed
+  - t: 1788671902.098
+    event: probe_confirmed
+    detail: The search returned zero rows after waiting 0.5 seconds, matching the prediction that the
+      item would not appear.
+    p_doc_correct: 0.1266
+    status: confirmed
+  p_doc_correct: 0.1266
   class: eventual_consistency
 - id: lab.search.the_rate_limit_is_global_shared_across_all_u
   tool: lab
@@ -818,15 +462,18 @@ beliefs:
   belief: 7 out of 10 requests were throttled, with the first throttling occurring on the 4th request.
   action: Retry with exponential backoff.
   parameter: null
-  status: hypothesis
+  status: confirmed
   posterior:
     alpha: 3.0
-    beta: 14.5
+    beta: 20.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-010
+  - probe-010
+  - probe-010
   - probe-010
   - probe-010
   - probe-010
@@ -1354,7 +1001,37 @@ beliefs:
       or per-key, not global shar
     p_doc_correct: 0.1714
     status: hypothesis
-  p_doc_correct: 0.1714
+  - t: 1788671207.104
+    event: confirmed_by_probe
+    detail: probe-010
+    p_doc_correct: 0.1714
+    status: confirmed
+  - t: 1788671207.104
+    event: probe_confirmed
+    detail: 7 out of 10 requests were throttled.
+    p_doc_correct: 0.1538
+    status: confirmed
+  - t: 1788671831.023
+    event: confirmed_by_probe
+    detail: probe-010
+    p_doc_correct: 0.1538
+    status: confirmed
+  - t: 1788671831.023
+    event: probe_confirmed
+    detail: 7 out of 10 requests were throttled.
+    p_doc_correct: 0.1395
+    status: confirmed
+  - t: 1788671902.011
+    event: confirmed_by_probe
+    detail: probe-010
+    p_doc_correct: 0.1395
+    status: confirmed
+  - t: 1788671902.011
+    event: probe_confirmed
+    detail: 7 out of 10 requests were throttled.
+    p_doc_correct: 0.1277
+    status: confirmed
+  p_doc_correct: 0.1277
   class: rate_limit
 - id: lab.update.the_validation_logic_is_buggy_and_only_check
   tool: lab
@@ -1364,15 +1041,18 @@ beliefs:
     with the value 'test_value'.
   action: Be cautious with required fields; assume the API might be lenient.
   parameter: not_a_real_field
-  status: hypothesis
+  status: confirmed
   posterior:
     alpha: 3.0
-    beta: 14.5
+    beta: 20.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-011
+  - probe-011
+  - probe-011
   - probe-011
   - probe-011
   - probe-011
@@ -1531,8 +1211,391 @@ beliefs:
       as null''. Then send the bogus '
     p_doc_correct: 0.1714
     status: hypothesis
-  p_doc_correct: 0.1714
+  - t: 1788671207.142
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.1714
+    status: confirmed
+  - t: 1788671207.142
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.1538
+    status: confirmed
+  - t: 1788671831.064
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.1538
+    status: confirmed
+  - t: 1788671831.064
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.1395
+    status: confirmed
+  - t: 1788671902.054
+    event: confirmed_by_probe
+    detail: probe-011
+    p_doc_correct: 0.1395
+    status: confirmed
+  - t: 1788671902.054
+    event: probe_confirmed
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.1277
+    status: confirmed
+  p_doc_correct: 0.1277
   class: silent_coercion
+- id: lab.create.the_api_enforces_a_hard_internal_limit_of_25
+  tool: lab
+  operation: create
+  doc_claims: 'stored as sent (doc: title_max=2000)'
+  belief: The API silently truncates the 'title' field upon storage, returning the truncated version in
+    the read-back.
+  action: Do not rely on the 'title' field containing the full input length; it will be truncated.
+  parameter: title
+  status: hypothesis
+  posterior:
+    alpha: 3.0
+    beta: 4.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes:
+  - probe-000
+  survived_falsification: null
+  falsified_by: null
+  replay:
+    belief_id: lab.create.the_api_enforces_a_hard_internal_limit_of_25
+    cls: silent_truncation
+    operation: create
+    parameter: title
+    signatures:
+    - create.title.silent_truncation
+    runs_affected: 0
+    calls_affected: 0
+    wasted_calls: 0
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: null
+    last_seen_run: null
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no replay rule implemented for signature(s) ['create.title.silent_truncation'] (belief classed 'silent_truncation');
+      reporting zero rather than guessing
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence: []
+  competing:
+  - lab.create.the_api_accepts_up_to_2000_characters_but_th
+  history:
+  - t: 1788653613.037
+    event: created
+    detail: 'stored as sent (doc: title_max=2000)'
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Send a title of exactly 255 characters. If it succeeds, send 256 characters. If 256 fails
+      with a 400 error, it is a hard limit. If 256 succeeds but the response
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: create.title.silent_truncation
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656106.469
+    event: probe_inconclusive
+    detail: The evidence confirms the string was echoed back, but does not provide the character count
+      to verify the 255-character limit.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656173.439
+    event: probe_inconclusive
+    detail: The evidence confirms the string was echoed back, but does not provide the character count
+      to verify the 255-character limit.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788656668.763
+    event: probe_inconclusive
+    detail: The experiment sent a title of length 1, which is below the 255 character limit, so the error
+      behavior was not observed.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788665056.336
+    event: confirmed_by_probe
+    detail: probe-000
+    p_doc_correct: 0.4444
+    status: confirmed
+  - t: 1788665056.336
+    event: probe_confirmed
+    detail: The read-back contained a truncated version of the sent data, matching the prediction of truncation.
+    p_doc_correct: 0.3077
+    status: confirmed
+  - t: 1788665056.336
+    event: restated_from_evidence
+    detail: 'was: The API enforces a hard internal limit of 255 characters for the ''title'' field, overriding
+      the documented 2000 limit.'
+    p_doc_correct: 0.3077
+    status: confirmed
+  - t: 1788670471.924
+    event: adversary_objection
+    detail: 'unsupported_cause: The only cited evidence (probe-000, header_burst) measures throttling
+      of 10 requests and contains no title-length data at all, so neither truncation nor a 25-character
+      limit was ever observed.'
+    p_doc_correct: 0.4
+    status: hypothesis
+  - t: 1788670471.924
+    event: suggested_attack
+    detail: Create items with titles of exactly 24, 25, 26, 100, and 2000 characters, read each back by
+      id, and compare stored length to sent length. Any read-back longer than 25 characters kills both
+      the truncation claim and the 'h
+    p_doc_correct: 0.4
+    status: hypothesis
+  p_doc_correct: 0.4
+  class: silent_truncation
+- id: lab.get.the_get_request_is_being_made_from_a_differe
+  tool: lab
+  operation: get
+  doc_claims: GET returns the item regardless of archived state
+  belief: The item was returned successfully with the status 'active', matching the sent value.
+  action: Ensure context consistency (API keys, tenants) across operations.
+  parameter: null
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 4
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay:
+    belief_id: lab.get.the_get_request_is_being_made_from_a_differe
+    cls: undocumented_flag
+    operation: get
+    parameter: null
+    signatures:
+    - get._.undocumented_flag
+    runs_affected: 1
+    calls_affected: 1
+    wasted_calls: 1
+    tokens_saved_estimate: 0
+    runs_rescued: 0
+    rescued_run_ids: []
+    first_seen_run: recon-000
+    last_seen_run: recon-000
+    method: tokens_saved_estimate = sum over affected runs of (wasted_calls_in_run * run.tokens / run.tool_calls)
+      from history.jsonl (flat per-call share; runs with no history record contribute 0). runs_rescued
+      = FAILED historical runs whose recorded signatures (operation.parameter-or-_.kind) exactly match
+      this belief's own minting signature(s).
+    notes:
+    - no runs/history.jsonl found; tokens_saved_estimate and runs_rescued are necessarily zero
+    evidence:
+    - run: recon-000
+      call_ns:
+      - 15
+      wasted: 1
+      reason: call 15 got 404 for id itm_5c412648d863, created earlier in this run
+  competing:
+  - lab.get.the_item_is_created_with_a_default_status_of
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: GET returns the item regardless of archived state
+    p_doc_correct: 0.5882
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Use the exact same API key and headers for the GET request as the POST request.
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: get._.undocumented_flag
+    p_doc_correct: 0.4545
+    status: hypothesis
+  - t: 1788655481.418
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.4545
+    status: confirmed
+  - t: 1788655481.418
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.3125
+    status: confirmed
+  - t: 1788655481.418
+    event: restated_from_evidence
+    detail: 'was: The GET request is being made from a different context (e.g., different tenant or API
+      key) than the creation context.'
+    p_doc_correct: 0.3125
+    status: confirmed
+  - t: 1788655709.375
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.3125
+    status: confirmed
+  - t: 1788655709.375
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.2381
+    status: confirmed
+  - t: 1788656106.19
+    event: confirmed_by_probe
+    detail: probe-004
+    p_doc_correct: 0.2381
+    status: confirmed
+  - t: 1788656106.19
+    event: probe_confirmed
+    detail: The get request returned status 200 and mismatches were empty, confirming the item was returned
+      with the status 'active'.
+    p_doc_correct: 0.1923
+    status: confirmed
+  - t: 1788665077.34
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-1
+    p_doc_correct: 0.4545
+    status: confirmed
+  - t: 1788665083.384
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-2
+    p_doc_correct: 0.5882
+    status: confirmed
+  - t: 1788665089.431
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-3
+    p_doc_correct: 0.6693
+    status: confirmed
+  - t: 1788665095.887
+    event: doc_behaved_as_written
+    detail: retire-demo-1788665071-round-4
+    p_doc_correct: 0.7237
+    status: confirmed
+  - t: 1788665095.887
+    event: auto_falsified
+    detail: posterior reverted above trust threshold
+    p_doc_correct: 0.7237
+    status: falsified
+  - t: 1788665095.92
+    event: retired
+    detail: world observed to match documentation for rule `archived_get_404` over 4 round(s) after the
+      rule was disabled; posterior crossed the trust threshold (0.7)
+    p_doc_correct: 0.7237
+    status: retired
+  - t: 1788665676.957
+    event: reopened_after_world_restored
+    detail: rule toggled back on by retire_demo
+    p_doc_correct: 0.5
+    status: hypothesis
+  p_doc_correct: 0.5
+  class: undocumented_flag
+- id: lab.search.cursors_expire_after_a_fixed_time_duration_e
+  tool: lab
+  operation: search
+  doc_claims: cursors remain valid indefinitely
+  belief: Cursors expire after a fixed time duration (e.g., 1 hour) to prevent stale data.
+  action: Refresh the cursor periodically (e.g., every hour).
+  parameter: cursor
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.cursors_expire_if_no_requests_are_made_for_a
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: cursors remain valid indefinitely
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Use the cursor immediately. If it works, wait 2 hours and try again. If it fails, the time
+      limit is the cause.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.cursor.expiry
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: expiry
+- id: lab.search.cursors_expire_if_no_requests_are_made_for_a
+  tool: lab
+  operation: search
+  doc_claims: cursors remain valid indefinitely
+  belief: Cursors expire if no requests are made for a specific duration (e.g., 30 minutes of inactivity).
+  action: Refresh the cursor periodically (e.g., every 15 minutes).
+  parameter: cursor
+  status: hypothesis
+  posterior:
+    alpha: 2.0
+    beta: 2.5
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-000
+  last_confirmed: ''
+  probes: []
+  survived_falsification: null
+  falsified_by: null
+  replay: {}
+  competing:
+  - lab.search.cursors_expire_after_a_fixed_time_duration_e
+  history:
+  - t: 1788653613.038
+    event: created
+    detail: cursors remain valid indefinitely
+    p_doc_correct: 0.5714
+    status: hypothesis
+  - t: 1788653613.038
+    event: contradiction
+    detail: recon-000
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: hypothesis
+    detail: Use the cursor, then make a request with a different cursor. If the original cursor still
+      works, the limit is inactivity-based.
+    p_doc_correct: 0.4444
+    status: hypothesis
+  - t: 1788653613.038
+    event: signature
+    detail: search.cursor.expiry
+    p_doc_correct: 0.4444
+    status: hypothesis
+  p_doc_correct: 0.4444
+  class: expiry
 - id: lab.bulk_create.the_api_has_a_hard_batch_limit_e_g_20_items
   tool: lab
   operation: bulk_create
@@ -1793,6 +1856,112 @@ beliefs:
     status: falsified
   p_doc_correct: 0.5455
   class: silent_truncation
+- id: lab.create.the_api_enforces_a_rate_limit_based_on_the_s
+  tool: lab
+  operation: create
+  doc_claims: no rate limit; 429 never returned
+  belief: The API enforces a rate limit based on the source IP address (e.g., to mitigate abuse from shared
+    networks or specific regions), rather than the user identity.
+  action: Rotate IP addresses or use a proxy service.
+  parameter: null
+  status: falsified
+  posterior:
+    alpha: 3.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-r2
+  last_confirmed: ''
+  probes:
+  - probe-000
+  survived_falsification: null
+  falsified_by: probe-000
+  replay: {}
+  competing:
+  - lab.create.the_api_enforces_a_strict_rate_limit_based_o
+  - lab.create.the_create_endpoint_is_currently_overloaded
+  history:
+  - t: 1788665131.099
+    event: created
+    detail: no rate limit; 429 never returned
+    p_doc_correct: 0.6667
+    status: hypothesis
+  - t: 1788665131.099
+    event: contradiction
+    detail: recon-r2
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: hypothesis
+    detail: Call the API from a different IP address (e.g., via a VPN or a different network). If the
+      request succeeds, the limit is IP-bound.
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: signature
+    detail: create._.undocumented_status
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788671207.301
+    event: falsified
+    detail: The hypothesis predicted the second burst would succeed, but 7 out of 10 requests were throttled.
+    p_doc_correct: 0.5
+    status: falsified
+  p_doc_correct: 0.6
+  class: rate_limit
+- id: lab.create.the_api_enforces_a_strict_rate_limit_based_o
+  tool: lab
+  operation: create
+  doc_claims: no rate limit; 429 never returned
+  belief: The API enforces a strict rate limit based on the specific user account's subscription tier
+    (e.g., Free vs Pro), and the current account has exceeded its creation quota.
+  action: Upgrade the account plan or reduce the frequency of 'create' operations.
+  parameter: null
+  status: falsified
+  posterior:
+    alpha: 3.0
+    beta: 2.0
+  evidence_for: 1
+  evidence_against: 0
+  first_seen: recon-r2
+  last_confirmed: ''
+  probes:
+  - probe-000
+  survived_falsification: null
+  falsified_by: probe-000
+  replay: {}
+  competing:
+  - lab.create.the_api_enforces_a_rate_limit_based_on_the_s
+  - lab.create.the_create_endpoint_is_currently_overloaded
+  history:
+  - t: 1788665131.099
+    event: created
+    detail: no rate limit; 429 never returned
+    p_doc_correct: 0.6667
+    status: hypothesis
+  - t: 1788665131.099
+    event: contradiction
+    detail: recon-r2
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: hypothesis
+    detail: Attempt the 'create' operation using a different user account (or a new one). If the request
+      succeeds, the limit is account-bound.
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788665131.099
+    event: signature
+    detail: create._.undocumented_status
+    p_doc_correct: 0.5
+    status: hypothesis
+  - t: 1788671207.301
+    event: falsified
+    detail: The hypothesis predicted the second burst would succeed, but 7 out of 10 requests were throttled.
+    p_doc_correct: 0.5
+    status: falsified
+  p_doc_correct: 0.6
+  class: rate_limit
 - id: lab.create.the_api_expects_a_specific_date_format_e_g_i
   tool: lab
   operation: create
@@ -2109,6 +2278,11 @@ beliefs:
     detail: The observation returned 0 rows, not 50.
     p_doc_correct: 0.7059
     status: falsified
+  - t: 1788671207.027
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.7368
+    status: falsified
   p_doc_correct: 0.7368
   class: silent_truncation
 - id: lab.search.the_api_enforces_a_hard_limit_of_50_results
@@ -2221,6 +2395,11 @@ beliefs:
     detail: The observation returned 0 rows, not 500.
     p_doc_correct: 0.5455
     status: falsified
+  - t: 1788671207.027
+    event: probe_inconclusive
+    detail: Both hypotheses predict the same outcome (50 items for all inputs).
+    p_doc_correct: 0.6154
+    status: falsified
   p_doc_correct: 0.6154
   class: silent_truncation
 - id: lab.search.the_api_sorts_by_created_descending_but_the
@@ -2232,13 +2411,16 @@ beliefs:
   parameter: sort
   status: falsified
   posterior:
-    alpha: 5.0
+    alpha: 8.0
     beta: 2.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-004
+  - probe-004
+  - probe-004
   - probe-004
   - probe-004
   - probe-004
@@ -2286,7 +2468,25 @@ beliefs:
       chronological order.
     p_doc_correct: 0.625
     status: falsified
-  p_doc_correct: 0.6757
+  - t: 1788671207.223
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not descending
+      chronological order.
+    p_doc_correct: 0.6757
+    status: falsified
+  - t: 1788671831.149
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not descending
+      chronological order.
+    p_doc_correct: 0.7143
+    status: falsified
+  - t: 1788671902.147
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not descending
+      chronological order.
+    p_doc_correct: 0.7447
+    status: falsified
+  p_doc_correct: 0.7692
   class: mislabelled_semantics
 - id: lab.search.the_api_sorts_by_the_string_value_of_the_fie
   tool: lab
@@ -2298,13 +2498,16 @@ beliefs:
   parameter: sort
   status: falsified
   posterior:
-    alpha: 5.0
+    alpha: 8.0
     beta: 2.6
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-004
+  - probe-004
+  - probe-004
   - probe-004
   - probe-004
   - probe-004
@@ -2353,7 +2556,25 @@ beliefs:
       order of the timestamps (oldest first).
     p_doc_correct: 0.6061
     status: falsified
-  p_doc_correct: 0.6579
+  - t: 1788671207.223
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not lexicographical
+      order of the timestamps (oldest first).
+    p_doc_correct: 0.6579
+    status: falsified
+  - t: 1788671831.149
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not lexicographical
+      order of the timestamps (oldest first).
+    p_doc_correct: 0.6977
+    status: falsified
+  - t: 1788671902.147
+    event: falsified
+    detail: The returned order is ['', 'Probe04-o1', 'Probe04-o2', 'Probe04-o0'], which is not lexicographical
+      order of the timestamps (oldest first).
+    p_doc_correct: 0.7292
+    status: falsified
+  p_doc_correct: 0.7547
   class: mislabelled_semantics
 - id: lab.search.the_filter_field_name_vendorr_is_a_typo_for
   tool: lab
@@ -2365,13 +2586,16 @@ beliefs:
   parameter: filter
   status: falsified
   posterior:
-    alpha: 8.0
+    alpha: 11.0
     beta: 2.6
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-008
+  - probe-008
+  - probe-008
   - probe-008
   - probe-008
   - probe-008
@@ -2440,7 +2664,22 @@ beliefs:
     detail: The search with 'vendorr' returned 50 items, not empty results.
     p_doc_correct: 0.7292
     status: falsified
-  p_doc_correct: 0.7547
+  - t: 1788671207.065
+    event: falsified
+    detail: The search with 'vendorr' returned 50 items, not empty results.
+    p_doc_correct: 0.7547
+    status: falsified
+  - t: 1788671830.983
+    event: falsified
+    detail: The search with 'vendorr' returned 50 items, not empty results.
+    p_doc_correct: 0.7759
+    status: falsified
+  - t: 1788671901.967
+    event: falsified
+    detail: The search with 'vendorr' returned 50 items, not empty results.
+    p_doc_correct: 0.7937
+    status: falsified
+  p_doc_correct: 0.8088
   class: silent_coercion
 - id: lab.search.the_filter_is_valid_but_there_are_genuinely
   tool: lab
@@ -2451,13 +2690,16 @@ beliefs:
   parameter: filter
   status: falsified
   posterior:
-    alpha: 8.0
+    alpha: 11.0
     beta: 2.4
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-008
+  - probe-008
+  - probe-008
   - probe-008
   - probe-008
   - probe-008
@@ -2526,7 +2768,22 @@ beliefs:
     detail: Both searches returned 50 items, not empty results.
     p_doc_correct: 0.7447
     status: falsified
-  p_doc_correct: 0.7692
+  - t: 1788671207.065
+    event: falsified
+    detail: Both searches returned 50 items, not empty results.
+    p_doc_correct: 0.7692
+    status: falsified
+  - t: 1788671830.983
+    event: falsified
+    detail: Both searches returned 50 items, not empty results.
+    p_doc_correct: 0.7895
+    status: falsified
+  - t: 1788671901.967
+    event: falsified
+    detail: Both searches returned 50 items, not empty results.
+    p_doc_correct: 0.8065
+    status: falsified
+  p_doc_correct: 0.8209
   class: silent_coercion
 - id: lab.search.the_search_index_is_updated_asynchronously_a
   tool: lab
@@ -2537,13 +2794,16 @@ beliefs:
   parameter: null
   status: falsified
   posterior:
-    alpha: 8.0
+    alpha: 11.0
     beta: 2.3
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-009
+  - probe-009
+  - probe-009
   - probe-009
   - probe-009
   - probe-009
@@ -2612,7 +2872,25 @@ beliefs:
       the item would appear.
     p_doc_correct: 0.7527
     status: falsified
-  p_doc_correct: 0.7767
+  - t: 1788671207.181
+    event: falsified
+    detail: The search returned zero rows after waiting 0.5 seconds, contradicting the prediction that
+      the item would appear.
+    p_doc_correct: 0.7767
+    status: falsified
+  - t: 1788671831.105
+    event: falsified
+    detail: The search returned zero rows after waiting 0.5 seconds, contradicting the prediction that
+      the item would appear.
+    p_doc_correct: 0.7965
+    status: falsified
+  - t: 1788671902.098
+    event: falsified
+    detail: The search returned zero rows after waiting 0.5 seconds, contradicting the prediction that
+      the item would appear.
+    p_doc_correct: 0.813
+    status: falsified
+  p_doc_correct: 0.8271
   class: eventual_consistency
 - id: lab.search.there_is_a_hidden_rate_limit_e_g_100_request
   tool: lab
@@ -2623,13 +2901,16 @@ beliefs:
   parameter: null
   status: falsified
   posterior:
-    alpha: 8.0
+    alpha: 11.0
     beta: 2.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-010
+  - probe-010
+  - probe-010
   - probe-010
   - probe-010
   - probe-010
@@ -2693,7 +2974,22 @@ beliefs:
     detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
     p_doc_correct: 0.7368
     status: falsified
-  p_doc_correct: 0.7619
+  - t: 1788671207.104
+    event: falsified
+    detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
+    p_doc_correct: 0.7619
+    status: falsified
+  - t: 1788671831.023
+    event: falsified
+    detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
+    p_doc_correct: 0.7826
+    status: falsified
+  - t: 1788671902.011
+    event: falsified
+    detail: 7 out of 10 requests were throttled, contradicting the prediction of success.
+    p_doc_correct: 0.8
+    status: falsified
+  p_doc_correct: 0.8148
   class: rate_limit
 - id: lab.update.the_api_is_designed_to_be_soft_and_ignores_u
   tool: lab
@@ -2705,13 +3001,16 @@ beliefs:
   parameter: not_a_real_field
   status: falsified
   posterior:
-    alpha: 8.0
+    alpha: 11.0
     beta: 2.5
   evidence_for: 1
   evidence_against: 0
   first_seen: recon-000
   last_confirmed: ''
   probes:
+  - probe-011
+  - probe-011
+  - probe-011
   - probe-011
   - probe-011
   - probe-011
@@ -2780,5 +3079,20 @@ beliefs:
     detail: The read-back contained the 'not_a_real_field' (stored as null).
     p_doc_correct: 0.7368
     status: falsified
-  p_doc_correct: 0.7619
+  - t: 1788671207.142
+    event: falsified
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.7619
+    status: falsified
+  - t: 1788671831.064
+    event: falsified
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.7826
+    status: falsified
+  - t: 1788671902.054
+    event: falsified
+    detail: The read-back contained the 'not_a_real_field' (stored as null).
+    p_doc_correct: 0.8
+    status: falsified
+  p_doc_correct: 0.8148
   class: silent_coercion

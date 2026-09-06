@@ -202,7 +202,27 @@ def design(
         f"  id={b.id}\n    class={b.cls} parameter={b.parameter}\n    claim: {b.belief}"
         for b in beliefs
     )
-    extra = ""
+
+    # If an adversary already said how it would break one of these, use its
+    # experiment rather than inventing a weaker one. The adversary reviewed
+    # the evidence and named the specific gap; a designer that ignores that
+    # is choosing to repeat the mistake it was told about.
+    attacks = []
+    for b in beliefs:
+        for h in reversed(b.history):
+            if h.get("event") == "suggested_attack" and h.get("detail"):
+                attacks.append(f"  for {b.id}:\n    {h['detail']}")
+                break
+    attack_txt = ""
+    if attacks:
+        attack_txt = (
+            "\n\nAN ADVERSARY REVIEWED THESE BELIEFS AND SAID THE EVIDENCE WAS\n"
+            "INSUFFICIENT. It proposed these experiments as the ones most likely to\n"
+            "settle the question properly. Prefer them unless a template genuinely\n"
+            "cannot express the experiment:\n" + "\n".join(attacks)
+        )
+
+    extra = attack_txt
     if exclude:
         extra = (
             f"\n\nDo NOT use these templates, they already failed to separate these "

@@ -54,7 +54,13 @@ def groups(store: BeliefStore) -> list[list[Any]]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--workers", type=int, default=4)
+    # The tool throttles at 3 req/s. Four workers each pacing themselves at
+    # 0.4s is ~10 req/s in aggregate, and the audit measured 72% of calls
+    # returning 429 at that setting: the probes were largely measuring the
+    # rate limiter rather than their own variable. Two workers keeps the fleet
+    # under the limit while still overlapping the model waits, which are where
+    # the wall-clock actually goes.
+    ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--max-groups", type=int, default=20)
     ap.add_argument("--beliefs", default="beliefs")
     a = ap.parse_args()
