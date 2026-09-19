@@ -276,14 +276,30 @@ the build window.
 
 ### Counterfactual replay
 
-`./.venv/bin/python -m replay.counterfactual` reports 115 distinct wasted calls
-across 47 runs, alongside 219 belief-attributions. Those are different numbers
+`./.venv/bin/python -m replay.counterfactual` reports 117 distinct wasted calls
+across 47 runs, alongside 258 belief-attributions. Those are different numbers
 for a reason: the rate-limit rule applies to every operation, so a belief about
 `search` and one about `create` both legitimately charge the same 429. Summing
 per-belief totals double counts, so the headline is the distinct count and the
 attribution sum is printed beside it rather than either being dropped. Token savings are reported as zero rather than estimated, because
 `runs/history.jsonl` does not exist in this snapshot and the tool refuses to
 guess at a number it cannot evidence.
+
+**This number is not reproducible from a clone of this repository, and the
+figure printed here was previously wrong because of it.** `runs/*.jsonl` is
+gitignored, so the input to the replay is untracked local state. This section
+read "115 distinct calls, 219 attributions" until the published command was
+re-run: over the same 47 runs it reports 117 and 258, because the local run
+directory drifted after the number was recorded. On a fresh clone the command
+reports zero, correctly, since there is nothing to replay.
+
+Two smaller hazards in the same area, both found the same way. `replay_all`
+calls `store.save()`, so running the replay rewrites `beliefs/lab.yaml` as a
+side effect of reporting -- and run it in a checkout with no run logs and it
+writes zeros over every attribution the store had. And any number derived this
+way is a measurement of one machine's scratch directory, not of the project.
+The fix is committed, versioned replays rather than a gitignored one, which is
+what `fixtures/` is for.
 
 ### The A/B: does the learned knowledge transfer?
 
