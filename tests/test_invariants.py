@@ -137,25 +137,8 @@ def test_run_probe_style_guard_prevents_falsification_from_empty_sweep(tmp_path)
     assert b.status is Status.CONFIRMED
 
 
-@pytest.mark.xfail(
-    strict=False,
-    reason=(
-        "reflect.probe._apply has NO internal check against an uninformative "
-        "observation: it falsifies a belief whenever rec.verdicts says "
-        "'falsified', regardless of whether obs.facts had any signal. The real "
-        "guard is enforced upstream, in run_probe (it overwrites rec.verdicts "
-        "with 'inconclusive' before ever calling _apply when _uninformative(obs) "
-        "is True) -- see reflect/probe.py. But bench/settle.py and "
-        "bench/apply_probes.py both call _apply directly on ProbeRecord objects "
-        "loaded from probes/*.json, so any record not produced through "
-        "run_probe's own check (a hand-edited or externally produced probe "
-        "file) can falsify a belief from zero signal with no defense at the "
-        "_apply layer itself. Flagging as a defense-in-depth gap, not fixing "
-        "since other work is in flight."
-    ),
-)
-def test_apply_alone_does_not_guard_against_uninformative_observation(tmp_path):
-    """Documents that _apply itself is not the vacuous-measurement guard -- run_probe is. See xfail reason for the real bug this surfaces."""
+def test_apply_itself_guards_against_uninformative_observation(tmp_path):
+    """The vacuous-measurement guard lives in `_apply`, the point of effect, so a probe record replayed from disk -- never passed through `run_probe` -- still cannot falsify a belief from zero signal."""
     store, b = _confirmed_belief(tmp_path, name="lab.search.cap_belief2")
 
     obs = Observation(
@@ -164,6 +147,10 @@ def test_apply_alone_does_not_guard_against_uninformative_observation(tmp_path):
     )
     assert _uninformative(obs) is True  # the sweep really did see nothing
 
+    # The record carries a "falsified" verdict and is handed straight to
+    # `_apply`, exactly as `bench/apply_probes.py` and `bench/settle.py` do
+    # with `probes/*.json` -- never passing through `run_probe`, which is
+    # where this check used to live and where every other caller bypassed it.
     rec = ProbeRecord(
         id="probe2", belief_ids=[b.id], template="boundary", params={}, why="",
         predictions=[], observation=obs.to_dict(),
@@ -171,7 +158,10 @@ def test_apply_alone_does_not_guard_against_uninformative_observation(tmp_path):
         learned="", calls=2, wall_s=0.01,
     )
     _apply(store, rec)
-    assert b.status is not Status.FALSIFIED
+
+    assert b.status is Status.CONFIRMED
+    assert any(h.get("event") == "probe_uninformative" for h in b.history), \
+        "the belief must record WHY the verdict was dropped, not silently ignore it"
 
 
 def test_indistinguishable_flags_identical_predictions():
