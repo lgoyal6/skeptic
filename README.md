@@ -20,7 +20,7 @@ The honest headline, verified at the end of the build:
 | false beliefs | 0 |
 | recall, observable | 0.38 (5 of 13) |
 | confirmed beliefs | 6 |
-| invariant tests | 42 passed |
+| invariant tests | 48 passed |
 
 **Earlier in the build these numbers were higher, and they were withdrawn.**
 Precision touched 1.00 over five confirmed beliefs. Then an adversarial
@@ -199,8 +199,19 @@ known to be unsupported.
 
 The audit also found that the retirement demo could run backwards (its
 page-size check measured an unseeded store, so it reported "cap still present"
-whether or not the rule was on), that the unknown-field guard was pinned to one
-hardcoded field name, and that `bench/settle.py --workers 4` produced 72% 429s
+whether or not the rule was on). Fixing the seeding uncovered a second, larger
+fault in the same function that the audit had not reached: it returned
+`still_capped` where `check_behaviour` is documented to return
+`world_matches_docs`, its negation. Measured live against an isolated lab, with
+the cap rule switched on and then off, the check answered backwards in both
+directions, so disabling the cap made the docs correct and the demo read that
+as the old lie persisting -- the belief could never retire. It now seeds past
+the cap, re-counts to confirm the seeding committed (paging with a size under
+the cap, since counting with a big page is circular when the cap is the thing
+under test), and returns no verdict at all when the population still cannot
+exercise the rule. A round with no verdict moves no posterior, the same rule
+`_apply` enforces for probes. The audit also found that the unknown-field guard
+was pinned to one hardcoded field name, and that `bench/settle.py --workers 4` produced 72% 429s
 against a 3 req/s limit, which means probes were substantially measuring the
 rate limiter rather than their own variable.
 

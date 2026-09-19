@@ -58,6 +58,15 @@ PRIORITY = [
 # measurement per round -- the cap either bites or it doesn't, on one search
 # -- so its weight is 1; the rest weight their round by trial count.
 TRIALS = 5
+
+# The cap the hidden rule enforces, and how many rows the cap check seeds so
+# the cap is observable at all. This is a client of the lab over HTTP, so it
+# does not import the server; drift is caught by
+# `test_retire_demo_cap_constant_tracks_the_lab` instead. A cap check whose
+# idea of the cap has drifted answers from a population that cannot exercise
+# the rule, which is the whole bug class this file demonstrates.
+PAGE_SIZE_CAP = 50
+WANT_ROWS = PAGE_SIZE_CAP + 10
 ROUND_WEIGHT = {
     "include_archived_flag": float(TRIALS),
     "archived_get_404": float(TRIALS),
@@ -164,42 +173,100 @@ def _check_unknown_field_ignored(adapter: LabAdapter) -> tuple[bool, str]:
     return doc_side > old_side, msg
 
 
-def _check_page_size_cap(adapter: Any) -> tuple[bool, str]:
-    """Is the page-size cap still in force?
+def _count_population(adapter: Any, vendor: str, page: int = 25) -> int | None:
+    """How many rows this vendor really has, measured without using the cap.
 
-    This has to seed its own population first. Measuring against the whole
-    unfiltered store means that right after a lab reset there are fewer rows
-    than the cap, every request returns everything, and the check reports
-    "cap still present" whether or not the rule is on. That is the retirement
-    demo running backwards, and it was reproduced against a fresh lab.
+    Asking for a big page to count rows is circular when the cap is exactly
+    the thing under test: the answer is bounded by the rule being measured.
+    Paging with a size well under the cap and following `next_cursor` gives a
+    count that is the same whether the cap is on or off. Returns None if any
+    page failed, because a partial count is not a count.
+    """
+    total, cursor, pages = 0, None, 0
+    while pages < 20:
+        args: dict[str, Any] = {"filter": {"vendor": vendor}, "page_size": page}
+        if cursor:
+            args["cursor"] = cursor
+        sc, body = _retry_429(lambda: adapter.search(**args))
+        if sc != 200 or not isinstance(body, dict):
+            return None
+        total += len(body.get("results", []))
+        pages += 1
+        if not body.get("has_more"):
+            return total
+        cursor = body.get("next_cursor")
+        if not cursor:
+            return total
+    return total
+
+
+def _check_page_size_cap(adapter: Any) -> tuple[bool | None, str]:
+    """Is the world behaving the way the docs promise for page_size?
+
+    Two things went wrong here, and only the first was in the audit.
+
+    It has to seed its own population. Measuring against the whole unfiltered
+    store means that right after a lab reset there are fewer rows than the
+    cap, every request returns everything, and the check answers from a
+    population that could not have exercised the rule either way.
+
+    And it has to answer the question its caller actually asks.
+    `check_behaviour` is documented to return `world_matches_docs`; every
+    other check returns that. This one returned `still_capped`, which is its
+    negation, so the retirement demo ran backwards for this rule: disabling
+    the cap made the docs correct, the demo read that as the old lie
+    persisting, and the belief could never cross the trust threshold and
+    retire -- the exact failure the demo exists to rule out, reached by a
+    different route than the unseeded store. Verified live in both
+    directions, with the rule on and off, before and after.
     """
     vendor = "RetireProbePage"
-    seen = _retry_429(lambda: adapter.search(filter={"vendor": vendor}, page_size=50))
-    have = len((seen[1] or {}).get("results", [])) if seen and seen[0] == 200 else 0
-    while have < 60:
-        n = min(20, 60 - have)
+    have = _count_population(adapter, vendor) or 0
+    while have < WANT_ROWS:
+        n = min(20, WANT_ROWS - have)  # bulk silently caps at 20
         _retry_429(lambda: adapter.bulk_create(
             [{"title": f"{vendor}-{have + i}", "vendor": vendor} for i in range(n)]))
         have += n
     time.sleep(2.4)
 
-    sc, body = _retry_429(lambda: adapter.search(
-        filter={"vendor": vendor}, page_size=200))
-    got = len((body or {}).get("results", [])) if sc == 200 else 0
-    still_capped = got <= 50 and bool((body or {}).get("has_more"))
-    return still_capped, (
-        f"asked 200 against {have} rows, got {got}"
+    # Seeding is a request, not a fact. `bulk_create` can be rate-limited or
+    # silently truncated, and incrementing a counter by what was asked for
+    # rather than by what committed is the same bug class this file exists to
+    # demonstrate. Re-count before answering, and refuse if the population is
+    # still too small for either answer to mean anything.
+    population = _count_population(adapter, vendor)
+    if population is None:
+        return None, f"could not count rows for {vendor}; no verdict on the cap"
+    if population <= PAGE_SIZE_CAP:
+        return None, (
+            f"only {population} rows for {vendor}, cap is {PAGE_SIZE_CAP}; "
+            f"a request cannot distinguish a cap from a small store, so no verdict"
+        )
+
+    sc, body = _retry_429(lambda: adapter.search(filter={"vendor": vendor}, page_size=200))
+    if sc != 200 or not isinstance(body, dict):
+        return None, f"sweep search returned HTTP {sc}; no verdict on the cap"
+    got = len(body.get("results", []))
+    still_capped = got <= PAGE_SIZE_CAP and bool(body.get("has_more"))
+    return not still_capped, (
+        f"asked 200 against {population} rows, got {got}"
         f"{'; cap still in force' if still_capped else '; full page returned, cap gone'}"
     )
 
 
 
-def check_behaviour(rule_id: str, adapter: LabAdapter) -> tuple[bool, str]:
+def check_behaviour(rule_id: str, adapter: LabAdapter) -> tuple[bool | None, str]:
     """Is the OLD (documented-contradicting) behaviour still present?
 
     Returns (world_matches_docs, message). world_matches_docs is True when
     the observation looks like what the docs promise -- i.e. what we expect
     once the underlying rule has been switched off.
+
+    None means the round could not observe the rule at all -- the population
+    was too small to exercise it, or the calls that would have measured it
+    failed. That is not a vote either way, and the caller must not count it
+    as one. This is the same rule `reflect/probe.py::_apply` enforces for
+    probe verdicts: an experiment with no signal moves nothing.
     """
     return CHECKS[rule_id](adapter)
 
@@ -261,6 +328,7 @@ def run_demo(
     ]
     retired = False
     rounds_run = 0
+    inconclusive = 0
     run_tag = f"retire-demo-{int(time.time())}"
 
     rule_was_on = _set_rule(lab_base, rule_id, False)  # noqa: F841 -- returned state is the new (off) state
@@ -271,7 +339,14 @@ def run_demo(
                 rounds_run = i
                 world_matches_docs, msg = check_behaviour(rule_id, adapter)
                 run_id = f"{run_tag}-round-{i}"
-                if world_matches_docs:
+                if world_matches_docs is None:
+                    # The round observed nothing. Moving the posterior on it
+                    # would be inventing evidence, in the one demo whose
+                    # entire point is that a belief moves only when the world
+                    # actually says something.
+                    belief.note("retire_round_uninformative", f"{run_id}: {msg}")
+                    inconclusive += 1
+                elif world_matches_docs:
                     belief.observe_support_for_doc(run_id, weight=weight)
                 else:
                     belief.observe_contradiction(run_id, weight=weight)
@@ -308,8 +383,10 @@ def run_demo(
     # lab -- the world the agent would see next is the same one it saw before.
     relearn_adapter = LabAdapter(run_id=f"{run_tag}-relearn", base=lab_base, min_interval=0.4)
     try:
-        old_behaviour_returned, relearn_msg = check_behaviour(rule_id, relearn_adapter)
-        old_behaviour_returned = not old_behaviour_returned  # check_behaviour reports doc-match
+        doc_match, relearn_msg = check_behaviour(rule_id, relearn_adapter)
+        # check_behaviour reports doc-match; None stays None rather than
+        # collapsing to "the old behaviour did not come back".
+        old_behaviour_returned = None if doc_match is None else not doc_match
     finally:
         relearn_adapter.close()
 
@@ -322,6 +399,7 @@ def run_demo(
         "trust_threshold": DOC_TRUST_THRESHOLD,
         "rounds_allotted": rounds,
         "rounds_run": rounds_run,
+        "rounds_inconclusive": inconclusive,
         "round_weight": weight,
         "starting": starting,
         "trajectory": trajectory,

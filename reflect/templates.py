@@ -45,7 +45,6 @@ class Observation:
 @dataclass
 class ProbeTemplate:
     name: str
-    描述: str = ""                 # placeholder guard, unused
     description: str = ""
     splits: list[str] = field(default_factory=list)
     est_calls: int = 2

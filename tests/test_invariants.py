@@ -764,3 +764,128 @@ def test_guard_field_list_is_not_a_second_copy_of_the_schema():
     from shim.guards import DOCUMENTED_FIELDS
 
     assert DOCUMENTED_FIELDS == frozenset(DOC_SPEC["promises"]["echo_fields"])
+
+
+# ---------------------------------------------------------------------------
+# The retirement demo. It exists to show a belief unlearning when the world
+# changes, which makes a check that answers backwards, or answers from a
+# population that could not have observed the rule, worse than no check.
+# ---------------------------------------------------------------------------
+
+
+class _PagedStore:
+    """A lab-shaped search: honours cursors, and optionally caps page_size."""
+
+    def __init__(self, rows: int, cap: int | None = 50):
+        self.rows = rows
+        self.cap = cap
+        self.bulk_calls = 0
+
+    def search(self, **kw):
+        page = kw.get("page_size", 50)
+        if self.cap is not None:
+            page = min(page, self.cap)
+        offset = int(kw.get("cursor") or 0)
+        got = max(0, min(page, self.rows - offset))
+        has_more = offset + got < self.rows
+        return 200, {"results": [{"id": str(offset + i)} for i in range(got)],
+                     "has_more": has_more,
+                     "next_cursor": str(offset + got) if has_more else None}
+
+    def bulk_create(self, items):
+        self.bulk_calls += 1
+        self.rows += len(items)
+        return 200, {"ids": ["x"] * len(items)}
+
+
+def test_retire_demo_cap_check_answers_the_question_its_caller_asks(monkeypatch):
+    """`check_behaviour` is documented to return world_matches_docs and every other check does. This one returned its negation, so the demo ran backwards: disabling the cap made the docs correct and the demo read that as the old lie persisting."""
+    import bench.retire_demo as rd
+
+    monkeypatch.setattr(rd.time, "sleep", lambda *_a, **_k: None)
+
+    capped, _ = rd._check_page_size_cap(_PagedStore(rows=60, cap=50))
+    assert capped is False, "cap in force means the world contradicts the docs"
+
+    uncapped, _ = rd._check_page_size_cap(_PagedStore(rows=60, cap=None))
+    assert uncapped is True, "cap gone means the world matches the docs"
+
+
+def test_retire_demo_cap_check_refuses_an_insufficient_population(monkeypatch):
+    """The audit's finding: a store holding fewer rows than the cap cannot distinguish a cap from a small store. Seeding is now verified by re-counting, and a population that still cannot exercise the rule gets no verdict rather than a guess."""
+    import bench.retire_demo as rd
+
+    monkeypatch.setattr(rd.time, "sleep", lambda *_a, **_k: None)
+    monkeypatch.setattr(rd, "WANT_ROWS", 0)  # suppress seeding
+
+    verdict, msg = rd._check_page_size_cap(_PagedStore(rows=12, cap=50))
+    assert verdict is None, "a 12-row store cannot answer a question about a 50-row cap"
+    assert "no verdict" in msg
+
+
+def test_retire_demo_counts_population_without_using_the_cap(monkeypatch):
+    """Counting rows with a big page is circular when the cap is the thing under test; the count must be the same whether the rule is on or off."""
+    import bench.retire_demo as rd
+
+    monkeypatch.setattr(rd.time, "sleep", lambda *_a, **_k: None)
+    assert rd._count_population(_PagedStore(rows=137, cap=50), "V") == 137
+    assert rd._count_population(_PagedStore(rows=137, cap=None), "V") == 137
+
+
+def test_retire_demo_seeds_enough_rows_to_exercise_the_cap(monkeypatch):
+    """Seeding is a request, not a fact, so the check re-counts before answering. It must seed strictly past the cap, or the answer means nothing either way."""
+    import bench.retire_demo as rd
+
+    monkeypatch.setattr(rd.time, "sleep", lambda *_a, **_k: None)
+    store = _PagedStore(rows=0, cap=50)
+    verdict, msg = rd._check_page_size_cap(store)
+
+    assert store.rows > rd.PAGE_SIZE_CAP, "seeded population must exceed the cap"
+    assert store.bulk_calls > 0
+    assert verdict is False, f"the cap is on in this store; got {verdict} ({msg})"
+
+
+def test_retire_demo_cap_constant_tracks_the_lab():
+    """`bench/retire_demo.py` is an HTTP client of the lab, so it restates the cap rather than importing the server. A restated limit drifts, and when this one drifts the check silently seeds a population that cannot exercise the rule."""
+    from bench.retire_demo import PAGE_SIZE_CAP
+    from lab.server import PAGE_SIZE_CAP as LAB_CAP
+
+    assert PAGE_SIZE_CAP == LAB_CAP
+
+
+def test_idempotent_create_guard_does_not_pay_for_a_discarded_search():
+    """The guard issued the identical /v1/search twice, discarding the first. A wasted round trip against a 3 req/s tool, invisible in the run's call count because it happens inside .after()."""
+    from shim.guards import IdempotentCreate
+
+    class _Client:
+        def __init__(self):
+            self.posts = 0
+
+        def post(self, _path, json=None):
+            self.posts += 1
+
+            class _R:
+                status_code = 200
+
+                @staticmethod
+                def json():
+                    return {"results": [{"title": "already-there"}]}
+
+            return _R()
+
+    class _Adapter:
+        def __init__(self):
+            self.client = _Client()
+
+    import shim.guards as g
+    real_sleep, g.time.sleep = g.time.sleep, lambda *_a, **_k: None
+    try:
+        a = _Adapter()
+        guard = IdempotentCreate(implements_class="idempotency_hazard",
+                                 parameter=None, note="", name="idempotent_create")
+        out = guard.after("create", {"title": "already-there", "vendor": "V"}, 502, {}, a)
+    finally:
+        g.time.sleep = real_sleep
+
+    assert a.client.posts == 1, f"the guard made {a.client.posts} searches; one answers the question"
+    assert out["committed_despite_error"] is True
