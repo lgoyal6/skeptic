@@ -343,3 +343,13 @@ consequence is not merely slower probes but silently corrupted `_consistency`/
   counts from the actual `guards` list used in the shielded arm (`collect=used`)
   rather than reporting a freshly compiled, all-zero set, which would have silently
   under-reported guard activity.
+
+## Resolution log
+
+The findings above are the record of what the audit found; they are not edited
+after the fact. This section records what was done about each one, and the
+negative control that proves the fix is real rather than described.
+
+| finding | status | negative control |
+| --- | --- | --- |
+| LOW `tests/test_invariants.py` non-strict xfail | fixed | The marker is removed and the test asserts the invariant that now holds (`_apply` drops the verdict and records `probe_uninformative`). Disabling the guard in `reflect/probe.py::_apply` makes the test fail; restoring it makes it pass. The suite reports a normal pass, not `1 xpassed`. |
