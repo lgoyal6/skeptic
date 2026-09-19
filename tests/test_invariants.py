@@ -490,3 +490,121 @@ def test_replay_total_does_not_double_count():
 
     rep = replay_all(BeliefStore("lab"))
     assert rep["total_wasted_calls_deduped"] <= rep["total_wasted_calls"]
+
+
+# ---------------------------------------------------------------------------
+# Status-blindness in the probe templates -- the same vacuous-measurement bug
+# class, one layer in from the four above. An error body is still a dict, so a
+# 429 or a 502 reads as "the field came back null" / "the row count changed"
+# unless the template checks the status first.
+# ---------------------------------------------------------------------------
+
+
+class _StubAdapter:
+    """Returns a scripted (status, body) per operation. No network, no lab."""
+
+    def __init__(self, search=None, create=None):
+        self._search = list(search or [])
+        self._create = list(create or [])
+        self.calls: list[str] = []
+
+    def search(self, **_kw):
+        self.calls.append("search")
+        return self._search.pop(0)
+
+    def create(self, **_kw):
+        self.calls.append("create")
+        return self._create.pop(0)
+
+
+def test_timing_rate_limited_read_is_not_eventual_consistency():
+    """A 429 on one of the two reads makes `before != after` true for a store that never changed; a failed read must be uninformative, not evidence of lag."""
+    from reflect.templates import _timing
+
+    a = _StubAdapter(search=[
+        (200, {"results": [{"id": str(i)} for i in range(12)]}),
+        (429, {"error": "rate_limited", "message": "too many requests"}),
+    ])
+    obs = _timing(a, {"wait_s": 0.0, "base": {"filter": {"vendor": "V"}, "page_size": 50}})
+
+    assert obs.facts["usable"] is False
+    assert obs.facts["changed"] is None, "a failed read may not report a change"
+    assert obs.facts["after_status"] == 429
+    assert _uninformative(obs) is True, "the pipeline guard has to be able to see this"
+
+
+def test_timing_two_good_reads_still_report_the_change():
+    """The status check must not neuter the template: two successful reads that genuinely differ still report lag."""
+    from reflect.templates import _timing
+
+    a = _StubAdapter(search=[
+        (200, {"results": [{"id": "1"}]}),
+        (200, {"results": [{"id": "1"}, {"id": "2"}, {"id": "3"}]}),
+    ])
+    obs = _timing(a, {"wait_s": 0.0, "base": {"filter": {"vendor": "V"}, "page_size": 50}})
+
+    assert obs.facts["usable"] is True
+    assert obs.facts["changed"] is True
+    assert obs.facts["delta"] == 2
+    assert _uninformative(obs) is False
+
+
+def test_boundary_create_sweep_with_no_committed_row_observed_nothing():
+    """Per-row `usable: False` stops one bad create reading as coercion, but a sweep where EVERY create failed carries no `returned` key for the all-zero check to find, so it needs its own uninformative signal."""
+    from reflect.templates import _boundary
+
+    a = _StubAdapter(create=[(429, {"error": "rate_limited"})] * 4)
+    obs = _boundary(a, {"op": "create", "param": "title", "values": [1, 10, 50, 200]})
+
+    assert obs.facts["usable_rows"] == 0
+    assert all(r["stored"] is None and r["usable"] is False for r in obs.facts["sweep"])
+    assert _uninformative(obs) is True, "a sweep that committed nothing measured nothing"
+
+
+def test_boundary_create_sweep_with_one_good_row_is_still_evidence():
+    """One survivor is enough to keep the experiment: the guard must fire on nothing-committed, not on anything-failed."""
+    from reflect.templates import _boundary
+
+    a = _StubAdapter(create=[
+        (502, {"error": "bad_gateway"}),
+        (200, {"title": "x" * 255}),
+        (429, {"error": "rate_limited"}),
+        (502, {"error": "bad_gateway"}),
+    ])
+    obs = _boundary(a, {"op": "create", "param": "title",
+                        "values": ["x" * 10, "x" * 400, "x" * 500, "x" * 600]})
+
+    assert obs.facts["usable_rows"] == 1
+    assert _uninformative(obs) is False
+    good = [r for r in obs.facts["sweep"] if r["usable"]]
+    assert good[0]["stored"] == 255, "the one successful create still reports truncation"
+
+
+def test_consistency_502_after_commit_cannot_confirm_silent_coercion():
+    """The lab 502s on ~5% of creates by design, and its error body is a dict, so every field sent reads back as `stored: null` -- the exact shape of real silent-coercion evidence. Fixed upstream; this locks it down."""
+    from reflect.templates import _consistency
+
+    a = _StubAdapter(create=[(502, {"error": "bad_gateway", "message": "upstream failure"})])
+    obs = _consistency(a, {"fields": {"title": "victim", "amount": 999}, "vendor": "V"})
+
+    assert obs.facts["usable"] is False
+    assert obs.facts["create_status"] == 502
+    assert "mismatches" not in obs.facts, "a failed create may not report field mismatches"
+    assert _uninformative(obs) is True
+    assert a.calls == ["create"], "a failed create must not be read back"
+
+
+def test_consistency_successful_create_still_reports_real_coercion():
+    """The status check must not blind the template to the coercion it exists to find."""
+    from reflect.templates import _consistency
+
+    class _A(_StubAdapter):
+        def get(self, _id):
+            return 200, {"id": "i1", "title": "kept", "due_date": None}
+
+    a = _A(create=[(200, {"id": "i1", "title": "kept", "due_date": None})])
+    obs = _consistency(a, {"fields": {"title": "kept", "due_date": "1969-07-20"}, "vendor": "V"})
+
+    assert obs.facts["echo_matches_sent"] is False
+    assert obs.facts["mismatches"]["due_date"] == {"sent": "1969-07-20", "stored": None}
+    assert _uninformative(obs) is False

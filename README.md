@@ -20,7 +20,7 @@ The honest headline, verified at the end of the build:
 | false beliefs | 0 |
 | recall, observable | 0.38 (5 of 13) |
 | confirmed beliefs | 6 |
-| invariant tests | 27 passed |
+| invariant tests | 33 passed |
 
 **Earlier in the build these numbers were higher, and they were withdrawn.**
 Precision touched 1.00 over five confirmed beliefs. Then an adversarial

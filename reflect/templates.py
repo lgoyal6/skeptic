@@ -136,17 +136,37 @@ def _boundary(a: LabAdapter, p: dict[str, Any]) -> Observation:
     ceiling = max(returned) if returned else None
     saturates = len(set(returned[-2:])) == 1 if len(returned) >= 2 else False
 
+    facts: dict[str, Any] = {
+        "population": populated,
+        "sweep": rows,
+        "ceiling": ceiling,
+        "saturates_at_ceiling": saturates,
+        "tracks_request": returned == sorted(returned) and not saturates,
+    }
+
+    # Labelling each failed create `usable: False` keeps one bad row from
+    # reading as coercion, but it does not cover the case where EVERY create
+    # failed: the sweep then contains no `returned` key at all, so the
+    # all-zero check in `_facts_uninformative` finds nothing to look at and
+    # the observation sails through as if it had measured something. A sweep
+    # with no usable row measured nothing, and has to say so in the one key
+    # that guard reads.
+    if op != "search":
+        usable = [r for r in rows if r.get("usable")]
+        facts["usable_rows"] = len(usable)
+        if not usable:
+            statuses = sorted({r.get("status") for r in rows})
+            facts["error"] = (
+                f"every create in the sweep failed (statuses {statuses}); "
+                f"no evidence about how {param} is stored"
+            )
+            narrative.append(f"all {len(rows)} creates failed; sweep carries no signal")
+
     return Observation(
         template="boundary",
         params=p,
         calls=len(values),
-        facts={
-            "population": populated,
-            "sweep": rows,
-            "ceiling": ceiling,
-            "saturates_at_ceiling": saturates,
-            "tracks_request": returned == sorted(returned) and not saturates,
-        },
+        facts=facts,
         narrative=narrative,
     )
 
@@ -173,14 +193,35 @@ def _timing(a: LabAdapter, p: dict[str, Any]) -> Observation:
     sc1, b1 = a.search(**base)
     n1 = len((b1 or {}).get("results", [])) if sc1 == 200 else None
 
+    # The same status-blindness as the create templates, one family over. If
+    # exactly one of the two reads was rate-limited its count is None, and
+    # `n0 != n1` is then True for a store that did not change at all -- a 429
+    # wearing the costume of eventual consistency. Only two successful reads
+    # can answer the question this template exists to ask.
+    facts: dict[str, Any] = {
+        "before": n0, "after": n1, "waited_s": wait_s,
+        "requested_wait_s": requested, "wait_truncated": requested > wait_s,
+        "before_status": sc0, "after_status": sc1,
+    }
+    if n0 is None or n1 is None:
+        failed = [f"before=HTTP {sc0}" if n0 is None else None,
+                  f"after=HTTP {sc1}" if n1 is None else None]
+        detail = ", ".join(f for f in failed if f)
+        facts.update({
+            "usable": False, "changed": None, "delta": None,
+            "error": f"a read failed ({detail}); no evidence about change over time",
+        })
+        return Observation(
+            template="timing", params=p, calls=2, facts=facts,
+            narrative=[f"read failed ({detail}); nothing can be concluded about lag"],
+        )
+
+    facts.update({"usable": True, "changed": n0 != n1, "delta": n1 - n0})
     return Observation(
         template="timing",
         params=p,
         calls=2,
-        facts={"before": n0, "after": n1, "waited_s": wait_s,
-               "requested_wait_s": requested,
-               "wait_truncated": requested > wait_s, "changed": n0 != n1,
-               "delta": (n1 - n0) if (n0 is not None and n1 is not None) else None},
+        facts=facts,
         narrative=[f"{n0} rows, waited {wait_s}s, then {n1} rows"],
     )
 
