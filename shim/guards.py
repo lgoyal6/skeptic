@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from agent.beliefs import Belief, BeliefStore, Status
+from agent.contract import DOC_SPEC
 
 
 @dataclass
@@ -322,6 +323,17 @@ class SortByEdited(Guard):
         return body
 
 
+# Sentinel for the one registry entry whose parameter is not a fixed field of
+# the documented surface: the field name is whatever the caller happened to
+# send, so the belief is matched on its evidence instead.
+UNKNOWN_UPDATE_FIELD = "<unknown-update-field>"
+
+# What the docs promise `update` will echo. Imported rather than restated,
+# because a second copy of the schema is a second thing to keep in sync, and
+# the failure mode when it drifts is silent: the guard stops compiling.
+DOCUMENTED_FIELDS = frozenset(DOC_SPEC["promises"]["echo_fields"])
+
+
 # class -> the guard that implements it, plus the parameter it applies to
 REGISTRY: list[tuple[str, str | None, type[Guard], dict[str, Any]]] = [
     ("silent_truncation", "page_size", ClampPageSize, {"name": "clamp_page_size"}),
@@ -334,14 +346,27 @@ REGISTRY: list[tuple[str, str | None, type[Guard], dict[str, Any]]] = [
     ("mislabelled_semantics", "sort", SortByEdited, {"name": "sort_by_created"}),
     ("rate_limit", None, Throttle, {"name": "throttle"}),
     ("silent_coercion", "due_date", NormaliseDate, {"name": "reject_pre_epoch_date"}),
-    # Matched on operation rather than a literal field name. It used to be
-    # pinned to "not_a_real_field", the name one hardcoded recon probe happens
-    # to use, so the same rule discovered by any other path compiled to no
-    # guard at all despite being correctly confirmed and correctly scored.
-    ("silent_coercion", "__update_any__", RejectUnknownUpdateField,
+    # Matched on the belief's own wire evidence rather than a literal field
+    # name. It was pinned to "not_a_real_field", the name one hardcoded recon
+    # probe happens to use, so the same rule discovered by any other path
+    # compiled to no guard at all despite being correctly confirmed and
+    # correctly scored. See UNKNOWN_UPDATE_FIELD in compile_guards.
+    ("silent_coercion", UNKNOWN_UPDATE_FIELD, RejectUnknownUpdateField,
      {"name": "reject_unknown_update_field"}),
     ("silent_truncation", "title", TruncateTitle, {"name": "warn_title_truncation"}),
 ]
+
+
+def _minting_kind(b: Belief) -> str:
+    """The anomaly kind the wire evidence actually showed, or "" if unrecorded.
+
+    A belief records its minting signature as `operation.parameter.kind`. That
+    kind is the only durable trace of what the tool actually did, which is why
+    `reflect/probe.py` already uses it to stop the verdict step restating a
+    belief's class or parameter into something the evidence never supported.
+    """
+    sig = next((h.get("detail") for h in b.history if h.get("event") == "signature"), "")
+    return sig.split(".", 2)[2] if str(sig).count(".") >= 2 else ""
 
 
 def compile_guards(store: BeliefStore, only_confirmed: bool = True) -> list[Guard]:
@@ -349,20 +374,38 @@ def compile_guards(store: BeliefStore, only_confirmed: bool = True) -> list[Guar
     beliefs = store.active() if only_confirmed else store.ordered()
     out: list[Guard] = []
     seen: set[str] = set()
-    known_fields = {"title", "amount", "due_date", "status", "assignee", "vendor"}
     for b in beliefs:
         for cls, param, klass, kw in REGISTRY:
             if b.cls != cls:
                 continue
-            if param == "__update_any__":
-                # any belief about a field the schema does not define
-                if b.operation != "update" or b.parameter in known_fields or not b.parameter:
+            parameter = param
+            if param == UNKNOWN_UPDATE_FIELD:
+                # This rule's parameter is whatever key the caller happened to
+                # send that the schema does not define, so there is no literal
+                # to match. What identifies it is the operation plus the wire
+                # evidence: a `silent_ignore` on `update` IS "PATCH accepted a
+                # field it promised to reject". Ground truth already treats
+                # this rule's parameter as a wildcard for exactly this reason,
+                # which is how a belief could score correctly and still compile
+                # to nothing.
+                if b.operation != "update" or not b.parameter:
                     continue
+                kind = _minting_kind(b)
+                if kind:
+                    if kind != "silent_ignore":
+                        continue
+                elif b.parameter in DOCUMENTED_FIELDS:
+                    # No signature recorded (a hand-built or imported belief).
+                    # Fall back to the documented surface: a field the docs do
+                    # not promise to echo is an unknown field.
+                    continue
+                # Report the field actually observed, not the sentinel.
+                parameter = b.parameter
             elif param is not None and b.parameter != param:
                 continue
             if kw["name"] in seen:
                 continue
-            g = klass(implements_class=cls, parameter=param, note=b.belief[:120], **kw)
+            g = klass(implements_class=cls, parameter=parameter, note=b.belief[:120], **kw)
             out.append(g)
             seen.add(kw["name"])
     return out

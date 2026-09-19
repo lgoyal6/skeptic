@@ -689,3 +689,78 @@ def test_bursting_probe_takes_the_budget_instead_of_racing_siblings():
 
     assert order[0] == "burst-done", "a sibling sent while the burst held the budget"
     assert order == ["burst-done", "sibling"]
+
+
+# ---------------------------------------------------------------------------
+# Guard derivation from evidence. `unknown_field_ignored` is the one rule
+# whose parameter is not a fixed field of the documented surface -- it is
+# whatever key the caller happened to send -- so matching it on a literal
+# means the guard compiles only for beliefs minted by one code path.
+# ---------------------------------------------------------------------------
+
+
+def _unknown_field_belief(tmp_path, parameter: str, signature: str | None):
+    from agent.beliefs import Belief, BeliefStore
+
+    store = BeliefStore("lab", root=tmp_path / "beliefs")
+    b = Belief(
+        id=f"lab.update.{parameter}", tool="lab", operation="update",
+        cls="silent_coercion", parameter=parameter,
+        doc_claims="PATCH with an unknown field returns 400 unknown_field",
+        belief="PATCH accepts unknown fields with 200 and silently discards them",
+    )
+    store.add(b)
+    if signature:
+        b.note("signature", signature)
+    b.confirm("probe0")
+    return store
+
+
+def _names(store):
+    return [g.name for g in compile_guards(store)]
+
+
+def test_unknown_field_guard_compiles_for_any_field_name(tmp_path):
+    """Pinned to the literal `not_a_real_field`, a correctly confirmed and correctly scored belief compiled to zero enforcement whenever the run used a different field name -- which every path except one hardcoded recon probe does."""
+    store = _unknown_field_belief(
+        tmp_path, "nonexistent_field", "update.nonexistent_field.silent_ignore")
+    assert "reject_unknown_update_field" in _names(store)
+
+
+def test_unknown_field_guard_still_compiles_for_the_original_probe_name(tmp_path):
+    """The belief the recon path actually mints must keep working."""
+    store = _unknown_field_belief(
+        tmp_path, "not_a_real_field", "update.not_a_real_field.silent_ignore")
+    assert "reject_unknown_update_field" in _names(store)
+
+
+def test_unknown_field_guard_is_matched_on_evidence_not_a_field_blacklist(tmp_path):
+    """The discriminator is the wire evidence (`silent_ignore` on `update`), not "is this name absent from a list I wrote down" -- so a documented field whose evidence really is silent_ignore still compiles."""
+    store = _unknown_field_belief(tmp_path, "assignee", "update.assignee.silent_ignore")
+    assert "reject_unknown_update_field" in _names(store)
+
+
+def test_unknown_field_guard_refuses_a_belief_whose_evidence_is_something_else(tmp_path):
+    """Compiling from evidence has to cut both ways: a silent_coercion belief on update whose anomaly was a type coercion is a different defect and must not compile this guard."""
+    store = _unknown_field_belief(tmp_path, "amount", "update.amount.type_coercion")
+    assert "reject_unknown_update_field" not in _names(store)
+
+
+def test_unknown_field_guard_does_not_leak_its_sentinel_into_the_manifest(tmp_path):
+    """The exported guard manifest is a published artifact; an internal matching sentinel appearing as the guard's parameter would be a lie about what was observed."""
+    from shim.guards import UNKNOWN_UPDATE_FIELD, guard_report
+
+    store = _unknown_field_belief(
+        tmp_path, "nonexistent_field", "update.nonexistent_field.silent_ignore")
+    row = next(r for r in guard_report(compile_guards(store))
+               if r["guard"] == "reject_unknown_update_field")
+    assert row["parameter"] == "nonexistent_field"
+    assert UNKNOWN_UPDATE_FIELD not in str(row)
+
+
+def test_guard_field_list_is_not_a_second_copy_of_the_schema():
+    """The fallback for a belief with no recorded signature reads the documented surface itself. A hand-maintained duplicate drifts, and the failure when it does is silent: the guard stops compiling."""
+    from agent.contract import DOC_SPEC
+    from shim.guards import DOCUMENTED_FIELDS
+
+    assert DOCUMENTED_FIELDS == frozenset(DOC_SPEC["promises"]["echo_fields"])
