@@ -179,14 +179,11 @@ class IdempotentCreate(Guard):
             return body
         self.fired += 1
         time.sleep(2.3)
-        try:
-            sc, found = adapter.client.post(
-                "/v1/search",
-                json={"filter": {"vendor": vendor} if vendor else {}, "page_size": 50,
-                      "include_archived": True},
-            ).status_code, None
-        except Exception:
-            return body
+        # This used to issue the identical search twice, computing a status
+        # into `sc` and a `found` that was unconditionally None, then throwing
+        # both away and asking again. A wasted round trip against a 3 req/s
+        # tool, and invisible in the run's call count because it happens
+        # inside a guard's .after() rather than through the adapter.
         try:
             r = adapter.client.post(
                 "/v1/search",
