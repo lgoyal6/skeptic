@@ -22,6 +22,7 @@ from typing import Any, Callable
 
 import httpx
 
+from agent.adapters.budget import RateBudget
 from agent.contract import Anomaly, Call, ContractLayer
 
 BASE = "http://127.0.0.1:8077"
@@ -37,6 +38,7 @@ class LabAdapter:
         guards: list[Any] | None = None,
         runs_dir: str | Path = "runs",
         min_interval: float = 0.0,
+        budget: RateBudget | None = None,
     ) -> None:
         self.run_id = run_id
         # Pacing between calls. An experiment must isolate its variable: a
@@ -45,6 +47,12 @@ class LabAdapter:
         # cap it was sent to measure. Probes pace themselves; header_burst
         # sets this to 0 because throttling is the thing it is measuring.
         self.min_interval = min_interval
+        # `min_interval` paces THIS adapter. When several adapters share one
+        # tool process the limit they are pacing against is shared too, and a
+        # per-adapter pacer cannot see its siblings. A `RateBudget` passed in
+        # here is that shared view; without one the adapter falls back to
+        # pacing itself, which is correct only when it really is alone.
+        self.budget = budget
         self._last_call_t = 0.0
         self.client = httpx.Client(base_url=base, timeout=30.0)
         self.contract = ContractLayer()
@@ -79,7 +87,9 @@ class LabAdapter:
             self._write(rec)
             return 0, {"refused_by_guard": refusal}
 
-        if self.min_interval > 0:
+        if self.budget is not None:
+            self.budget.acquire()
+        elif self.min_interval > 0:
             gap = time.time() - self._last_call_t
             if gap < self.min_interval:
                 time.sleep(self.min_interval - gap)

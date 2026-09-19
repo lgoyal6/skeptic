@@ -608,3 +608,84 @@ def test_consistency_successful_create_still_reports_real_coercion():
     assert obs.facts["echo_matches_sent"] is False
     assert obs.facts["mismatches"]["due_date"] == {"sent": "1969-07-20", "stored": None}
     assert _uninformative(obs) is False
+
+
+# ---------------------------------------------------------------------------
+# The shared request budget. A per-adapter pacer is computed from the tool's
+# limit under the assumption the adapter is alone; concurrency makes that
+# assumption false, and the limit is global, so the enforcement must be too.
+# ---------------------------------------------------------------------------
+
+
+def test_four_workers_stay_within_one_global_budget():
+    """Four adapters each individually paced under a 3 req/s limit summed to ~10 req/s and 72% 429s. Sharing one budget, no 1s window may ever hold more than 3 sends."""
+    import threading
+    import time as _time
+
+    from agent.adapters.budget import RateBudget
+
+    budget = RateBudget(n=3, window_s=1.0, safety_s=0.0)
+    sends: list[float] = []
+    lock = threading.Lock()
+
+    def worker():
+        for _ in range(3):
+            budget.acquire()
+            with lock:
+                sends.append(_time.monotonic())
+
+    threads = [threading.Thread(target=worker) for _ in range(4)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert len(sends) == 12
+    sends.sort()
+    # The server evicts entries strictly older than the window, then rejects
+    # at >= n. So any 4 sends inside one window is a 429 on the 4th.
+    worst = max(
+        sum(1 for s in sends if start <= s < start + 1.0) for start in sends
+    )
+    assert worst <= 3, f"{worst} sends landed in one 1s window; the tool allows 3"
+
+
+def test_budget_does_not_serialise_below_the_limit():
+    """The guard must cost nothing when the fleet is already under budget, or it is just a slower pacer."""
+    import time as _time
+
+    from agent.adapters.budget import RateBudget
+
+    budget = RateBudget(n=3, window_s=1.0, safety_s=0.0)
+    t0 = _time.monotonic()
+    for _ in range(3):
+        budget.acquire()
+    assert _time.monotonic() - t0 < 0.1, "the first n calls in a window must not block"
+    assert budget.waits == 0
+
+
+def test_bursting_probe_takes_the_budget_instead_of_racing_siblings():
+    """header_burst exists to trip the limiter, so it cannot run under a budget that prevents tripping it -- but a burst fired while siblings send makes THEIR 429s, so it holds the budget rather than bypassing it."""
+    import threading
+    import time as _time
+
+    from agent.adapters.budget import RateBudget
+
+    budget = RateBudget(n=3, window_s=1.0, safety_s=0.0)
+    order: list[str] = []
+    released = threading.Event()
+
+    def sibling():
+        budget.acquire()
+        order.append("sibling")
+
+    with budget.exclusive():
+        t = threading.Thread(target=sibling)
+        t.start()
+        _time.sleep(0.2)
+        order.append("burst-done")
+        released.set()
+    t.join(timeout=5.0)
+
+    assert order[0] == "burst-done", "a sibling sent while the burst held the budget"
+    assert order == ["burst-done", "sibling"]

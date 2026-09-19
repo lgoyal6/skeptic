@@ -22,6 +22,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
+from agent.adapters.budget import RateBudget
 from agent.beliefs import BeliefStore, Status
 from agent.llm import build
 from reflect.probe import _apply, run_probe
@@ -54,16 +55,23 @@ def groups(store: BeliefStore) -> list[list[Any]]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    # The tool throttles at 3 req/s. Four workers each pacing themselves at
-    # 0.4s is ~10 req/s in aggregate, and the audit measured 72% of calls
-    # returning 429 at that setting: the probes were largely measuring the
-    # rate limiter rather than their own variable. Two workers keeps the fleet
-    # under the limit while still overlapping the model waits, which are where
-    # the wall-clock actually goes.
-    ap.add_argument("--workers", type=int, default=2)
+    # The tool throttles at 3 req/s, globally, across every client hitting the
+    # process. Each adapter used to pace itself at 0.4s as if it were the only
+    # one, so four workers put ~10 req/s on a budget of 3 and the audit
+    # measured 23 of 32 calls coming back 429: the probes were largely
+    # measuring the rate limiter rather than their own variable. Dropping the
+    # worker count shrank the overshoot without removing it -- two workers at
+    # 0.4s is still ~5 req/s -- because a per-adapter pacer cannot see its
+    # siblings. One `RateBudget`, shared by reference, can, so the worker
+    # count is now a concurrency choice rather than a rate-limit workaround.
+    ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--max-groups", type=int, default=20)
     ap.add_argument("--beliefs", default="beliefs")
+    ap.add_argument("--rate-limit", type=int, default=3,
+                    help="requests per second the whole fleet may spend (the tool's global limit)")
     a = ap.parse_args()
+
+    budget = RateBudget(n=a.rate_limit, window_s=1.0)
 
     ex, refl, usage = build()
     store = BeliefStore("lab", root=a.beliefs)
@@ -72,7 +80,7 @@ def main() -> int:
         say("  nothing open to settle")
         return 0
 
-    say(f"  {len(gs)} rival groups, {a.workers} at a time")
+    say(f"  {len(gs)} rival groups, {a.workers} at a time, {a.rate_limit} req/s shared")
     t0 = time.time()
     done: list[tuple[Any, list[Any]]] = []
 
@@ -80,7 +88,8 @@ def main() -> int:
         pid = f"probe-{i:03d}"
         vendor = f"Probe{i:02d}"
         say(f"    [{pid}] {len(group)} rivals -> {group[0].cls}")
-        rec = run_probe(refl, store, group, probe_id=pid, vendor=vendor, apply=False)
+        rec = run_probe(refl, store, group, probe_id=pid, vendor=vendor,
+                        apply=False, budget=budget)
         verdicts = [v.get("verdict") for v in rec.verdicts]
         say(f"    [{pid}] {rec.template} {rec.calls} calls {rec.wall_s:.0f}s -> {verdicts}")
         return rec, group
@@ -103,6 +112,7 @@ def main() -> int:
     say(f"\n  settled {len(done)} groups in {time.time() - t0:.0f}s")
     say(f"  beliefs: {fresh.counts()}")
     say(f"  reflector: {usage.by_role.get('reflector')}")
+    say(f"  request budget: {budget.stats()}")
     return 0
 
 
