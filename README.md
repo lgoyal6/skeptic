@@ -20,7 +20,7 @@ The honest headline, verified at the end of the build:
 | false beliefs | 0 |
 | recall, observable | 0.38 (5 of 13) |
 | confirmed beliefs | 6 |
-| invariant tests | 33 passed |
+| invariant tests | 36 passed |
 
 **Earlier in the build these numbers were higher, and they were withdrawn.**
 Precision touched 1.00 over five confirmed beliefs. Then an adversarial
@@ -202,7 +202,26 @@ page-size check measured an unseeded store, so it reported "cap still present"
 whether or not the rule was on), that the unknown-field guard was pinned to one
 hardcoded field name, and that `bench/settle.py --workers 4` produced 72% 429s
 against a 3 req/s limit, which means probes were substantially measuring the
-rate limiter rather than their own variable. The default is now 2 workers.
+rate limiter rather than their own variable.
+
+Dropping the default to 2 workers shrank that overshoot without removing it:
+two adapters each correctly paced at 0.4s still put ~5 req/s on a budget of 3,
+because a pacer computed from the tool's limit assumes it is the only client
+and no per-adapter pacer can see its siblings. The limit is global, so the
+enforcement is now global too -- one `RateBudget` shared by reference across
+every adapter in a settle run. Measured against an isolated lab, four workers
+issuing eight calls each:
+
+| | 429s | elapsed |
+| --- | --- | --- |
+| per-adapter pacing (before) | 23/32 (71%) | 2.8s |
+| one shared 3 req/s budget | 0/32 (0%) | 10.6s |
+
+The run got slower, and that is the honest shape of the fix: the fast version
+was fast because two thirds of its calls were being rejected. 32 calls at
+3 req/s takes 10.7s, and now they are 32 observations instead of 9. The
+default is back to 4 workers, because the worker count is now a concurrency
+choice rather than a rate-limit workaround.
 
 ### Unlearning
 

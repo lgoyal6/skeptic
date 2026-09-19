@@ -16,10 +16,12 @@ from __future__ import annotations
 
 import json
 import time
+from contextlib import nullcontext
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any
 
+from agent.adapters.budget import RateBudget
 from agent.adapters.lab import LabAdapter
 from agent.beliefs import Belief, BeliefStore, Status
 from agent.llm import LLM
@@ -265,6 +267,7 @@ def run_probe(
     budget_calls: int = 5,
     adversarial: bool = False,
     apply: bool = True,
+    budget: RateBudget | None = None,
 ) -> ProbeRecord:
     """Design, run and judge one experiment.
 
@@ -281,9 +284,22 @@ def run_probe(
     # Everything else paces itself so the rate limiter does not contaminate
     # the variable under test.
     pace = 0.0 if tmpl.name == "header_burst" else 0.4
-    adapter = LabAdapter(run_id=probe_id, runs_dir=runs_dir, min_interval=pace)
+
+    # A shared budget, when one is supplied, replaces the per-adapter pacer:
+    # concurrent probes hit one tool process and one global limit, which a
+    # pacer that cannot see its siblings has no way to respect. header_burst
+    # is the exception in both worlds -- tripping the limiter IS its
+    # measurement -- so it takes the budget exclusively instead of racing
+    # siblings whose 429s would then be its own doing.
+    bursting = tmpl.name == "header_burst"
+    adapter = LabAdapter(
+        run_id=probe_id, runs_dir=runs_dir, min_interval=pace,
+        budget=None if bursting else budget,
+    )
+    hold = budget.exclusive() if (budget is not None and bursting) else nullcontext()
     try:
-        obs: Observation = tmpl.run(adapter, plan.get("params") or {})
+        with hold:
+            obs: Observation = tmpl.run(adapter, plan.get("params") or {})
     except Exception as e:  # a probe that blows up is a failed probe, not a crash
         obs = Observation(
             template=tmpl.name,
