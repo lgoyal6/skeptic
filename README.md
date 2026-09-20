@@ -14,13 +14,23 @@ The point of the exercise is not the toy API. It is that "trust the documentatio
 
 The honest headline, verified at the end of the build:
 
-| | |
+| against the lab (live, model calls) | |
 | --- | --- |
 | precision | 0.83 |
 | false beliefs | 0 |
 | recall, observable | 0.38 (5 of 13) |
 | confirmed beliefs | 6 |
-| invariant tests | 48 passed |
+
+| against 8 real public APIs (offline replay) | |
+| --- | --- |
+| tools / fixtures / exchanges | 8 / 10 / 54 |
+| documented claims under test | 20 |
+| confirmed mismatches | 11 |
+| claims the tool honours (controls) | 7 |
+| claims the evidence cannot settle (abstentions) | 2 |
+| guards compiled, unguarded mismatches | 11, **0** |
+| tests | 254 passed |
+| mutations killed | 25 / 25 |
 
 **Earlier in the build these numbers were higher, and they were withdrawn.**
 Precision touched 1.00 over five confirmed beliefs. Then an adversarial
@@ -34,6 +44,65 @@ That fall is the most interesting result here. A precision of 1.00 that cannot
 survive one pass of adversarial review was worth less than 0.75 that can, and a
 project about documentation which lies does not get to keep a number it knows
 is unsupported.
+
+## Five minutes, offline, from a clean clone
+
+No network, no credentials, no model calls, no paid anything.
+
+```bash
+UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen --group dev
+make offline
+```
+
+That runs the suite, replays all ten fixtures against their recorded hashes,
+runs the regression gate, compares four probe-selection policies, replays a
+real API version change, and prints the full evaluation record.
+
+The fixtures are recordings of eight real public APIs -- Open-Meteo, Open
+Library, Frankfurter (two versions), GitHub, Wikipedia's Action API, PokeAPI,
+REST Countries, and this repo's own lab. Live services are called exactly
+once, by `make capture`, to make a redacted recording; everything else reads
+the recording. That is what makes these numbers reproducible by someone who is
+not sitting at the machine that produced them -- a property the counterfactual
+replay in this README conspicuously did not have, and which is described at
+"Counterfactual replay" below.
+
+| what it shows | command |
+| --- | --- |
+| one mismatch from observation to guard | [`docs/ONE_MISMATCH.md`](docs/ONE_MISMATCH.md) |
+| the full evaluation, including what lost | [`docs/EVALUATION.md`](docs/EVALUATION.md) |
+| the flow, and what the system cannot observe | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| the correctness audit and its resolutions | [`docs/AUDIT.md`](docs/AUDIT.md) |
+
+### What the corpus is for
+
+Three of the eight APIs clamp a page-size parameter. The lab clamps
+`page_size` to 50 silently. GitHub clamps `per_page` to 100 silently.
+MediaWiki clamps `srlimit` to 500 **and returns a `warnings` object naming the
+parameter, the offending value and the permitted range.** The clamp is
+identical; the honesty is not, and a checker that fired on all three would be
+detecting clamping rather than dishonesty. Six of the twenty claims in the
+corpus are tools behaving correctly, and they are there so precision means
+something.
+
+Two claims cannot be settled from a recording at all -- GitHub's rate-limit
+window reset names a time an hour away, and REST Countries returns
+byte-identical bodies for every field list because a deprecation
+short-circuits before field handling. Both abstain. Neither compiles a guard.
+
+### Results that went the wrong way
+
+Kept, because dropping them would make the rest less trustworthy:
+
+- **Expected information gain lost to the simpler greedy selector**: 3.90
+  calls per run against 2.90, at identical success and identical (zero) false
+  beliefs. The simpler policy is retained, and the loss is asserted in a test
+  so it cannot quietly stop being true.
+- **Probe cost is untested**: every recorded exchange costs one call, so the
+  cost term in the information-gain score is constant across candidates.
+- The historical A/B headline (35% fewer calls, 37% fewer tokens, 71% lower
+  wall time) is **not** reproduced by any of this. It needs live model calls
+  and remains historical until re-run.
 
 ## How it works
 
