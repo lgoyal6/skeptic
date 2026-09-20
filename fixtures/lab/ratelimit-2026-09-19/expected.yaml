@@ -1,0 +1,17 @@
+tool: lab
+version: ratelimit-2026-09-19
+qualitative: false
+answer_key_source: lab/ground_truth.yaml rule `rate_limit_flaky_header`; the lab's
+  own answer key.
+rules:
+- id: rate_limit_flaky_header
+  mismatch_class: rate-limit
+  observable: true
+  class: rate_limit
+  operation: search
+  parameter: null
+  doc_claims: no documented rate limit
+  truth: 3 requests per second; excess returns 429, and Retry-After is present on
+    only ~60% of 429 responses
+  probe_template: header_burst
+  difficulty: medium

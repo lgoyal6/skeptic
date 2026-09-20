@@ -1,0 +1,46 @@
+{
+  "tool": "openlibrary",
+  "version": "search-2026-09-19",
+  "endpoint": {
+    "base_url": "https://openlibrary.org",
+    "paths": [
+      "/search.json"
+    ]
+  },
+  "api_version": "search.json",
+  "docs_url": "https://openlibrary.org/dev/docs/api/search",
+  "docs_sha256": "sha256:3f8ccc2a3e6da270c7dfd021c03df8c9e1cc7b37159b08ebcee9effb3c3f1382",
+  "captured_at": "2026-09-20T03:10:36Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "exchanges": 6,
+  "allowed_operations": [
+    "search"
+  ],
+  "methods_used": [
+    "GET"
+  ],
+  "local_target": false,
+  "credential_free": true,
+  "license": {
+    "name": "Open Library / Internet Archive; bibliographic data openly licensed",
+    "terms_url": "https://openlibrary.org/developers/api",
+    "verified_from_terms_page": false,
+    "redistribution": "This fixture holds a minimal excerpt of live responses, captured once for offline regression testing and not redistributed as a dataset. The terms page was not independently parsed during capture, so the boundary is recorded as stated by the source rather than as verified by this project."
+  },
+  "redaction": {
+    "scanned": true,
+    "patterns": "fixtures.format.SECRET_PATTERNS + SENSITIVE_HEADERS",
+    "placeholder": "<redacted> (a constant, so a redaction is never itself a signal)",
+    "findings": []
+  },
+  "raw_capture_sha256": "sha256:a93aeca9b3b86fafc8007fd93b55737b6c1732979ebe1ac69971e812e6956e4b",
+  "traffic_sha256": "sha256:9996273b505fd211daf76cdf251ee80330b191bf54845f57c4d723d1280d437c",
+  "qualitative": false,
+  "mismatch_classes": [
+    "no-mismatch-control",
+    "pagination-cursor"
+  ],
+  "replay_command": "./.venv/bin/python -m bench.replay_corpus --tool openlibrary --version search-2026-09-19",
+  "note": "Does the documented pagination parameter validate its own degenerate value?"
+}

@@ -582,7 +582,17 @@ def replay_belief(belief: Belief, runs_dir: str = "runs") -> dict[str, Any]:
     }
 
 
-def replay_all(store: BeliefStore, runs_dir: str = "runs") -> dict[str, Any]:
+def replay_all(store: BeliefStore, runs_dir: str = "runs",
+               save: bool = True) -> dict[str, Any]:
+    """Replay every confirmed belief against the run logs.
+
+    `save=False` makes this a read: the attribution is computed and returned
+    but not persisted. Reporting with a write side effect is how this module
+    came to overwrite the repository's belief store from a unit test -- and,
+    separately, how running the replay in a checkout with no run logs wrote
+    zeros over every attribution the store held. A function whose name is
+    "replay" should not need a warning label to be called safely.
+    """
     confirmed = [b for b in store.ordered() if b.status is Status.CONFIRMED]
     runs, _ = _load_all_runs(runs_dir)
 
@@ -602,7 +612,8 @@ def replay_all(store: BeliefStore, runs_dir: str = "runs") -> dict[str, Any]:
         total_tokens += rep["tokens_saved_estimate"]
         total_rescued_runs.update(rep["rescued_run_ids"])
 
-    store.save()
+    if save:
+        store.save()
 
     note = None
     if not confirmed:

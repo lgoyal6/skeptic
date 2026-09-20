@@ -1,0 +1,46 @@
+tool: restcountries
+version: v3.1-2026-09-19
+qualitative: false
+answer_key_source: 'Verifiable by anyone: request any v3.1 path and read the HTTP
+  status alongside the body''s `success` field.'
+rules:
+- id: http_200_carries_hard_failure
+  mismatch_class: status-code-mismatch
+  observable: true
+  class: mislabelled_semantics
+  operation: alpha
+  parameter: null
+  doc_claims: 'Standard HTTP semantics: 200 means the request succeeded and the body
+    is the requested country.'
+  truth: Every request returns HTTP 200 with success:false, data:null and a deprecation
+    error. The transport status contradicts the body. A client that branches on status
+    alone treats a retired API as a working one and reads data:null as content.
+  probe_template: consistency
+  difficulty: easy
+- id: deprecation_notice_points_at_itself
+  mismatch_class: semantic-type-correct
+  observable: true
+  class: mislabelled_semantics
+  operation: alpha
+  parameter: null
+  doc_claims: 'An error that names a successor version is actionable: following it
+    resolves the error.'
+  truth: The message instructs the caller to migrate to v5, and the v5 path returns
+    the identical message instructing migration to v5. The remediation is well-formed,
+    type-correct, and circular.
+  probe_template: consistency
+  difficulty: medium
+- id: field_selection_semantics
+  mismatch_class: unobservable
+  observable: false
+  class: none
+  operation: alpha
+  parameter: fields
+  doc_claims: '`?fields=` selects which fields the response carries.'
+  truth: UNOBSERVABLE from this capture. A valid field list, a partially invalid one,
+    and a wholly invalid one produce byte-identical responses, because the deprecation
+    short-circuits before field handling. Nothing distinguishes the inputs, so nothing
+    can be learned; the required outcome is abstention, not a belief inferred from
+    a uniform failure.
+  probe_template: null
+  difficulty: n/a

@@ -1,0 +1,88 @@
+tool: frankfurter
+version: v1-2026-09-19
+api_version: v1
+base_url: https://api.frankfurter.dev
+docs_url: https://frankfurter.dev
+credential_free: true
+pace_s: 1.5
+license:
+  name: Frankfurter, open-source; rates from central bank publications
+  terms_url: https://frankfurter.dev
+  verified_from_terms_page: true
+  redistribution: 'Source states: ''No authentication required. Open-source. Genuinely free, not "free
+    with limits."'' Fixture holds five exchanges captured once for offline regression testing.'
+note: Version A of the temporal pair. Two silent behaviours, both loud in v2.
+docs: "# Frankfurter v1, documentation snapshot\n\nSource: https://frankfurter.dev, https://api.frankfurter.dev/v2/openapi.json\n\
+  Captured: 2026-09-19\nAuthentication: \"No authentication required. Open-source.\"\n\n## Documented\
+  \ promises exercised by this capture\n\n- `base`: the base currency for the returned rates.\n- `symbols`:\
+  \ a comma-separated list of target currencies to filter to. The\n  documentation describes it as a filter\
+  \ over which currencies are returned;\n  it does not say what happens to a code that is not a currency.\n\
+  - A dated request returns the rates for that date, echoed in a `date` field.\n- Rates come from central\
+  \ bank publications, which publish on working days.\n\n## What a caller is entitled to assume\n\nThat\
+  \ asking for a currency that does not exist is an error. The API proves it\ncan tell: an unknown `base`\
+  \ returns 404. An unknown entry in `symbols` returns\n200 with the currency simply absent, so a caller\
+  \ who asked for three and got\ntwo has no signal unless they count.\n\nThat the rates returned are for\
+  \ the date requested. When no rate was published\nfor that date the API returns the most recent published\
+  \ date instead, still\nHTTP 200, and the only indication is that the echoed `date` differs.\n"
+calls:
+- op: rates
+  path: /v1/latest
+  why: baseline, two valid symbols
+  params:
+    base: USD
+    symbols: EUR,GBP
+- op: rates
+  path: /v1/latest
+  why: 'one valid symbol, one that is not a currency: error or silent drop?'
+  params:
+    base: USD
+    symbols: EUR,ZZZ
+- op: rates
+  path: /v1/latest
+  why: 'unknown base: establishes the API CAN reject an unknown currency'
+  params:
+    base: ZZZ
+- op: rates
+  path: /v1/2026-09-13
+  why: 'a Sunday with no published rate: is the requested date echoed?'
+  params:
+    base: USD
+    symbols: EUR
+- op: rates
+  path: /v1/2026-09-11
+  why: the preceding working day, for comparison
+  params:
+    base: USD
+    symbols: EUR
+expected:
+  tool: frankfurter
+  version: v1-2026-09-19
+  qualitative: false
+  answer_key_source: 'Verifiable: compare the symbols requested to the keys of `rates`, and the date in
+    the path to the `date` in the body.'
+  rules:
+  - id: unknown_symbol_silently_dropped
+    mismatch_class: field-omission
+    observable: true
+    class: silent_coercion
+    operation: rates
+    parameter: symbols
+    doc_claims: '`symbols` filters the returned currencies. An unknown currency is an error: an unknown
+      `base` returns 404.'
+    truth: An unknown entry in `symbols` returns HTTP 200 with that currency absent from `rates` and no
+      error field. The same API rejects an unknown `base` with 404, so the inconsistency is between two
+      parameters of one request, not a blanket leniency.
+    probe_template: consistency
+    difficulty: easy
+  - id: non_publication_date_silently_substituted
+    mismatch_class: semantic-type-correct
+    observable: true
+    class: mislabelled_semantics
+    operation: rates
+    parameter: date
+    doc_claims: A dated request returns the rates for that date, and the response echoes the date.
+    truth: A date with no published rate returns HTTP 200 carrying the most recent earlier publication
+      date. Requesting 2026-09-13 (a Sunday) returns date 2026-09-11. A caller who does not compare the
+      echoed date to the one requested silently receives Friday's rates for Sunday. Every field is type-correct.
+    probe_template: consistency
+    difficulty: medium

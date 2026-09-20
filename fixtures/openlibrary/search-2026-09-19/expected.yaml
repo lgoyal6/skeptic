@@ -1,0 +1,32 @@
+tool: openlibrary
+version: search-2026-09-19
+qualitative: false
+answer_key_source: 'Verifiable by anyone: request limit=0 and limit=-5 for the same
+  query and compare statuses and the docs/numFound fields.'
+rules:
+- id: zero_limit_returns_empty_page_with_200
+  mismatch_class: pagination-cursor
+  observable: true
+  class: silent_coercion
+  operation: search
+  parameter: limit
+  doc_claims: '`limit` is the page size for pagination, and the API validates it:
+    limit=-5 is rejected with HTTP 422.'
+  truth: limit=0 is accepted with HTTP 200 and returns an empty `docs` array alongside
+    numFound in the tens of thousands. The API validates negative page sizes but not
+    zero, so the one degenerate value producing a result indistinguishable from 'no
+    matches' is the one that passes validation.
+  probe_template: boundary
+  difficulty: easy
+- id: limit_is_not_capped_at_100
+  mismatch_class: no-mismatch-control
+  observable: true
+  class: none
+  operation: search
+  parameter: limit
+  doc_claims: The documentation states no ceiling on `limit`.
+  truth: 'Held. limit=1000 returns 1000 docs, so there is no silent clamp to discover.
+    A control: a belief claiming one would be false, and this rule exists so that
+    claim scores as false rather than going unchecked.'
+  probe_template: boundary
+  difficulty: easy

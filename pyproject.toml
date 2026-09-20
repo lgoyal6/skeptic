@@ -14,5 +14,14 @@ dependencies = [
 [project.scripts]
 skeptic = "cli:main"
 
+# The test suite could not be run from a clean install of this file: pytest was
+# never declared anywhere, so "the suite passes" was a claim only reproducible
+# on a machine that already happened to have it. Declared here, and locked in
+# uv.lock, so an independent checkout gets the same versions.
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
 [tool.uv]
 package = false

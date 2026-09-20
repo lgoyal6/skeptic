@@ -1,0 +1,47 @@
+tool: frankfurter
+version: v2-2026-09-19
+qualitative: false
+answer_key_source: Verifiable, and directly comparable to v1 because the same five
+  questions are asked.
+supersedes: v1-2026-09-19
+retires:
+- unknown_symbol_silently_dropped
+- non_publication_date_silently_substituted
+rules:
+- id: filter_parameter_renamed
+  mismatch_class: renamed-field
+  observable: true
+  class: none
+  operation: rates
+  parameter: quotes
+  doc_claims: v2 documents `quotes`; v1 documented `symbols`.
+  truth: The same filter is spelled `quotes` in v2 and `symbols` in v1. A client carrying
+    the v1 spelling does not fail loudly -- it sends an unrecognised parameter --
+    which is why the rename is recorded as its own contract change rather than folded
+    into the rejection change.
+  probe_template: consistency
+  difficulty: easy
+- id: unknown_quote_rejected
+  mismatch_class: no-mismatch-control
+  observable: true
+  class: none
+  operation: rates
+  parameter: quotes
+  doc_claims: '`quotes` lists quote currencies to include; 422 is a documented response
+    code.'
+  truth: 'Held. An unknown currency in `quotes` returns 422 ''invalid currency: ZZZ'',
+    and an unknown `base` returns the same. The v1 silent drop is gone and the two
+    parameters agree.'
+  probe_template: consistency
+  difficulty: easy
+- id: requested_date_returned
+  mismatch_class: no-mismatch-control
+  observable: true
+  class: none
+  operation: rates
+  parameter: date
+  doc_claims: '`date` selects a specific date (YYYY-MM-DD).'
+  truth: 'Held. The requested date is returned as requested: 2026-09-13 comes back
+    as 2026-09-13, where v1 substituted 2026-09-11 without saying so.'
+  probe_template: consistency
+  difficulty: easy

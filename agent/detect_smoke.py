@@ -54,7 +54,10 @@ def main() -> int:
     CTL.post("/_control/reset", json={"seed": 1337})
     CTL.post("/_control/rules/rate_limit_flaky_header", json={"enabled": False})
 
-    a = LabAdapter(run_id="detect-smoke", runs_dir="/tmp/skeptic-runs")
+    # A fixed path under /tmp is shared mutable state: two checkouts, two
+    # parallel runs, or two users on one machine write the same file. Keep
+    # scratch inside the checkout that produced it.
+    a = LabAdapter(run_id="detect-smoke", runs_dir="runs/scratch")
     kinds: set[str] = set()
 
     def harvest():

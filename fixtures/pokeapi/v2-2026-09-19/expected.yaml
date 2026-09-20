@@ -1,0 +1,19 @@
+tool: pokeapi
+version: v2-2026-09-19
+qualitative: false
+answer_key_source: 'Verifiable by anyone: compare len(results), count, and next across
+  the three requests.'
+rules:
+- id: pagination_reports_its_own_end
+  mismatch_class: no-mismatch-control
+  observable: true
+  class: none
+  operation: list_pokemon
+  parameter: limit
+  doc_claims: List responses carry count, next, previous and results; limit and offset
+    paginate.
+  truth: 'Held. Requesting more than exists returns every row, count equals the number
+    returned, and next is null. The control for the pagination class: a belief of
+    silent_truncation or of a hidden cap here would be false.'
+  probe_template: boundary
+  difficulty: easy

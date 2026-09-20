@@ -1,0 +1,50 @@
+{
+  "tool": "lab",
+  "version": "seed1337-2026-09-19",
+  "endpoint": {
+    "base_url": "http://127.0.0.1:8077",
+    "paths": [
+      "/v1/bulk_create",
+      "/v1/items",
+      "/v1/search"
+    ]
+  },
+  "api_version": "lab/DOCS.md",
+  "docs_url": "lab/DOCS.md",
+  "docs_sha256": "sha256:640453e4496f5563f536f8ea6c96650309f1a4c2a37d82336f2ad47517fea4bb",
+  "captured_at": "2026-09-20T03:10:14Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "exchanges": 9,
+  "allowed_operations": [
+    "bulk_create",
+    "create",
+    "search"
+  ],
+  "methods_used": [
+    "POST"
+  ],
+  "local_target": true,
+  "credential_free": true,
+  "license": {
+    "name": "This repository's own instrumented lab",
+    "terms_url": "lab/DOCS.md",
+    "verified_from_terms_page": true,
+    "redistribution": "Authored in this repository. No third-party content, no redistribution boundary."
+  },
+  "redaction": {
+    "scanned": true,
+    "patterns": "fixtures.format.SECRET_PATTERNS + SENSITIVE_HEADERS",
+    "placeholder": "<redacted> (a constant, so a redaction is never itself a signal)",
+    "findings": []
+  },
+  "raw_capture_sha256": "sha256:2047d0a8525ea741aacbd3bda3bf3f6d73b32f52fbc0ca3ed44bca448ef72364",
+  "traffic_sha256": "sha256:c92cd0d50f5cb3c0f98244cf2a9df4fc669d42a8ed1df71ee83fdc513136ced3",
+  "qualitative": false,
+  "mismatch_classes": [
+    "field-omission",
+    "pagination-cursor"
+  ],
+  "replay_command": "./.venv/bin/python -m bench.replay_corpus --tool lab --version seed1337-2026-09-19",
+  "note": "The controlled tool, captured through the same driver as the public ones, so the fixture path is exercised against a tool whose answer key is already known."
+}

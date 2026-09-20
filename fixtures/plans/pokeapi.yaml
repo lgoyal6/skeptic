@@ -1,0 +1,63 @@
+tool: pokeapi
+version: v2-2026-09-19
+api_version: v2
+base_url: https://pokeapi.co
+docs_url: https://pokeapi.co/docs/v2
+credential_free: true
+pace_s: 1.5
+license:
+  name: PokeAPI, free public API with a published Fair Use Policy
+  terms_url: https://pokeapi.co/docs/v2
+  verified_from_terms_page: false
+  redistribution: This fixture holds a minimal excerpt of live responses, captured once for offline regression
+    testing and not redistributed as a dataset. The terms page was not independently parsed during capture,
+    so the boundary is recorded as stated by the source rather than as verified by this project.
+note: 'A second honest control, for cursor-style pagination: count, next and results agree.'
+docs: "# PokeAPI v2, documentation snapshot\n\nSource: https://pokeapi.co/docs/v2\nCaptured: 2026-09-19\n\
+  Authentication: none. A Fair Use Policy asks callers to cache locally, which\nis precisely what this\
+  \ fixture does.\n\n## Documented promises exercised by this capture\n\n- Resource lists are paginated\
+  \ with `limit` and `offset`.\n- A list response carries `count` (the total available), `next` and `previous`\n\
+  \  (URLs, or null at the ends), and `results` (the page).\n\n## Why this fixture is a control\n\n`count`\
+  \ is a claim about the whole collection, and `results` is a page of it.\nThat pair is exactly the shape\
+  \ that lets a caller be misled -- Open Library\nreturns `numFound: 48168` with `docs: []` for `limit=0`,\
+  \ and the emptiness\nlooks like absence. PokeAPI is the same shape behaving correctly: asking for\n\
+  more than exists returns everything, `count` equals the number returned, and\n`next` is null because\
+  \ there is genuinely no next page. Pagination that\nreports its own end accurately is the control against\
+  \ which the others are\nmismatches.\n"
+calls:
+- op: list_pokemon
+  path: /api/v2/pokemon
+  why: the documented default page
+  params:
+    limit: 20
+    offset: 0
+- op: list_pokemon
+  path: /api/v2/pokemon
+  why: 'more than exists: does count/next/results stay consistent?'
+  params:
+    limit: 100000
+    offset: 0
+- op: list_pokemon
+  path: /api/v2/pokemon
+  why: a second page, to check offset and previous
+  params:
+    limit: 20
+    offset: 20
+expected:
+  tool: pokeapi
+  version: v2-2026-09-19
+  qualitative: false
+  answer_key_source: 'Verifiable by anyone: compare len(results), count, and next across the three requests.'
+  rules:
+  - id: pagination_reports_its_own_end
+    mismatch_class: no-mismatch-control
+    observable: true
+    class: none
+    operation: list_pokemon
+    parameter: limit
+    doc_claims: List responses carry count, next, previous and results; limit and offset paginate.
+    truth: 'Held. Requesting more than exists returns every row, count equals the number returned, and
+      next is null. The control for the pagination class: a belief of silent_truncation or of a hidden
+      cap here would be false.'
+    probe_template: boundary
+    difficulty: easy

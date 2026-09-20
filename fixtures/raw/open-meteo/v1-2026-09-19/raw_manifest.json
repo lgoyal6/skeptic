@@ -1,0 +1,10 @@
+{
+  "tool": "open-meteo",
+  "version": "v1-2026-09-19",
+  "base_url": "https://api.open-meteo.com",
+  "captured_at": "2026-09-20T03:10:20Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "immutable": true,
+  "note": "Raw capture. Never edit in place; a correction creates a new version."
+}

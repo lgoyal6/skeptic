@@ -1,0 +1,19 @@
+tool: wikipedia
+version: actionapi-2026-09-19
+qualitative: false
+answer_key_source: 'Verifiable by anyone: request srlimit=5000 and read the `warnings.search`
+  object in the response.'
+rules:
+- id: clamp_is_announced_in_band
+  mismatch_class: no-mismatch-control
+  observable: true
+  class: none
+  operation: search
+  parameter: srlimit
+  doc_claims: srlimit must be between 1 and 500; out-of-range values produce a warning.
+  truth: Held, and this is the control for the clamp class. srlimit=5000 returns 500
+    results AND a warnings.search entry naming the parameter, the offending value
+    5000, and the permitted range. The clamp matches the lab's and GitHub's; the disclosure
+    does not. A belief of silent_truncation here would be false.
+  probe_template: boundary
+  difficulty: easy

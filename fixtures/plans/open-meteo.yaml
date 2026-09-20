@@ -1,0 +1,104 @@
+tool: open-meteo
+version: v1-2026-09-19
+api_version: v1
+base_url: https://api.open-meteo.com
+docs_url: https://open-meteo.com/en/docs
+credential_free: true
+pace_s: 1.0
+license:
+  name: Open-Meteo API, free for non-commercial use; data CC BY 4.0 per site
+  terms_url: https://open-meteo.com/en/terms
+  verified_from_terms_page: false
+  redistribution: This fixture holds a minimal excerpt of live responses, captured once for offline regression
+    testing and not redistributed as a dataset. The terms page was not independently parsed during capture,
+    so the boundary is recorded as stated by the source rather than as verified by this project.
+note: 'Diagnostic integrity: does an out-of-range error report the value the caller sent?'
+docs: "# Open-Meteo Forecast API, documentation snapshot\n\nSource: https://open-meteo.com/en/docs\nCaptured:\
+  \ 2026-09-19\n\n## Documented promises exercised by this capture\n\nQuoted from the parameter table:\n\
+  \n- `forecast_days`, `Integer (0-16)`, default `7`: \"Per default, only 7 days are\n  returned. Up to\
+  \ 16 days of forecast are possible.\"\n- The response carries a `daily` object whose `time` array has\
+  \ one entry per day.\n- An invalid request returns HTTP 400 with `{\"error\": true, \"reason\": \"...\"\
+  }`,\n  where `reason` describes what was wrong with the request.\n\n## What a caller is entitled to\
+  \ assume\n\nThat `reason` describes *this* request. A diagnostic exists to tell the caller\nwhat they\
+  \ sent that the server would not accept. One that reports a value the\ncaller did not send is worse\
+  \ than no diagnostic, because it sends them to debug\nthe wrong thing -- and it is type-correct, so\
+  \ nothing downstream flags it.\n"
+calls:
+- op: forecast
+  path: /v1/forecast
+  why: baseline, documented in-range
+  params:
+    latitude: 52.52
+    longitude: 13.41
+    daily: temperature_2m_max
+    forecast_days: 1
+    timezone: UTC
+- op: forecast
+  path: /v1/forecast
+  why: the documented default
+  params:
+    latitude: 52.52
+    longitude: 13.41
+    daily: temperature_2m_max
+    forecast_days: 7
+    timezone: UTC
+- op: forecast
+  path: /v1/forecast
+  why: the documented ceiling, exactly
+  params:
+    latitude: 52.52
+    longitude: 13.41
+    daily: temperature_2m_max
+    forecast_days: 16
+    timezone: UTC
+- op: forecast
+  path: /v1/forecast
+  why: 'one past the ceiling: does the error report what was sent?'
+  params:
+    latitude: 52.52
+    longitude: 13.41
+    daily: temperature_2m_max
+    forecast_days: 17
+    timezone: UTC
+- op: forecast
+  path: /v1/forecast
+  why: 'far past the ceiling: a different input should give a different diagnostic'
+  params:
+    latitude: 52.52
+    longitude: 13.41
+    daily: temperature_2m_max
+    forecast_days: 99
+    timezone: UTC
+expected:
+  tool: open-meteo
+  version: v1-2026-09-19
+  qualitative: false
+  answer_key_source: 'Verifiable by anyone: send forecast_days=17 and =99 and compare the two `reason`
+    strings.'
+  rules:
+  - id: error_reports_clamped_input
+    mismatch_class: semantic-type-correct
+    observable: true
+    class: mislabelled_semantics
+    operation: forecast
+    parameter: forecast_days
+    doc_claims: An out-of-range request returns 400 with a `reason` describing what was wrong; the allowed
+      range is 0 to 16.
+    truth: The `reason` reports the value clamped to the ceiling, not the value sent. forecast_days=17
+      and forecast_days=99 both return 'Allowed range 0 to 16. Given 16.' The caller is told they sent
+      16, which is inside the allowed range and is not what they sent. The string is well-formed and type-correct,
+      so only a reader comparing it to the request can notice.
+    probe_template: boundary
+    difficulty: easy
+  - id: forecast_days_cap_is_enforced
+    mismatch_class: no-mismatch-control
+    observable: true
+    class: none
+    operation: forecast
+    parameter: forecast_days
+    doc_claims: up to 16 days of forecast are available
+    truth: 'Held. forecast_days=16 returns 16 daily entries and 17 is rejected rather than silently clamped.
+      A control: the defect is in the diagnostic, not the enforcement, and a belief claiming silent truncation
+      here would be false.'
+    probe_template: boundary
+    difficulty: easy
