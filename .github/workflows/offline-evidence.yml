@@ -1,0 +1,23 @@
+name: offline-evidence
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install locked dependencies
+        run: UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen --group dev
+      - name: Replay and verify the evidence pipeline
+        run: make offline
