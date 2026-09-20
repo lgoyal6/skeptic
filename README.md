@@ -29,7 +29,7 @@ The honest headline, verified at the end of the build:
 | claims the tool honours (controls) | 7 |
 | claims the evidence cannot settle (abstentions) | 2 |
 | guards compiled, unguarded mismatches | 11, **0** |
-| tests | 254 passed |
+| tests | 260 passed |
 | mutations killed | 25 / 25 |
 
 **Earlier in the build these numbers were higher, and they were withdrawn.**
@@ -56,7 +56,18 @@ make offline
 
 That runs the suite, replays all ten fixtures against their recorded hashes,
 runs the regression gate, compares four probe-selection policies, replays a
-real API version change, and prints the full evaluation record.
+real API version change, prints the full evaluation record, and exports one
+self-verifying run bundle.
+
+The same `make offline` gate runs in GitHub Actions for every pull request and
+push to `main`; it needs no service credentials or model API key.
+
+The bundle records the documentation and traffic hashes, seed, belief state
+before and after, selected probes, predictions committed before each response,
+typed lifecycle events, model usage by role, corrected contract, and generated
+guards. `make bundle` then reads the JSON back, recomputes its content hash,
+and checks every recorded probe against the committed fixture. The example is
+offline, so its executor and reflector usage are explicitly zero.
 
 The fixtures are recordings of eight real public APIs -- Open-Meteo, Open
 Library, Frankfurter (two versions), GitHub, Wikipedia's Action API, PokeAPI,
@@ -468,6 +479,15 @@ evidence
   make replay         what would these beliefs have saved?
   make verify         reproduce every number in the README
 
+offline evidence
+  make replay-corpus  verify and replay every captured fixture
+  make gate           compile and exercise every confirmed guard
+  make policies       compare fixed, random, greedy, and EIG selectors
+  make drift          classify a recorded API version change
+  make evaluate       print the complete evaluation record
+  make bundle         export and verify a structured replay bundle
+  make offline        run the complete offline evidence path
+
   make ui             serve the panels for `ao preview`
 ```
 
@@ -483,7 +503,7 @@ reflect/   recon sweep, batched hypothesis generation, probe design/templates,
            reopening exhausted anomalies
 shim/      guards derived from confirmed beliefs; export to TOOLS.md + guards.json
 bench/     scoring, the A/B, the memory-wipe ablation, the retirement demo,
-           settling hypotheses concurrently, applying saved probe records
+           settling hypotheses, applying probe records, exporting run bundles
 replay/    counterfactual replay of run logs against learned beliefs
 ao/        the orchestrator's operating manual, the three worker prompts,
            the SSE event bridge, the falsification worker

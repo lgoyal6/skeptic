@@ -9,7 +9,7 @@ WORKERS ?= 2
 
 .PHONY: help lab lab-stop smoke detect recon learn settle apply probe run \
         bench status export ab ablate retire replay ui verify clean all \
-        test replay-corpus gate mutations policies drift evaluate offline capture
+        test replay-corpus gate mutations policies drift evaluate bundle offline capture
 
 help:
 	@echo "skeptic -- the agent that reverse-engineers its own tools"
@@ -44,6 +44,7 @@ help:
 	@echo "    make policies       four-arm probe-selection comparison"
 	@echo "    make drift          a real API version change, classified"
 	@echo "    make evaluate       the whole evaluation record in one command"
+	@echo "    make bundle         export and verify one structured replay bundle"
 	@echo "    make offline        everything above, start to finish (~1 min)"
 	@echo ""
 	@echo "  make ui             serve the panels for `ao preview`"
@@ -138,11 +139,15 @@ drift:
 evaluate:
 	@$(PY) -m bench.evaluate --write
 
+bundle:
+	@$(PY) -m bench.run_bundle --tool frankfurter --version v2-2026-09-19 --policy greedy --seed $(SEED)
+	@$(PY) -m bench.run_bundle --verify runs/bundles/frankfurter-v2-2026-09-19-greedy-seed$(SEED).json
+
 # Everything an outside reader needs, in one command, from a clean clone.
-offline: test replay-corpus gate policies drift evaluate
+offline: test replay-corpus gate policies drift evaluate bundle
 	@echo ""
 	@echo "  offline verification complete: suite, corpus replay, regression gate,"
-	@echo "  policy comparison, drift timeline, and the evaluation record."
+	@echo "  policy comparison, drift timeline, evaluation record, and run bundle."
 
 # Re-record the fixtures from live services. Needs network; everything else
 # does not. Raw captures are immutable, so this refuses to overwrite one.

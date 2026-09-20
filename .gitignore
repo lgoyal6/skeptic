@@ -4,6 +4,7 @@ __pycache__/
 .env
 runs/*.jsonl
 runs/scratch/
+runs/bundles/
 !runs/observable.json
 !runs/.gitkeep
 !probes/.gitkeep
