@@ -1,0 +1,33 @@
+tool: open-meteo
+version: v1-2026-09-19
+qualitative: false
+answer_key_source: 'Verifiable by anyone: send forecast_days=17 and =99 and compare
+  the two `reason` strings.'
+rules:
+- id: error_reports_clamped_input
+  mismatch_class: semantic-type-correct
+  observable: true
+  class: mislabelled_semantics
+  operation: forecast
+  parameter: forecast_days
+  doc_claims: An out-of-range request returns 400 with a `reason` describing what
+    was wrong; the allowed range is 0 to 16.
+  truth: The `reason` reports the value clamped to the ceiling, not the value sent.
+    forecast_days=17 and forecast_days=99 both return 'Allowed range 0 to 16. Given
+    16.' The caller is told they sent 16, which is inside the allowed range and is
+    not what they sent. The string is well-formed and type-correct, so only a reader
+    comparing it to the request can notice.
+  probe_template: boundary
+  difficulty: easy
+- id: forecast_days_cap_is_enforced
+  mismatch_class: no-mismatch-control
+  observable: true
+  class: none
+  operation: forecast
+  parameter: forecast_days
+  doc_claims: up to 16 days of forecast are available
+  truth: 'Held. forecast_days=16 returns 16 daily entries and 17 is rejected rather
+    than silently clamped. A control: the defect is in the diagnostic, not the enforcement,
+    and a belief claiming silent truncation here would be false.'
+  probe_template: boundary
+  difficulty: easy

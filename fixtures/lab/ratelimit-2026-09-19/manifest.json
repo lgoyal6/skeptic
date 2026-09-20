@@ -1,0 +1,45 @@
+{
+  "tool": "lab",
+  "version": "ratelimit-2026-09-19",
+  "endpoint": {
+    "base_url": "http://127.0.0.1:8077",
+    "paths": [
+      "/v1/search"
+    ]
+  },
+  "api_version": "lab/DOCS.md",
+  "docs_url": "lab/DOCS.md",
+  "docs_sha256": "sha256:844b6c323eee3b31848fd2f798dbd0ef0561783508da7d7956eedb473a00d226",
+  "captured_at": "2026-09-20T03:12:25Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "exchanges": 10,
+  "allowed_operations": [
+    "search"
+  ],
+  "methods_used": [
+    "POST"
+  ],
+  "local_target": true,
+  "credential_free": true,
+  "license": {
+    "name": "This repository's own instrumented lab",
+    "terms_url": "lab/DOCS.md",
+    "verified_from_terms_page": true,
+    "redistribution": "Authored in this repository. No third-party content."
+  },
+  "redaction": {
+    "scanned": true,
+    "patterns": "fixtures.format.SECRET_PATTERNS + SENSITIVE_HEADERS",
+    "placeholder": "<redacted> (a constant, so a redaction is never itself a signal)",
+    "findings": []
+  },
+  "raw_capture_sha256": "sha256:1811b641a9f44bbc38f0d2c00d4747dfa39e06e915d9091c66da7d1b2e78401d",
+  "traffic_sha256": "sha256:99d6c5edfe21425938b80cacccb2e7a4f8b54d9d74bfcf02ad2da0d11f60faab",
+  "qualitative": false,
+  "mismatch_classes": [
+    "rate-limit"
+  ],
+  "replay_command": "./.venv/bin/python -m bench.replay_corpus --tool lab --version ratelimit-2026-09-19",
+  "note": "The rate-limit mismatch class: documented as absent, present at 3 req/s, with a Retry-After header on only some of the rejections."
+}

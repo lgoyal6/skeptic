@@ -1,0 +1,48 @@
+{
+  "tool": "restcountries",
+  "version": "v3.1-2026-09-19",
+  "endpoint": {
+    "base_url": "https://restcountries.com",
+    "paths": [
+      "/v3.1/alpha/jp",
+      "/v5/countries/alpha/jp"
+    ]
+  },
+  "api_version": "v3.1 (deprecated)",
+  "docs_url": "https://restcountries.com/",
+  "docs_sha256": "sha256:b2deb2b3288619837204001e23da993f60a065312f1d71792ab98309a5194c89",
+  "captured_at": "2026-09-20T03:10:49Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "exchanges": 4,
+  "allowed_operations": [
+    "alpha"
+  ],
+  "methods_used": [
+    "GET"
+  ],
+  "local_target": false,
+  "credential_free": true,
+  "license": {
+    "name": "REST Countries, free public API",
+    "terms_url": "https://restcountries.com/",
+    "verified_from_terms_page": false,
+    "redistribution": "This fixture holds a minimal excerpt of live responses, captured once for offline regression testing and not redistributed as a dataset. The terms page was not independently parsed during capture, so the boundary is recorded as stated by the source rather than as verified by this project."
+  },
+  "redaction": {
+    "scanned": true,
+    "patterns": "fixtures.format.SECRET_PATTERNS + SENSITIVE_HEADERS",
+    "placeholder": "<redacted> (a constant, so a redaction is never itself a signal)",
+    "findings": []
+  },
+  "raw_capture_sha256": "sha256:3c400fd2ac118f43f53fb3588fb1919ad9045c20dcb5e73bfa8bd81b587e7980",
+  "traffic_sha256": "sha256:cd5d388bb1aa4c334a3941c02350b7843239f04af85444205d2b5db6d36c8d8f",
+  "qualitative": false,
+  "mismatch_classes": [
+    "semantic-type-correct",
+    "status-code-mismatch",
+    "unobservable"
+  ],
+  "replay_command": "./.venv/bin/python -m bench.replay_corpus --tool restcountries --version v3.1-2026-09-19",
+  "note": "The status-code mismatch: HTTP 200 carrying a hard failure, and a remediation message that points at itself."
+}

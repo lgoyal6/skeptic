@@ -1,0 +1,33 @@
+tool: frankfurter
+version: v1-2026-09-19
+qualitative: false
+answer_key_source: 'Verifiable: compare the symbols requested to the keys of `rates`,
+  and the date in the path to the `date` in the body.'
+rules:
+- id: unknown_symbol_silently_dropped
+  mismatch_class: field-omission
+  observable: true
+  class: silent_coercion
+  operation: rates
+  parameter: symbols
+  doc_claims: '`symbols` filters the returned currencies. An unknown currency is an
+    error: an unknown `base` returns 404.'
+  truth: An unknown entry in `symbols` returns HTTP 200 with that currency absent
+    from `rates` and no error field. The same API rejects an unknown `base` with 404,
+    so the inconsistency is between two parameters of one request, not a blanket leniency.
+  probe_template: consistency
+  difficulty: easy
+- id: non_publication_date_silently_substituted
+  mismatch_class: semantic-type-correct
+  observable: true
+  class: mislabelled_semantics
+  operation: rates
+  parameter: date
+  doc_claims: A dated request returns the rates for that date, and the response echoes
+    the date.
+  truth: A date with no published rate returns HTTP 200 carrying the most recent earlier
+    publication date. Requesting 2026-09-13 (a Sunday) returns date 2026-09-11. A
+    caller who does not compare the echoed date to the one requested silently receives
+    Friday's rates for Sunday. Every field is type-correct.
+  probe_template: consistency
+  difficulty: medium

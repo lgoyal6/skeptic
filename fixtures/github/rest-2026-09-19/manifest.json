@@ -1,0 +1,51 @@
+{
+  "tool": "github",
+  "version": "rest-2026-09-19",
+  "endpoint": {
+    "base_url": "https://api.github.com",
+    "paths": [
+      "/repos/python/cpython",
+      "/repos/python/cpython/commits"
+    ]
+  },
+  "api_version": "2022-11-28",
+  "docs_url": "https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api",
+  "docs_sha256": "sha256:cbe42932aa37472e739b2da2146002c938d891815f5b7cfbb12eb88cbbd62ef6",
+  "captured_at": "2026-09-20T03:09:51Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "exchanges": 4,
+  "allowed_operations": [
+    "commits",
+    "repo"
+  ],
+  "methods_used": [
+    "GET"
+  ],
+  "local_target": false,
+  "credential_free": true,
+  "license": {
+    "name": "GitHub REST API, unauthenticated public read",
+    "terms_url": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
+    "verified_from_terms_page": false,
+    "redistribution": "This fixture holds a minimal excerpt of live responses, captured once for offline regression testing and not redistributed as a dataset. The terms page was not independently parsed during capture, so the boundary is recorded as stated by the source rather than as verified by this project."
+  },
+  "redaction": {
+    "scanned": true,
+    "patterns": "fixtures.format.SECRET_PATTERNS + SENSITIVE_HEADERS",
+    "placeholder": "<redacted> (a constant, so a redaction is never itself a signal)",
+    "findings": [
+      "email"
+    ]
+  },
+  "raw_capture_sha256": "sha256:d74b85c1d5426279e3da99a6487a6e0523db3028097259b8d3dcbc9daabdcaf8",
+  "traffic_sha256": "sha256:ae57d9fe2a3d0d5d1a056d68142f8496b253b1b65df55b7e407c3ca69a3d7fa2",
+  "qualitative": false,
+  "mismatch_classes": [
+    "no-mismatch-control",
+    "pagination-cursor",
+    "unobservable"
+  ],
+  "replay_command": "./.venv/bin/python -m bench.replay_corpus --tool github --version rest-2026-09-19",
+  "note": "Two behaviours at once: a silent pagination clamp, and a rate-limit surface that is exactly as documented."
+}

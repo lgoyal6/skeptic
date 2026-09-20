@@ -1,0 +1,100 @@
+tool: openlibrary
+version: search-2026-09-19
+api_version: search.json
+base_url: https://openlibrary.org
+docs_url: https://openlibrary.org/dev/docs/api/search
+credential_free: true
+pace_s: 2.0
+license:
+  name: Open Library / Internet Archive; bibliographic data openly licensed
+  terms_url: https://openlibrary.org/developers/api
+  verified_from_terms_page: false
+  redistribution: This fixture holds a minimal excerpt of live responses, captured once for offline regression
+    testing and not redistributed as a dataset. The terms page was not independently parsed during capture,
+    so the boundary is recorded as stated by the source rather than as verified by this project.
+note: Does the documented pagination parameter validate its own degenerate value?
+docs: "# Open Library Search API, documentation snapshot\n\nSource: https://openlibrary.org/dev/docs/api/search\n\
+  Captured: 2026-09-19\n\n## Documented promises exercised by this capture\n\n- `offset` / `limit`: \"\
+  Use for pagination.\"\n- `page` / `limit`: \"Use for pagination, with limit corresponding to the page\n\
+  \  size. Note page starts at 1.\"\n- The response carries `numFound`, `numFoundExact`, `start`, and\
+  \ `docs`.\n\nThe documentation states no ceiling on `limit`, and says nothing about `limit=0`.\n\n##\
+  \ What a caller is entitled to assume\n\nThat a 200 with an empty `docs` array means the query matched\
+  \ nothing. That is\nwhy `numFound` and `docs` are separate fields: one is the size of the result\nset,\
+  \ the other is the page. A page size of zero produces an empty page for a\nquery matching tens of thousands\
+  \ of records, and the only thing distinguishing\nit from \"no matches\" is a field the caller has no\
+  \ particular reason to read.\n"
+calls:
+- op: search
+  path: /search.json
+  why: baseline, small page
+  params:
+    q: dune
+    limit: 1
+    fields: key
+- op: search
+  path: /search.json
+  why: typical page
+  params:
+    q: dune
+    limit: 10
+    fields: key
+- op: search
+  path: /search.json
+  why: the page size commonly assumed to be the ceiling
+  params:
+    q: dune
+    limit: 100
+    fields: key
+- op: search
+  path: /search.json
+  why: 'far past the assumed ceiling: is limit capped at all?'
+  params:
+    q: dune
+    limit: 1000
+    fields: key
+- op: search
+  path: /search.json
+  why: 'the degenerate value: accepted, or rejected?'
+  params:
+    q: dune
+    limit: 0
+    fields: key
+- op: search
+  path: /search.json
+  why: negative, to establish the parameter IS validated somewhere
+  params:
+    q: dune
+    limit: -5
+    fields: key
+expected:
+  tool: openlibrary
+  version: search-2026-09-19
+  qualitative: false
+  answer_key_source: 'Verifiable by anyone: request limit=0 and limit=-5 for the same query and compare
+    statuses and the docs/numFound fields.'
+  rules:
+  - id: zero_limit_returns_empty_page_with_200
+    mismatch_class: pagination-cursor
+    observable: true
+    class: silent_coercion
+    operation: search
+    parameter: limit
+    doc_claims: '`limit` is the page size for pagination, and the API validates it: limit=-5 is rejected
+      with HTTP 422.'
+    truth: limit=0 is accepted with HTTP 200 and returns an empty `docs` array alongside numFound in the
+      tens of thousands. The API validates negative page sizes but not zero, so the one degenerate value
+      producing a result indistinguishable from 'no matches' is the one that passes validation.
+    probe_template: boundary
+    difficulty: easy
+  - id: limit_is_not_capped_at_100
+    mismatch_class: no-mismatch-control
+    observable: true
+    class: none
+    operation: search
+    parameter: limit
+    doc_claims: The documentation states no ceiling on `limit`.
+    truth: 'Held. limit=1000 returns 1000 docs, so there is no silent clamp to discover. A control: a
+      belief claiming one would be false, and this rule exists so that claim scores as false rather than
+      going unchecked.'
+    probe_template: boundary
+    difficulty: easy

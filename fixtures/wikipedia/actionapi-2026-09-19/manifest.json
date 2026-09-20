@@ -1,0 +1,47 @@
+{
+  "tool": "wikipedia",
+  "version": "actionapi-2026-09-19",
+  "endpoint": {
+    "base_url": "https://en.wikipedia.org",
+    "paths": [
+      "/w/api.php"
+    ]
+  },
+  "api_version": "MediaWiki Action API",
+  "docs_url": "https://www.mediawiki.org/wiki/API:Search",
+  "docs_sha256": "sha256:e731b55e83739b4e4b9e75f749d78458687114a9ab6ad2e1839ada37383eebe4",
+  "captured_at": "2026-09-20T03:10:55Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "exchanges": 3,
+  "allowed_operations": [
+    "search"
+  ],
+  "methods_used": [
+    "GET"
+  ],
+  "local_target": false,
+  "credential_free": true,
+  "license": {
+    "name": "Wikipedia content CC BY-SA 4.0; API use governed by Wikimedia API etiquette",
+    "terms_url": "https://www.mediawiki.org/wiki/API:Etiquette",
+    "verified_from_terms_page": true,
+    "redistribution": "MediaWiki API etiquette requires a descriptive User-Agent, which this capture sets. Content is CC BY-SA 4.0. Fixture holds three search responses captured once."
+  },
+  "redaction": {
+    "scanned": true,
+    "patterns": "fixtures.format.SECRET_PATTERNS + SENSITIVE_HEADERS",
+    "placeholder": "<redacted> (a constant, so a redaction is never itself a signal)",
+    "findings": [
+      "header:set-cookie"
+    ]
+  },
+  "raw_capture_sha256": "sha256:08646a2ffbd611c19f9691408f64751a88b71f8e52db07203b1cd149383bdedc",
+  "traffic_sha256": "sha256:20ab094694162dba9e1c6ccccf4a1855c9874bb72572a89179572983700c44c8",
+  "qualitative": false,
+  "mismatch_classes": [
+    "no-mismatch-control"
+  ],
+  "replay_command": "./.venv/bin/python -m bench.replay_corpus --tool wikipedia --version actionapi-2026-09-19",
+  "note": "The honest control for the clamp class: MediaWiki clamps AND says so, in band."
+}

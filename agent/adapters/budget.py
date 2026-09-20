@@ -54,6 +54,13 @@ class RateBudget:
         self.granted = 0
         self.waits = 0
         self.waited_s = 0.0
+        # The moment each send was authorised, recorded inside the lock. A
+        # caller timing itself after `acquire()` returns measures thread
+        # scheduling as much as pacing: under load, four grants correctly
+        # spaced can be observed within one second because the observations,
+        # not the grants, bunched up. The budget's own log is the only record
+        # of when it actually permitted a send.
+        self.grant_log: list[float] = []
 
     def acquire(self) -> None:
         """Block until this caller may send, then record the send."""
@@ -65,6 +72,7 @@ class RateBudget:
                 if len(self._sent) < self.n:
                     self._sent.append(now)
                     self.granted += 1
+                    self.grant_log.append(now)
                     return
                 sleep_for = self.window_s - (now - self._sent[0])
                 self.waits += 1
@@ -105,4 +113,16 @@ class RateBudget:
                 "granted": self.granted,
                 "waits": self.waits,
                 "waited_s": round(self.waited_s, 2),
+                "worst_window": self.worst_window(),
             }
+
+    def worst_window(self) -> int:
+        """The most grants this budget ever authorised inside one window.
+
+        The number the limit is about. If it exceeds `n`, the budget failed,
+        and no amount of wall-clock timing elsewhere changes that.
+        """
+        g = sorted(self.grant_log)
+        if not g:
+            return 0
+        return max(sum(1 for t in g if start <= t < start + self.window_s) for start in g)

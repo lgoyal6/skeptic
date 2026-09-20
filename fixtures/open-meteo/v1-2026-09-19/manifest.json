@@ -1,0 +1,46 @@
+{
+  "tool": "open-meteo",
+  "version": "v1-2026-09-19",
+  "endpoint": {
+    "base_url": "https://api.open-meteo.com",
+    "paths": [
+      "/v1/forecast"
+    ]
+  },
+  "api_version": "v1",
+  "docs_url": "https://open-meteo.com/en/docs",
+  "docs_sha256": "sha256:f275c840c3e0f4556319723d8c2663be5af078d7b5c039954204f265254e1954",
+  "captured_at": "2026-09-20T03:10:20Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "exchanges": 5,
+  "allowed_operations": [
+    "forecast"
+  ],
+  "methods_used": [
+    "GET"
+  ],
+  "local_target": false,
+  "credential_free": true,
+  "license": {
+    "name": "Open-Meteo API, free for non-commercial use; data CC BY 4.0 per site",
+    "terms_url": "https://open-meteo.com/en/terms",
+    "verified_from_terms_page": false,
+    "redistribution": "This fixture holds a minimal excerpt of live responses, captured once for offline regression testing and not redistributed as a dataset. The terms page was not independently parsed during capture, so the boundary is recorded as stated by the source rather than as verified by this project."
+  },
+  "redaction": {
+    "scanned": true,
+    "patterns": "fixtures.format.SECRET_PATTERNS + SENSITIVE_HEADERS",
+    "placeholder": "<redacted> (a constant, so a redaction is never itself a signal)",
+    "findings": []
+  },
+  "raw_capture_sha256": "sha256:0603762a48dc38d9d97b5f0350d37ee1909611c5572ca68c70c0e0696faddb8a",
+  "traffic_sha256": "sha256:102819748cf48fa33333864f66d2feb35985e318da1569127764b9e85746406e",
+  "qualitative": false,
+  "mismatch_classes": [
+    "no-mismatch-control",
+    "semantic-type-correct"
+  ],
+  "replay_command": "./.venv/bin/python -m bench.replay_corpus --tool open-meteo --version v1-2026-09-19",
+  "note": "Diagnostic integrity: does an out-of-range error report the value the caller sent?"
+}

@@ -482,16 +482,6 @@ def test_restatement_may_not_invent_a_class():
     assert b.cls == "silent_coercion", "wire evidence admits only silent_coercion"
 
 
-def test_replay_total_does_not_double_count():
-    """Two beliefs can blame the same call; summing per-belief totals inflated
-    the headline by nearly 2x (219 attributions over 115 distinct calls)."""
-    from replay.counterfactual import replay_all
-    from agent.beliefs import BeliefStore
-
-    rep = replay_all(BeliefStore("lab"))
-    assert rep["total_wasted_calls_deduped"] <= rep["total_wasted_calls"]
-
-
 # ---------------------------------------------------------------------------
 # Status-blindness in the probe templates -- the same vacuous-measurement bug
 # class, one layer in from the four above. An error body is still a dict, so a
@@ -618,21 +608,25 @@ def test_consistency_successful_create_still_reports_real_coercion():
 
 
 def test_four_workers_stay_within_one_global_budget():
-    """Four adapters each individually paced under a 3 req/s limit summed to ~10 req/s and 72% 429s. Sharing one budget, no 1s window may ever hold more than 3 sends."""
+    """Four adapters each individually paced under a 3 req/s limit summed to ~10 req/s and 72% 429s. Sharing one budget, no window may ever hold more than 3 grants.
+
+    Asserted against the budget's own grant log rather than against timestamps
+    the worker threads take after `acquire()` returns. Those measure thread
+    scheduling as well as pacing: on a loaded machine four correctly spaced
+    grants can be *observed* inside one second because the observations
+    bunched up, which made an earlier version of this test fail while the
+    budget was behaving perfectly. The grant log is the record of what the
+    budget actually authorised.
+    """
     import threading
-    import time as _time
 
     from agent.adapters.budget import RateBudget
 
     budget = RateBudget(n=3, window_s=1.0, safety_s=0.0)
-    sends: list[float] = []
-    lock = threading.Lock()
 
     def worker():
         for _ in range(3):
             budget.acquire()
-            with lock:
-                sends.append(_time.monotonic())
 
     threads = [threading.Thread(target=worker) for _ in range(4)]
     for t in threads:
@@ -640,14 +634,21 @@ def test_four_workers_stay_within_one_global_budget():
     for t in threads:
         t.join()
 
-    assert len(sends) == 12
-    sends.sort()
+    assert budget.granted == 12
     # The server evicts entries strictly older than the window, then rejects
-    # at >= n. So any 4 sends inside one window is a 429 on the 4th.
-    worst = max(
-        sum(1 for s in sends if start <= s < start + 1.0) for start in sends
-    )
-    assert worst <= 3, f"{worst} sends landed in one 1s window; the tool allows 3"
+    # at >= n. So any 4 grants inside one window is a 429 on the 4th.
+    assert budget.worst_window() <= 3, (
+        f"{budget.worst_window()} sends were authorised in one 1s window; "
+        f"the tool allows 3")
+
+
+def test_a_broken_budget_is_caught_by_the_same_assertion():
+    """The control: `worst_window` must actually be able to report a violation, or the test above is a formality."""
+    from agent.adapters.budget import RateBudget
+
+    b = RateBudget(n=3, window_s=1.0, safety_s=0.0)
+    b.grant_log = [0.0, 0.1, 0.2, 0.3]   # four sends inside one second
+    assert b.worst_window() == 4
 
 
 def test_budget_does_not_serialise_below_the_limit():
@@ -889,3 +890,91 @@ def test_idempotent_create_guard_does_not_pay_for_a_discarded_search():
 
     assert a.client.posts == 1, f"the guard made {a.client.posts} searches; one answers the question"
     assert out["committed_despite_error"] is True
+
+
+def test_replay_total_does_not_double_count(tmp_path):
+    """Two beliefs can blame the same call; summing per-belief totals inflated the headline by nearly 2x (219 attributions over 115 distinct calls).
+
+    Driven from a synthetic run log in `tmp_path`, for two reasons. The
+    original version called `replay_all(BeliefStore("lab"))` with the default
+    root, and `replay_all` persisted -- so every run of this suite rewrote the
+    repository's `beliefs/lab.yaml`, while the docstring at the top of this
+    file promised nothing is written outside `tmp_path`. And `runs/*.jsonl` is
+    gitignored, so on a clean checkout there were no logs, every total was
+    zero, and `0 <= 0` passed without measuring anything.
+    """
+    import json
+
+    from agent.beliefs import Belief, BeliefStore
+    from replay.counterfactual import replay_all
+
+    runs = tmp_path / "runs"
+    runs.mkdir()
+    # One 429 on `search`. Both beliefs below are about rate limiting, and the
+    # rate limit applies to every operation, so both legitimately charge this
+    # same call -- which is exactly the double count.
+    (runs / "r1.jsonl").write_text("\n".join(json.dumps(r) for r in [
+        {"n": 1, "t": 0.0, "op": "search", "request": {}, "status": 200, "response": {}},
+        {"n": 2, "t": 0.1, "op": "search", "request": {}, "status": 429,
+         "response": {"error": "rate_limited", "_retry_after_present": False}},
+    ]) + "\n")
+
+    store = BeliefStore("lab", root=tmp_path / "beliefs")
+    for op in ("search", "create"):
+        b = Belief(id=f"lab.{op}.rl", tool="lab", operation=op, cls="rate_limit",
+                   parameter=None, doc_claims="no documented rate limit",
+                   belief="the rate limit is global, shared across all operations")
+        store.add(b)
+        b.note("signature", f"{op}._.undocumented_status")
+        b.confirm("probe0")
+
+    rep = replay_all(store, runs_dir=str(runs), save=False)
+
+    assert rep["total_wasted_calls"] > 0, (
+        "the synthetic log contains a 429 that both beliefs should charge; a zero "
+        "total would make the comparison below vacuous")
+    assert rep["total_wasted_calls_deduped"] <= rep["total_wasted_calls"]
+    assert rep["total_wasted_calls_deduped"] < rep["total_wasted_calls"], (
+        "two beliefs charged the same call, so the deduped count must be strictly "
+        "smaller -- that gap is the double count this test exists to catch")
+
+
+def test_the_suite_does_not_write_to_the_repository(tmp_path):
+    """A unit test that mutates tracked files is a test that changes the thing it measures.
+
+    This suite's header promises nothing is written outside `tmp_path`. It was
+    not true: `replay_all` persisted by default and the double-count test
+    called it with the default root, so every run of these tests rewrote
+    `beliefs/lab.yaml`. The promise is now checked rather than stated.
+
+    Checked by hashing the files rather than by asking git, because the
+    mutation harness copies the tree without `.git` -- a check that shelled
+    out to git would pass vacuously there, which is the exact failure mode
+    this file exists to catch.
+    """
+    import hashlib
+
+    from agent.beliefs import BeliefStore
+    from replay.counterfactual import replay_all
+
+    repo = Path(__file__).resolve().parent.parent
+    watched = sorted(
+        p for d in ("beliefs", "probes", "export", "lab", "fixtures")
+        for p in (repo / d).rglob("*") if p.is_file())
+
+    def fingerprint():
+        h = hashlib.sha256()
+        for f in watched:
+            h.update(f.name.encode())
+            h.update(hashlib.sha256(f.read_bytes()).digest())
+        return h.hexdigest()
+
+    before = fingerprint()
+    assert watched, "nothing was watched; this test would pass trivially"
+
+    # The real code path, against the real default root, read-only.
+    replay_all(BeliefStore("lab"), runs_dir=str(tmp_path / "no-runs"), save=False)
+
+    assert fingerprint() == before, (
+        "running a test modified a file under beliefs/, probes/, export/, lab/ "
+        "or fixtures/; reporting must not have a write side effect")

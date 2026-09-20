@@ -1,0 +1,27 @@
+tool: lab
+version: seed1337-2026-09-19
+qualitative: false
+answer_key_source: lab/ground_truth.yaml, the lab's own answer key; these are the
+  subset this capture observes.
+rules:
+- id: page_size_cap
+  mismatch_class: pagination-cursor
+  observable: true
+  class: silent_truncation
+  operation: search
+  parameter: page_size
+  doc_claims: page_size accepts any integer from 1 to 500
+  truth: page_size is silently clamped to 50; larger values return 50 items with has_more=true
+    and no warning
+  probe_template: boundary
+  difficulty: easy
+- id: pre_epoch_date_null
+  mismatch_class: field-omission
+  observable: true
+  class: silent_coercion
+  operation: create
+  parameter: due_date
+  doc_claims: due_date accepts any ISO date and is echoed as sent
+  truth: a due_date before 1970-01-01 is accepted with 200 and stored as null
+  probe_template: consistency
+  difficulty: medium

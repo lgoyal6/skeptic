@@ -1,0 +1,99 @@
+tool: github
+version: rest-2026-09-19
+api_version: '2022-11-28'
+base_url: https://api.github.com
+docs_url: https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api
+credential_free: true
+pace_s: 2.0
+headers:
+  accept: application/vnd.github+json
+  x-github-api-version: '2022-11-28'
+license:
+  name: GitHub REST API, unauthenticated public read
+  terms_url: https://docs.github.com/en/site-policy/github-terms/github-terms-of-service
+  verified_from_terms_page: false
+  redistribution: This fixture holds a minimal excerpt of live responses, captured once for offline regression
+    testing and not redistributed as a dataset. The terms page was not independently parsed during capture,
+    so the boundary is recorded as stated by the source rather than as verified by this project.
+note: 'Two behaviours at once: a silent pagination clamp, and a rate-limit surface that is exactly as
+  documented.'
+docs: "# GitHub REST API, documentation snapshot\n\nSource: https://docs.github.com/en/rest\nCaptured:\
+  \ 2026-09-19\nAuthentication: none. Unauthenticated requests are rate limited to 60 per hour.\n\n##\
+  \ Documented promises exercised by this capture\n\n- `per_page`: \"The number of results per page (max\
+  \ 100).\" The documentation\n  gives a maximum; it does not say what happens above it.\n- Unauthenticated\
+  \ requests carry `x-ratelimit-limit`, `x-ratelimit-remaining`,\n  `x-ratelimit-used`, `x-ratelimit-resource`\
+  \ and `x-ratelimit-reset` headers.\n  `x-ratelimit-reset` is \"the time at which the current rate limit\
+  \ window\n  resets, in UTC epoch seconds.\"\n\n## What a caller is entitled to assume\n\nFor `per_page`,\
+  \ nothing in particular above 100 -- which is the point. The\ndocumentation states a maximum and stops,\
+  \ so a caller sending 200 has no\ndocumented outcome to expect, and the observed outcome (a silent clamp\
+  \ to 100,\nwith nothing in the body or headers saying so) is the same shape as the lab's\npage_size\
+  \ rule and GitHub's own is not announced the way MediaWiki's is.\n\nFor the rate limit, the headers\
+  \ say exactly what the documentation says. This\nis recorded as a control: it is the same mismatch class\
+  \ as the lab's\n`rate_limit_flaky_header` rule, behaving honestly, and a belief claiming an\nundocumented\
+  \ rate limit here would be a false belief.\n\n## What cannot be observed from a capture\n\n`x-ratelimit-reset`\
+  \ promises that the window resets at a stated time. A\nrecording made in one second cannot observe an\
+  \ event an hour later. The\ndocumented promise is real and the response reports it, but no probe against\n\
+  this fixture can confirm or refute it, so the correct outcome is abstention.\n"
+calls:
+- op: commits
+  path: /repos/python/cpython/commits
+  why: the documented maximum, exactly
+  params:
+    per_page: 100
+- op: commits
+  path: /repos/python/cpython/commits
+  why: 'past the documented maximum: clamped, rejected, or announced?'
+  params:
+    per_page: 200
+- op: commits
+  path: /repos/python/cpython/commits
+  why: a small page, for comparison
+  params:
+    per_page: 5
+- op: repo
+  path: /repos/python/cpython
+  why: a plain read, to capture the documented rate-limit headers
+  params: {}
+expected:
+  tool: github
+  version: rest-2026-09-19
+  qualitative: false
+  answer_key_source: 'Verifiable by anyone unauthenticated: request per_page=200 and count the array;
+    read the x-ratelimit-* headers on any response.'
+  rules:
+  - id: per_page_silently_clamped
+    mismatch_class: pagination-cursor
+    observable: true
+    class: silent_truncation
+    operation: commits
+    parameter: per_page
+    doc_claims: per_page is documented with a maximum of 100. No behaviour above the maximum is documented.
+    truth: per_page=200 returns 100 items with HTTP 200 and no warning in the body or headers. The request
+      is silently reinterpreted; only a caller who compares the count to the request can tell.
+    probe_template: boundary
+    difficulty: easy
+  - id: rate_limit_headers_are_honest
+    mismatch_class: no-mismatch-control
+    observable: true
+    class: none
+    operation: repo
+    parameter: null
+    doc_claims: Unauthenticated requests are limited to 60/hour and carry x-ratelimit-* headers reporting
+      it.
+    truth: 'Held. x-ratelimit-limit is 60 and the remaining/used headers are present and consistent. A
+      control for the rate-limit class: a belief claiming an undocumented or misreported rate limit here
+      would be false.'
+    probe_template: header_burst
+    difficulty: easy
+  - id: rate_limit_window_actually_resets
+    mismatch_class: unobservable
+    observable: false
+    class: none
+    operation: repo
+    parameter: null
+    doc_claims: x-ratelimit-reset is the epoch second at which the current window resets.
+    truth: 'UNOBSERVABLE from this capture. The response reports a reset time an hour away; a recording
+      cannot witness the reset. The required outcome is abstention: no belief may be minted for or against
+      this promise, and inventing one is the failure this rule exists to catch.'
+    probe_template: null
+    difficulty: n/a

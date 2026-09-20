@@ -1,0 +1,276 @@
+tool: lab
+version: seed1337-2026-09-19
+api_version: lab/DOCS.md
+base_url: http://127.0.0.1:8077
+docs_url: lab/DOCS.md
+local: true
+credential_free: true
+pace_s: 2.5
+license:
+  name: This repository's own instrumented lab
+  terms_url: lab/DOCS.md
+  verified_from_terms_page: true
+  redistribution: Authored in this repository. No third-party content, no redistribution boundary.
+note: The controlled tool, captured through the same driver as the public ones, so the fixture path is
+  exercised against a tool whose answer key is already known.
+docs: '# Lab tool, documentation snapshot
+
+
+  Source: `lab/DOCS.md` in this repository.
+
+  Captured: 2026-09-19, seed 1337, default port 8077.
+
+
+  ## Documented promises exercised by this capture
+
+
+  - `page_size`: "Any integer from **1 to 500**."
+
+  - `due_date`: any ISO date, stored and echoed as sent.
+
+  - `bulk_create`: accepts up to 100 items.
+
+  - Created items are immediately searchable.
+
+
+  ## Why this fixture exists
+
+
+  The lab already has a full answer key in `lab/ground_truth.yaml`, so it is the
+
+  one tool where a fixture''s fidelity can be checked against something other than
+
+  itself: a belief learned from this recording must match the same rules a belief
+
+  learned from the live lab matches. It is the control for the fixture path.
+
+
+  The seeding calls are part of the recording on purpose. The lab resets to zero
+
+  rows, and a page-size sweep against an empty store returns 0 for every value --
+
+  not evidence of a cap, and the bug this project has now found five times in its
+
+  own code. A capture that did not seed would record an experiment that could not
+
+  have observed its own variable.
+
+  '
+calls:
+- op: bulk_create
+  method: POST
+  path: /v1/bulk_create
+  why: 'seed rows 0-19: a page-size sweep against an empty store returns 0 for every value, which is not
+    evidence of a cap or of its absence'
+  params:
+    items:
+    - title: FixtureSeed-0
+      vendor: FixtureVendor
+    - title: FixtureSeed-1
+      vendor: FixtureVendor
+    - title: FixtureSeed-2
+      vendor: FixtureVendor
+    - title: FixtureSeed-3
+      vendor: FixtureVendor
+    - title: FixtureSeed-4
+      vendor: FixtureVendor
+    - title: FixtureSeed-5
+      vendor: FixtureVendor
+    - title: FixtureSeed-6
+      vendor: FixtureVendor
+    - title: FixtureSeed-7
+      vendor: FixtureVendor
+    - title: FixtureSeed-8
+      vendor: FixtureVendor
+    - title: FixtureSeed-9
+      vendor: FixtureVendor
+    - title: FixtureSeed-10
+      vendor: FixtureVendor
+    - title: FixtureSeed-11
+      vendor: FixtureVendor
+    - title: FixtureSeed-12
+      vendor: FixtureVendor
+    - title: FixtureSeed-13
+      vendor: FixtureVendor
+    - title: FixtureSeed-14
+      vendor: FixtureVendor
+    - title: FixtureSeed-15
+      vendor: FixtureVendor
+    - title: FixtureSeed-16
+      vendor: FixtureVendor
+    - title: FixtureSeed-17
+      vendor: FixtureVendor
+    - title: FixtureSeed-18
+      vendor: FixtureVendor
+    - title: FixtureSeed-19
+      vendor: FixtureVendor
+- op: bulk_create
+  method: POST
+  path: /v1/bulk_create
+  why: 'seed rows 20-39: a page-size sweep against an empty store returns 0 for every value, which is
+    not evidence of a cap or of its absence'
+  params:
+    items:
+    - title: FixtureSeed-20
+      vendor: FixtureVendor
+    - title: FixtureSeed-21
+      vendor: FixtureVendor
+    - title: FixtureSeed-22
+      vendor: FixtureVendor
+    - title: FixtureSeed-23
+      vendor: FixtureVendor
+    - title: FixtureSeed-24
+      vendor: FixtureVendor
+    - title: FixtureSeed-25
+      vendor: FixtureVendor
+    - title: FixtureSeed-26
+      vendor: FixtureVendor
+    - title: FixtureSeed-27
+      vendor: FixtureVendor
+    - title: FixtureSeed-28
+      vendor: FixtureVendor
+    - title: FixtureSeed-29
+      vendor: FixtureVendor
+    - title: FixtureSeed-30
+      vendor: FixtureVendor
+    - title: FixtureSeed-31
+      vendor: FixtureVendor
+    - title: FixtureSeed-32
+      vendor: FixtureVendor
+    - title: FixtureSeed-33
+      vendor: FixtureVendor
+    - title: FixtureSeed-34
+      vendor: FixtureVendor
+    - title: FixtureSeed-35
+      vendor: FixtureVendor
+    - title: FixtureSeed-36
+      vendor: FixtureVendor
+    - title: FixtureSeed-37
+      vendor: FixtureVendor
+    - title: FixtureSeed-38
+      vendor: FixtureVendor
+    - title: FixtureSeed-39
+      vendor: FixtureVendor
+- op: bulk_create
+  method: POST
+  path: /v1/bulk_create
+  why: 'seed rows 40-59: a page-size sweep against an empty store returns 0 for every value, which is
+    not evidence of a cap or of its absence'
+  params:
+    items:
+    - title: FixtureSeed-40
+      vendor: FixtureVendor
+    - title: FixtureSeed-41
+      vendor: FixtureVendor
+    - title: FixtureSeed-42
+      vendor: FixtureVendor
+    - title: FixtureSeed-43
+      vendor: FixtureVendor
+    - title: FixtureSeed-44
+      vendor: FixtureVendor
+    - title: FixtureSeed-45
+      vendor: FixtureVendor
+    - title: FixtureSeed-46
+      vendor: FixtureVendor
+    - title: FixtureSeed-47
+      vendor: FixtureVendor
+    - title: FixtureSeed-48
+      vendor: FixtureVendor
+    - title: FixtureSeed-49
+      vendor: FixtureVendor
+    - title: FixtureSeed-50
+      vendor: FixtureVendor
+    - title: FixtureSeed-51
+      vendor: FixtureVendor
+    - title: FixtureSeed-52
+      vendor: FixtureVendor
+    - title: FixtureSeed-53
+      vendor: FixtureVendor
+    - title: FixtureSeed-54
+      vendor: FixtureVendor
+    - title: FixtureSeed-55
+      vendor: FixtureVendor
+    - title: FixtureSeed-56
+      vendor: FixtureVendor
+    - title: FixtureSeed-57
+      vendor: FixtureVendor
+    - title: FixtureSeed-58
+      vendor: FixtureVendor
+    - title: FixtureSeed-59
+      vendor: FixtureVendor
+- op: search
+  method: POST
+  path: /v1/search
+  why: 'page_size=1: documented as any integer from 1 to 500'
+  params:
+    filter:
+      vendor: FixtureVendor
+    page_size: 1
+- op: search
+  method: POST
+  path: /v1/search
+  why: 'page_size=10: documented as any integer from 1 to 500'
+  params:
+    filter:
+      vendor: FixtureVendor
+    page_size: 10
+- op: search
+  method: POST
+  path: /v1/search
+  why: 'page_size=50: documented as any integer from 1 to 500'
+  params:
+    filter:
+      vendor: FixtureVendor
+    page_size: 50
+- op: search
+  method: POST
+  path: /v1/search
+  why: 'page_size=200: documented as any integer from 1 to 500'
+  params:
+    filter:
+      vendor: FixtureVendor
+    page_size: 200
+- op: search
+  method: POST
+  path: /v1/search
+  why: 'page_size=500: documented as any integer from 1 to 500'
+  params:
+    filter:
+      vendor: FixtureVendor
+    page_size: 500
+- op: create
+  method: POST
+  path: /v1/items
+  why: 'a pre-epoch due_date: documented as any ISO date, stored as what?'
+  params:
+    title: FixturePreEpoch
+    vendor: FixtureVendor
+    due_date: '1969-07-20'
+expected:
+  tool: lab
+  version: seed1337-2026-09-19
+  qualitative: false
+  answer_key_source: lab/ground_truth.yaml, the lab's own answer key; these are the subset this capture
+    observes.
+  rules:
+  - id: page_size_cap
+    mismatch_class: pagination-cursor
+    observable: true
+    class: silent_truncation
+    operation: search
+    parameter: page_size
+    doc_claims: page_size accepts any integer from 1 to 500
+    truth: page_size is silently clamped to 50; larger values return 50 items with has_more=true and no
+      warning
+    probe_template: boundary
+    difficulty: easy
+  - id: pre_epoch_date_null
+    mismatch_class: field-omission
+    observable: true
+    class: silent_coercion
+    operation: create
+    parameter: due_date
+    doc_claims: due_date accepts any ISO date and is echoed as sent
+    truth: a due_date before 1970-01-01 is accepted with 200 and stored as null
+    probe_template: consistency
+    difficulty: medium

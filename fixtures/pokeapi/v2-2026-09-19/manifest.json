@@ -1,0 +1,45 @@
+{
+  "tool": "pokeapi",
+  "version": "v2-2026-09-19",
+  "endpoint": {
+    "base_url": "https://pokeapi.co",
+    "paths": [
+      "/api/v2/pokemon"
+    ]
+  },
+  "api_version": "v2",
+  "docs_url": "https://pokeapi.co/docs/v2",
+  "docs_sha256": "sha256:2dcc3c92bcf6a08cb99577729bc96a406957541d8929c11211cc5e9729ca0333",
+  "captured_at": "2026-09-20T03:10:42Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "exchanges": 3,
+  "allowed_operations": [
+    "list_pokemon"
+  ],
+  "methods_used": [
+    "GET"
+  ],
+  "local_target": false,
+  "credential_free": true,
+  "license": {
+    "name": "PokeAPI, free public API with a published Fair Use Policy",
+    "terms_url": "https://pokeapi.co/docs/v2",
+    "verified_from_terms_page": false,
+    "redistribution": "This fixture holds a minimal excerpt of live responses, captured once for offline regression testing and not redistributed as a dataset. The terms page was not independently parsed during capture, so the boundary is recorded as stated by the source rather than as verified by this project."
+  },
+  "redaction": {
+    "scanned": true,
+    "patterns": "fixtures.format.SECRET_PATTERNS + SENSITIVE_HEADERS",
+    "placeholder": "<redacted> (a constant, so a redaction is never itself a signal)",
+    "findings": []
+  },
+  "raw_capture_sha256": "sha256:6575831c239bb575a50444febc51b1e830529e1355d7ea2bc572b18fc47ae9be",
+  "traffic_sha256": "sha256:9c3f1b485df998f39345f41bbe9df358520daa3f79ffda46ca323473423448ab",
+  "qualitative": false,
+  "mismatch_classes": [
+    "no-mismatch-control"
+  ],
+  "replay_command": "./.venv/bin/python -m bench.replay_corpus --tool pokeapi --version v2-2026-09-19",
+  "note": "A second honest control, for cursor-style pagination: count, next and results agree."
+}

@@ -1,0 +1,105 @@
+tool: frankfurter
+version: v2-2026-09-19
+api_version: v2
+base_url: https://api.frankfurter.dev
+docs_url: https://api.frankfurter.dev/v2/openapi.json
+credential_free: true
+pace_s: 1.5
+license:
+  name: Frankfurter, open-source; rates from central bank publications
+  terms_url: https://frankfurter.dev
+  verified_from_terms_page: true
+  redistribution: 'Source states: ''No authentication required. Open-source. Genuinely free, not "free
+    with limits."'' Fixture holds five exchanges captured once for offline regression testing.'
+note: Version B of the temporal pair. Same tool, same day, one surface later.
+docs: "# Frankfurter v2, documentation snapshot\n\nSource: https://api.frankfurter.dev/v2/openapi.json\n\
+  Captured: 2026-09-19\nAuthentication: \"No authentication required. Open-source.\"\n\n## Documented\
+  \ promises exercised by this capture\n\nFrom the published OpenAPI description of `GET /v2/rates`:\n\
+  \n- \"Returns exchange rates blended across providers. Without date params,\n  returns the latest rates.\
+  \ Each record is a single currency pair.\"\n- `date`: \"Specific date (YYYY-MM-DD). Cannot be combined\
+  \ with from/to.\"\n- `base`: \"Base currency (default: EUR)\"\n- `quotes`: \"Comma-separated list of\
+  \ quote currencies to include\" -- the v2\n  spelling of what v1 called `symbols`.\n- Documented response\
+  \ codes include `422`.\n\n## What changed between v1 and v2\n\nThree contract changes, two of them from\
+  \ a silent outcome to a loud one:\n\n- The filter parameter is renamed: `symbols` becomes `quotes`.\n\
+  - An unknown currency in `quotes` returns `422 {\"status\": 422, \"message\":\n  \"invalid currency:\
+  \ ZZZ\"}`, where v1 returned 200 with it quietly missing.\n  v2 treats an unknown `base` the same way,\
+  \ so the two parameters now agree.\n- A date with no published rate returns the requested date. 2026-09-13\
+  \ comes\n  back as 2026-09-13, where v1 returned 2026-09-11.\n\nA belief learned against v1 about either\
+  \ behaviour is false here. Capturing\nboth is what makes the demotion measurable rather than asserted.\n"
+calls:
+- op: rates
+  path: /v2/rates
+  why: baseline, two valid quotes
+  params:
+    base: USD
+    quotes: EUR,GBP
+- op: rates
+  path: /v2/rates
+  why: 'the v1 silent-drop case: still silent?'
+  params:
+    base: USD
+    quotes: EUR,ZZZ
+- op: rates
+  path: /v2/rates
+  why: unknown base, for comparison with the unknown quote
+  params:
+    base: ZZZ
+    quotes: EUR
+- op: rates
+  path: /v2/rates
+  why: 'the v1 date-substitution case: is the requested date echoed now?'
+  params:
+    date: '2026-09-13'
+    base: USD
+    quotes: EUR
+- op: rates
+  path: /v2/rates
+  why: the preceding working day, for comparison
+  params:
+    date: '2026-09-11'
+    base: USD
+    quotes: EUR
+expected:
+  tool: frankfurter
+  version: v2-2026-09-19
+  qualitative: false
+  answer_key_source: Verifiable, and directly comparable to v1 because the same five questions are asked.
+  supersedes: v1-2026-09-19
+  retires:
+  - unknown_symbol_silently_dropped
+  - non_publication_date_silently_substituted
+  rules:
+  - id: filter_parameter_renamed
+    mismatch_class: renamed-field
+    observable: true
+    class: none
+    operation: rates
+    parameter: quotes
+    doc_claims: v2 documents `quotes`; v1 documented `symbols`.
+    truth: The same filter is spelled `quotes` in v2 and `symbols` in v1. A client carrying the v1 spelling
+      does not fail loudly -- it sends an unrecognised parameter -- which is why the rename is recorded
+      as its own contract change rather than folded into the rejection change.
+    probe_template: consistency
+    difficulty: easy
+  - id: unknown_quote_rejected
+    mismatch_class: no-mismatch-control
+    observable: true
+    class: none
+    operation: rates
+    parameter: quotes
+    doc_claims: '`quotes` lists quote currencies to include; 422 is a documented response code.'
+    truth: 'Held. An unknown currency in `quotes` returns 422 ''invalid currency: ZZZ'', and an unknown
+      `base` returns the same. The v1 silent drop is gone and the two parameters agree.'
+    probe_template: consistency
+    difficulty: easy
+  - id: requested_date_returned
+    mismatch_class: no-mismatch-control
+    observable: true
+    class: none
+    operation: rates
+    parameter: date
+    doc_claims: '`date` selects a specific date (YYYY-MM-DD).'
+    truth: 'Held. The requested date is returned as requested: 2026-09-13 comes back as 2026-09-13, where
+      v1 substituted 2026-09-11 without saying so.'
+    probe_template: consistency
+    difficulty: easy

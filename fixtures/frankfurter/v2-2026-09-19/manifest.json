@@ -1,0 +1,46 @@
+{
+  "tool": "frankfurter",
+  "version": "v2-2026-09-19",
+  "endpoint": {
+    "base_url": "https://api.frankfurter.dev",
+    "paths": [
+      "/v2/rates"
+    ]
+  },
+  "api_version": "v2",
+  "docs_url": "https://api.frankfurter.dev/v2/openapi.json",
+  "docs_sha256": "sha256:b6ab74d99dd8a7b6c7d3803d13b92f434bc70c7fec94739f458ab8b7ebbd8433",
+  "captured_at": "2026-09-20T03:09:42Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "exchanges": 5,
+  "allowed_operations": [
+    "rates"
+  ],
+  "methods_used": [
+    "GET"
+  ],
+  "local_target": false,
+  "credential_free": true,
+  "license": {
+    "name": "Frankfurter, open-source; rates from central bank publications",
+    "terms_url": "https://frankfurter.dev",
+    "verified_from_terms_page": true,
+    "redistribution": "Source states: 'No authentication required. Open-source. Genuinely free, not \"free with limits.\"' Fixture holds five exchanges captured once for offline regression testing."
+  },
+  "redaction": {
+    "scanned": true,
+    "patterns": "fixtures.format.SECRET_PATTERNS + SENSITIVE_HEADERS",
+    "placeholder": "<redacted> (a constant, so a redaction is never itself a signal)",
+    "findings": []
+  },
+  "raw_capture_sha256": "sha256:510c32677140e6929ab14f7c0ca6b1479539ad0a599635545237cf0bb18b1b88",
+  "traffic_sha256": "sha256:7cc4089eac2cd5ae3d84d9bedafe21bc5d1b86223aca7b4c09af840b6f546664",
+  "qualitative": false,
+  "mismatch_classes": [
+    "no-mismatch-control",
+    "renamed-field"
+  ],
+  "replay_command": "./.venv/bin/python -m bench.replay_corpus --tool frankfurter --version v2-2026-09-19",
+  "note": "Version B of the temporal pair. Same tool, same day, one surface later."
+}

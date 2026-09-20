@@ -1,0 +1,75 @@
+tool: wikipedia
+version: actionapi-2026-09-19
+api_version: MediaWiki Action API
+base_url: https://en.wikipedia.org
+docs_url: https://www.mediawiki.org/wiki/API:Search
+credential_free: true
+pace_s: 1.5
+headers:
+  user-agent: skeptic-fixture-capture/2 (research; contact via repository)
+license:
+  name: Wikipedia content CC BY-SA 4.0; API use governed by Wikimedia API etiquette
+  terms_url: https://www.mediawiki.org/wiki/API:Etiquette
+  verified_from_terms_page: true
+  redistribution: MediaWiki API etiquette requires a descriptive User-Agent, which this capture sets.
+    Content is CC BY-SA 4.0. Fixture holds three search responses captured once.
+note: 'The honest control for the clamp class: MediaWiki clamps AND says so, in band.'
+docs: "# MediaWiki Action API (English Wikipedia), documentation snapshot\n\nSource: https://www.mediawiki.org/wiki/API:Search\n\
+  Captured: 2026-09-19\nAuthentication: none. Etiquette requires a descriptive User-Agent.\n\n## Documented\
+  \ promises exercised by this capture\n\n- `srlimit`: how many total pages to return. Documented as \"\
+  The value must be\n  between 1 and 500\" for unprivileged users.\n- Out-of-range parameter values produce\
+  \ a `warnings` object in the response\n  alongside the results.\n\n## Why this fixture is the control\n\
+  \nThree APIs in this corpus clamp a page-size parameter. The lab clamps\n`page_size` to 50 silently.\
+  \ GitHub clamps `per_page` to 100 silently.\nMediaWiki clamps `srlimit` to 500 and returns\n\n    \"\
+  warnings\": {\"search\": {\"*\": \"The value \\\"5000\\\" for parameter \\\"srlimit\\\"\n     must be\
+  \ between 1 and 500.\"}}\n\nin the same response. The clamp is identical; the honesty is not. That makes\n\
+  this the negative control for the whole class: a pipeline that mints\n`silent_truncation` here is wrong,\
+  \ because nothing was silent. It also echoes\nthe caller's actual value, \"5000\", which is the thing\
+  \ Open-Meteo gets wrong.\n"
+calls:
+- op: search
+  path: /w/api.php
+  why: baseline, well inside the documented range
+  params:
+    action: query
+    list: search
+    srsearch: falsifiability
+    srlimit: 10
+    format: json
+- op: search
+  path: /w/api.php
+  why: the documented ceiling, exactly
+  params:
+    action: query
+    list: search
+    srsearch: falsifiability
+    srlimit: 500
+    format: json
+- op: search
+  path: /w/api.php
+  why: 'past the ceiling: clamped silently, or announced?'
+  params:
+    action: query
+    list: search
+    srsearch: falsifiability
+    srlimit: 5000
+    format: json
+expected:
+  tool: wikipedia
+  version: actionapi-2026-09-19
+  qualitative: false
+  answer_key_source: 'Verifiable by anyone: request srlimit=5000 and read the `warnings.search` object
+    in the response.'
+  rules:
+  - id: clamp_is_announced_in_band
+    mismatch_class: no-mismatch-control
+    observable: true
+    class: none
+    operation: search
+    parameter: srlimit
+    doc_claims: srlimit must be between 1 and 500; out-of-range values produce a warning.
+    truth: Held, and this is the control for the clamp class. srlimit=5000 returns 500 results AND a warnings.search
+      entry naming the parameter, the offending value 5000, and the permitted range. The clamp matches
+      the lab's and GitHub's; the disclosure does not. A belief of silent_truncation here would be false.
+    probe_template: boundary
+    difficulty: easy

@@ -1,0 +1,10 @@
+{
+  "tool": "pokeapi",
+  "version": "v2-2026-09-19",
+  "base_url": "https://pokeapi.co",
+  "captured_at": "2026-09-20T03:10:42Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "immutable": true,
+  "note": "Raw capture. Never edit in place; a correction creates a new version."
+}

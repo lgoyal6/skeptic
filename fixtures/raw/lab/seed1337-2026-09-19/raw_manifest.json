@@ -1,0 +1,10 @@
+{
+  "tool": "lab",
+  "version": "seed1337-2026-09-19",
+  "base_url": "http://127.0.0.1:8077",
+  "captured_at": "2026-09-20T03:10:14Z",
+  "capture_driver": "skeptic.fixtures.capture",
+  "capture_driver_version": "2",
+  "immutable": true,
+  "note": "Raw capture. Never edit in place; a correction creates a new version."
+}

@@ -1,0 +1,45 @@
+tool: github
+version: rest-2026-09-19
+qualitative: false
+answer_key_source: 'Verifiable by anyone unauthenticated: request per_page=200 and
+  count the array; read the x-ratelimit-* headers on any response.'
+rules:
+- id: per_page_silently_clamped
+  mismatch_class: pagination-cursor
+  observable: true
+  class: silent_truncation
+  operation: commits
+  parameter: per_page
+  doc_claims: per_page is documented with a maximum of 100. No behaviour above the
+    maximum is documented.
+  truth: per_page=200 returns 100 items with HTTP 200 and no warning in the body or
+    headers. The request is silently reinterpreted; only a caller who compares the
+    count to the request can tell.
+  probe_template: boundary
+  difficulty: easy
+- id: rate_limit_headers_are_honest
+  mismatch_class: no-mismatch-control
+  observable: true
+  class: none
+  operation: repo
+  parameter: null
+  doc_claims: Unauthenticated requests are limited to 60/hour and carry x-ratelimit-*
+    headers reporting it.
+  truth: 'Held. x-ratelimit-limit is 60 and the remaining/used headers are present
+    and consistent. A control for the rate-limit class: a belief claiming an undocumented
+    or misreported rate limit here would be false.'
+  probe_template: header_burst
+  difficulty: easy
+- id: rate_limit_window_actually_resets
+  mismatch_class: unobservable
+  observable: false
+  class: none
+  operation: repo
+  parameter: null
+  doc_claims: x-ratelimit-reset is the epoch second at which the current window resets.
+  truth: 'UNOBSERVABLE from this capture. The response reports a reset time an hour
+    away; a recording cannot witness the reset. The required outcome is abstention:
+    no belief may be minted for or against this promise, and inventing one is the
+    failure this rule exists to catch.'
+  probe_template: null
+  difficulty: n/a

@@ -1,0 +1,99 @@
+tool: restcountries
+version: v3.1-2026-09-19
+api_version: v3.1 (deprecated)
+base_url: https://restcountries.com
+docs_url: https://restcountries.com/
+credential_free: true
+pace_s: 1.5
+license:
+  name: REST Countries, free public API
+  terms_url: https://restcountries.com/
+  verified_from_terms_page: false
+  redistribution: This fixture holds a minimal excerpt of live responses, captured once for offline regression
+    testing and not redistributed as a dataset. The terms page was not independently parsed during capture,
+    so the boundary is recorded as stated by the source rather than as verified by this project.
+note: 'The status-code mismatch: HTTP 200 carrying a hard failure, and a remediation message that points
+  at itself.'
+docs: "# REST Countries v3.1, documentation snapshot\n\nSource: https://restcountries.com/\nCaptured:\
+  \ 2026-09-19\nAuthentication: none.\n\n## Documented promises exercised by this capture\n\n- `/v3.1/alpha/{code}`\
+  \ returns the country matching an ISO alpha code.\n- `?fields=` selects which fields the response carries;\
+  \ the documentation\n  describes it as a filter over the returned object.\n- Standard HTTP semantics:\
+  \ 200 means the request succeeded.\n\n## What was actually observed\n\nEvery request in this capture\
+  \ returns **HTTP 200** with\n\n    {\"success\": false, \"data\": null,\n     \"errors\": [{\"message\"\
+  : \"This API version has been deprecated. Please visit\n      .../legacy-api-deprecation to migrate\
+  \ to our new version (v5).\"}]}\n\nThe request did not succeed. The API version is retired. The transport\
+  \ layer\nsays 200 OK, and a client that checks the status code and then reads\n`data` gets `null` --\
+  \ which, for a field-selection probe, is indistinguishable\nfrom \"the server returned the object with\
+  \ every selected field empty\". This is\nthe same failure this project found inside its own probe templates,\
+  \ where a\n502 error body was read as \"every field was silently nulled\", except here the\nstatus code\
+  \ actively endorses the misreading.\n\nA second, independent defect: the remediation says to migrate\
+  \ to v5, and the\nv5 path returns the identical message telling the caller to migrate to v5.\n\n## What\
+  \ cannot be observed\n\nThe documented `?fields=` semantics. Every input -- a valid field list, a\n\
+  partially invalid one, and a wholly invalid one -- produces byte-identical\nresponses, because the deprecation\
+  \ short-circuits before any field handling.\nNo probe can learn anything about field selection from\
+  \ this surface, and the\nrequired outcome is abstention rather than a belief inferred from a uniform\n\
+  failure.\n"
+calls:
+- op: alpha
+  path: /v3.1/alpha/jp
+  why: a wholly valid field list
+  params:
+    fields: name,cca2
+- op: alpha
+  path: /v3.1/alpha/jp
+  why: one valid field, one that does not exist
+  params:
+    fields: name,notARealField
+- op: alpha
+  path: /v3.1/alpha/jp
+  why: only a field that does not exist
+  params:
+    fields: notARealField
+- op: alpha
+  path: /v5/countries/alpha/jp
+  why: the version the error message recommends
+  params: {}
+expected:
+  tool: restcountries
+  version: v3.1-2026-09-19
+  qualitative: false
+  answer_key_source: 'Verifiable by anyone: request any v3.1 path and read the HTTP status alongside the
+    body''s `success` field.'
+  rules:
+  - id: http_200_carries_hard_failure
+    mismatch_class: status-code-mismatch
+    observable: true
+    class: mislabelled_semantics
+    operation: alpha
+    parameter: null
+    doc_claims: 'Standard HTTP semantics: 200 means the request succeeded and the body is the requested
+      country.'
+    truth: Every request returns HTTP 200 with success:false, data:null and a deprecation error. The transport
+      status contradicts the body. A client that branches on status alone treats a retired API as a working
+      one and reads data:null as content.
+    probe_template: consistency
+    difficulty: easy
+  - id: deprecation_notice_points_at_itself
+    mismatch_class: semantic-type-correct
+    observable: true
+    class: mislabelled_semantics
+    operation: alpha
+    parameter: null
+    doc_claims: 'An error that names a successor version is actionable: following it resolves the error.'
+    truth: The message instructs the caller to migrate to v5, and the v5 path returns the identical message
+      instructing migration to v5. The remediation is well-formed, type-correct, and circular.
+    probe_template: consistency
+    difficulty: medium
+  - id: field_selection_semantics
+    mismatch_class: unobservable
+    observable: false
+    class: none
+    operation: alpha
+    parameter: fields
+    doc_claims: '`?fields=` selects which fields the response carries.'
+    truth: UNOBSERVABLE from this capture. A valid field list, a partially invalid one, and a wholly invalid
+      one produce byte-identical responses, because the deprecation short-circuits before field handling.
+      Nothing distinguishes the inputs, so nothing can be learned; the required outcome is abstention,
+      not a belief inferred from a uniform failure.
+    probe_template: null
+    difficulty: n/a
