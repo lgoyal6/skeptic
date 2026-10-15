@@ -18,6 +18,10 @@ jobs:
         with:
           enable-cache: true
       - name: Install locked dependencies
-        run: UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen --group dev
+        run: UV_PROJECT_ENVIRONMENT=.venv uv sync --python 3.11 --frozen --group dev --extra runtimes --extra observability
       - name: Replay and verify the evidence pipeline
+        env:
+          CREWAI_DISABLE_TELEMETRY: "true"
+          LANGCHAIN_TRACING_V2: "false"
+          LANGSMITH_TRACING: "false"
         run: make offline
