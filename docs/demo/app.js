@@ -1,7 +1,7 @@
 /*
  * Display three saved date-fidelity cases and their deterministic verdicts.
  * The exporter calls fixtures.checks.py and pins the fixture/source hashes.
- * This page only presents those results; it makes no API or model calls.
+ * The interactive date check calls a bounded endpoint that runs the source guard.
  */
 (async function () {
   "use strict";
@@ -100,6 +100,89 @@
   }
   renderCase(0);
 
+  const guardForm = $("guard-form");
+  const guardCase = $("guard-case");
+  const requestDate = $("guard-request-date");
+  const responseDate = $("guard-response-date");
+  const guardStatus = $("guard-status");
+  const guardResult = $("guard-result");
+  data.cases.forEach((item, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.textContent = item.id.replaceAll("-", " ");
+    guardCase.append(option);
+  });
+
+  let guardRevision = 0;
+  let guardPending;
+  function clearGuard() {
+    guardRevision++;
+    guardPending?.abort();
+    guardResult.textContent = "Inputs changed. Run the guard again.";
+    guardResult.className = "guard-result";
+  }
+  guardForm.addEventListener("input", clearGuard);
+  function loadGuardCase() {
+    clearGuard();
+    const item = data.cases[Number(guardCase.value)];
+    requestDate.value = item.requestDate;
+    responseDate.value = item.responseDate;
+    guardStatus.value = String(item.status);
+    guardResult.textContent = "Values loaded. Run the date check to evaluate them.";
+    guardResult.className = "guard-result";
+  }
+  guardCase.addEventListener("change", loadGuardCase);
+  guardForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const current = ++guardRevision;
+    guardPending?.abort();
+    const controller = new AbortController();
+    guardPending = controller;
+    const timer = setTimeout(() => controller.abort(), 12000);
+    const status = Number(guardStatus.value);
+    if (!Number.isInteger(status) || status < 100 || status > 599) {
+      guardResult.textContent = "Enter an HTTP status from 100 to 599.";
+      guardResult.className = "guard-result is-error";
+      clearTimeout(timer);
+      return;
+    }
+    guardResult.textContent = "Checking the source guard...";
+    guardResult.className = "guard-result is-neutral";
+    try {
+      const response = await fetch("/api/date_guard", {
+        method: "POST",
+        signal: controller.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestDate: requestDate.value,
+          responseDate: responseDate.value,
+          status,
+        }),
+      });
+      const result = await response.json();
+      if (current !== guardRevision) return;
+      if (!response.ok) throw new Error(result.error || "The date check could not evaluate this input.");
+      if (result.finding) {
+        guardResult.textContent = `Guard finding: ${result.finding}`;
+        guardResult.className = "guard-result is-finding";
+      } else if (!result.checked) {
+        guardResult.textContent = "Not checked: this rule only reports a date mismatch on HTTP 200.";
+        guardResult.className = "guard-result is-neutral";
+      } else {
+        guardResult.textContent = "No mismatch found for this input. One matching response does not establish a general guarantee.";
+        guardResult.className = "guard-result is-match";
+      }
+    } catch (error) {
+      if (current !== guardRevision) return;
+      guardResult.textContent = error.message;
+      guardResult.className = "guard-result is-error";
+    } finally {
+      clearTimeout(timer);
+    }
+  });
+  guardCase.value = "0";
+  loadGuardCase();
+
   const limits = $("limits-list");
   data.limits.forEach((text) => {
     const item = document.createElement("li");
@@ -121,7 +204,7 @@
     }));
     const matches = results.length > 0 && results.every(Boolean);
     $("integrity-status").textContent = matches
-      ? "All seven fixture, rule, and explanation files match the pinned SHA256 values."
+      ? `All ${results.length} fixture, rule, guard, and explanation files match the pinned SHA256 values.`
       : "Some source files are unavailable or do not match their pinned SHA256 values.";
   }
   await verifySources();

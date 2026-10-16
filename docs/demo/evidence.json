@@ -1,5 +1,5 @@
 {
-  "sourceCommit": "6901425fbae1f07163c182e189cd784fe8c6c1c9",
+  "sourceCommit": "85baa06dbd51331ec03dcf1f8899e95382d4f230",
   "ruleId": "non_publication_date_silently_substituted",
   "cases": [
     {
@@ -43,9 +43,10 @@
     "fixtures/frankfurter/v2-2026-09-19/docs.md": "b6ab74d99dd8a7b6c7d3803d13b92f434bc70c7fec94739f458ab8b7ebbd8433",
     "fixtures/frankfurter/v2-2026-09-19/traffic.jsonl": "7cc4089eac2cd5ae3d84d9bedafe21bc5d1b86223aca7b4c09af840b6f546664",
     "shim/corpus_guards.py": "08c680dc0d449c79d30db9ba5556bf26d0702926f86998b39a3184b2c455e242",
+    "api/date_guard.py": "b8bc229f71ee0d04aea31d4161e8f0eb2cba8f22d3af00ec20fc6ca54381a37a",
     "docs/ONE_MISMATCH.md": "83e055f9b912bcaeb674f7cc554881217a1ad8979eb0f50bdbb3c1dc5e3bc7b7"
   },
-  "scope": "Saved public API recordings only. The page does not make live requests or call a model.",
+  "scope": "Saved recordings plus a bounded endpoint that runs the source date guard. It makes no upstream requests and calls no model.",
   "limits": [
     "Three saved requests explain one date-fidelity check; they do not describe every API behavior.",
     "The v1 and v2 records are historical captures, not a live service check.",
