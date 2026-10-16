@@ -20,6 +20,7 @@ INPUTS = (
     "fixtures/frankfurter/v2-2026-09-19/docs.md",
     "fixtures/frankfurter/v2-2026-09-19/traffic.jsonl",
     "shim/corpus_guards.py",
+    "api/date_guard.py",
     "docs/ONE_MISMATCH.md",
 )
 
@@ -72,7 +73,7 @@ def build_evidence(root: Path, source_commit: str) -> dict:
         "ruleId": RULE_ID,
         "cases": cases,
         "sourceHashes": {name: sha256(root / name) for name in INPUTS},
-        "scope": "Saved public API recordings only. The page does not make live requests or call a model.",
+        "scope": "Saved recordings plus a bounded endpoint that runs the source date guard. It makes no upstream requests and calls no model.",
         "limits": [
             "Three saved requests explain one date-fidelity check; they do not describe every API behavior.",
             "The v1 and v2 records are historical captures, not a live service check.",

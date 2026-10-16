@@ -20,3 +20,4 @@ class DateDemoExportTests(unittest.TestCase):
         self.assertEqual(data["cases"][0]["responseDate"], "2026-09-11")
         self.assertEqual(data["cases"][1]["requestDate"], data["cases"][1]["responseDate"])
         self.assertEqual(data["cases"][2]["requestDate"], data["cases"][2]["responseDate"])
+        self.assertIn("api/date_guard.py", data["sourceHashes"])
