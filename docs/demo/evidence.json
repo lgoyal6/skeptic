@@ -1,0 +1,55 @@
+{
+  "sourceCommit": "6901425fbae1f07163c182e189cd784fe8c6c1c9",
+  "ruleId": "non_publication_date_silently_substituted",
+  "cases": [
+    {
+      "id": "v1-sunday-mismatch",
+      "version": "v1",
+      "path": "/v1/2026-09-13",
+      "requestDate": "2026-09-13",
+      "responseDate": "2026-09-11",
+      "status": 200,
+      "evidenceKey": "0f3ab1f694343bc738d3c50c",
+      "outcome": "contradicts_doc",
+      "detail": "requested 2026-09-13, response carries date 2026-09-11, HTTP 200: a different day's rates returned as if they were the requested day"
+    },
+    {
+      "id": "v1-friday-control",
+      "version": "v1",
+      "path": "/v1/2026-09-11",
+      "requestDate": "2026-09-11",
+      "responseDate": "2026-09-11",
+      "status": 200,
+      "evidenceKey": "680e884b633df3ae7632b954",
+      "outcome": "unobservable",
+      "detail": "every dated request observed (['2026-09-11']) was for a publication day, which could not have been substituted. The evidence matches the documentation but was never capable of contradicting it"
+    },
+    {
+      "id": "v2-sunday-correction",
+      "version": "v2",
+      "path": "/v2/rates",
+      "requestDate": "2026-09-13",
+      "responseDate": "2026-09-13",
+      "status": 200,
+      "evidenceKey": "9ba90e1c913066924b811fbd",
+      "outcome": "supports_doc",
+      "detail": "a date that could have been substituted (2026-09-13, a weekend) came back as requested"
+    }
+  ],
+  "sourceHashes": {
+    "fixtures/checks.py": "74863e167635d1852b0d5e742ec352f6f0f9470ddf094ef2ad1ae9fcaeef6198",
+    "fixtures/frankfurter/v1-2026-09-19/docs.md": "9891aeebbfce7b02cb1a104d7b727bf5c94377387d992022d62d86d476c2e02c",
+    "fixtures/frankfurter/v1-2026-09-19/traffic.jsonl": "c0a2c14b8c23e20473c8da0b3ee7a9f1fcf180685d3940a2bffff179982f58b8",
+    "fixtures/frankfurter/v2-2026-09-19/docs.md": "b6ab74d99dd8a7b6c7d3803d13b92f434bc70c7fec94739f458ab8b7ebbd8433",
+    "fixtures/frankfurter/v2-2026-09-19/traffic.jsonl": "7cc4089eac2cd5ae3d84d9bedafe21bc5d1b86223aca7b4c09af840b6f546664",
+    "shim/corpus_guards.py": "08c680dc0d449c79d30db9ba5556bf26d0702926f86998b39a3184b2c455e242",
+    "docs/ONE_MISMATCH.md": "83e055f9b912bcaeb674f7cc554881217a1ad8979eb0f50bdbb3c1dc5e3bc7b7"
+  },
+  "scope": "Saved public API recordings only. The page does not make live requests or call a model.",
+  "limits": [
+    "Three saved requests explain one date-fidelity check; they do not describe every API behavior.",
+    "The v1 and v2 records are historical captures, not a live service check.",
+    "The Friday match is unobservable for substitution risk. It is not evidence that the promise holds.",
+    "The guard checks echoed dates. It does not verify that the returned exchange rate is economically correct."
+  ]
+}
