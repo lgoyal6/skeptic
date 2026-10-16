@@ -27,6 +27,18 @@ checks apply only to their exact declared API version; transfer and adaptation
 need separately recorded evidence. Confirmation on two recordings is bounded
 support and does not itself establish a newly discovered API defect.
 
+Model callers can use `bench.guard_candidates.candidate_schema(excerpt, quotes,
+workflow)` as their structured-output schema, then pass the unchanged response
+to `parse_candidate` with the same inputs and a new rule ID. Quotes must be exact
+bounded passages from discovery documentation. The schema permits only the
+existing check kinds, JSON pointers, exercised request keys, two literal boolean
+predictions, or explicit abstention. Parsing rejects extra fields, duplicate JSON
+keys and malformed candidates without repair or coercion. A parsed candidate is
+still a hypothesis: pass its rule and predictions to `confirm` before compiling
+it through `learned_rules`. These helpers do not call a model or read fixtures,
+answer keys or certification records. Model budget, input isolation and frozen
+study provenance remain the caller's responsibility.
+
 `score` is a separate scorer-only interface. It verifies matching populations
 and versions, retains inconclusive workflow denominators, and reuses the
 existing deterministic external-holdout arithmetic. No label or expected.yaml
